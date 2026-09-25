@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Convert audio samples to 16-bit/48kHz WAV for the Roland SP-404, entirely in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Oswald:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<title>SP-404 WAV Converter</title>
+<style>
+  :root{
+    --chassis-1:#26241f;
+    --chassis-2:#332f27;
+    --chassis-edge:#141310;
+    --panel:#3a352b;
+    --screen-bg:#120f09;
+    --screen-glass:#1a1509;
+    --screen-fg:#ffb454;
+    --screen-fg-dim:#8a5f2c;
+    --accent:#ff5a1f;
+    --accent-hi:#ff8a4d;
+    --accent-press:#c8410f;
+    --success:#5ee08a;
+    --danger:#ff5f78;
+    --text-main:#f1e9dc;
+    --text-dim:#a99d89;
+    --text-faint:#6f6656;
+    --screw:#100e0b;
+    --font-display:'Oswald','Arial Narrow',sans-serif;
+    --font-body:'Inter',system-ui,-apple-system,sans-serif;
+    --font-mono:'Space Mono','SFMono-Regular',Consolas,monospace;
+    color-scheme: dark;
+    background:#0b0a09;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100%;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, #1c1a16 0%, transparent 60%),
+      #0b0a09;
+    font-family:var(--font-body);
+    color:var(--text-main);
+    display:flex;
+    justify-content:center;
+    padding-block: 40px 56px;
+  }
+  .page{
+    width:100%;
+    max-width:660px;
+    padding:0 16px;
+  }
+  .intro{
+    text-align:center;
+    margin-bottom:22px;
+  }
+  .intro .kicker{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+  }
+  .intro h1{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:clamp(22px,5vw,30px);
+    letter-spacing:.02em;
+    margin:6px 0 4px;
+    text-wrap:balance;
+    color:var(--text-main);
+  }
+  .intro p{
+    font-size:13.5px;
+    color:var(--text-dim);
+    margin:0 auto;
+    max-width:440px;
+    line-height:1.5;
+  }
+
+  /* ---- device chassis ---- */
+  .device{
+    position:relative;
+    background:
+      linear-gradient(155deg, var(--chassis-2) 0%, var(--chassis-1) 55%, var(--chassis-1) 100%);
+    border-radius:20px;
+    padding:22px 22px 26px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.05) inset,
+      0 30px 60px -20px rgba(0,0,0,.6),
+      0 2px 0 var(--chassis-edge);
+    border:1px solid rgba(0,0,0,.4);
+  }
+  .screw{
+    position:absolute;
+    width:9px;height:9px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #55503f, var(--screw) 70%);
+    box-shadow:0 1px 0 rgba(255,255,255,.08);
+  }
+  .screw.tl{top:12px;left:12px;} .screw.tr{top:12px;right:12px;}
+  .screw.bl{bottom:12px;left:12px;} .screw.br{bottom:12px;right:12px;}
+
+  .brand-row{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    padding:0 4px 14px;
+    margin-bottom:14px;
+    border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .brand-row .wordmark{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:22px;
+    letter-spacing:.03em;
+    color:var(--text-main);
+  }
+  .brand-row .wordmark span{color:var(--accent);}
+  .brand-row .tag{
+    font-family:var(--font-mono);
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+  }
+
+  .pad-strip{
+    display:grid;
+    grid-template-columns:repeat(8,1fr);
+    gap:6px;
+    margin-bottom:16px;
+  }
+  .pad-strip i{
+    aspect-ratio:1;
+    border-radius:5px;
+    background:linear-gradient(160deg,#4a4436,#2b271f);
+    box-shadow:0 1px 0 rgba(255,255,255,.08) inset, 0 2px 3px rgba(0,0,0,.4);
+  }
+  .pad-strip i.lit{
+    background:linear-gradient(160deg, var(--accent-hi), var(--accent-press));
+    box-shadow:0 0 8px rgba(255,90,31,.55), 0 1px 0 rgba(255,255,255,.15) inset;
+  }
+
+  /* ---- screen / LCD ---- */
+  .screen-frame{
+    background:var(--screen-glass);
+    border-radius:10px;
+    padding:8px;
+    box-shadow:0 2px 6px rgba(0,0,0,.5) inset, 0 1px 0 rgba(255,255,255,.05);
+    margin-bottom:16px;
+  }
+  .screen{
+    position:relative;
+    background:var(--screen-bg);
+    border-radius:6px;
+    min-height:150px;
+    max-height:260px;
+    overflow-y:auto;
+    padding:16px;
+    font-family:var(--font-mono);
+    color:var(--screen-fg);
+    box-shadow:0 0 0 1px rgba(0,0,0,.6) inset;
+    transition:box-shadow .15s ease;
+  }
+  .screen::before{
+    content:"";
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(
+      to bottom, rgba(255,255,255,.025) 0 1px, transparent 1px 3px
+    );
+    border-radius:6px;
+    pointer-events:none;
+  }
+  .screen.drag-over{
+    box-shadow:0 0 0 2px var(--accent) inset, 0 0 18px rgba(255,90,31,.35);
+  }
+  .screen-idle{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    min-height:118px;
+    gap:10px;
+    cursor:pointer;
+  }
+  .screen-idle .drop-icon{
+    font-size:22px;
+    color:var(--screen-fg-dim);
+    letter-spacing:.3em;
+  }
+  .screen-idle .drop-title{
+    font-size:13px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  .screen-idle .drop-sub{
+    font-size:11px;
+    color:var(--screen-fg-dim);
+  }
+  .screen-idle .browse-link{
+    color:var(--accent-hi);
+    text-decoration:underline;
+    text-decoration-color:rgba(255,138,77,.4);
+  }
+
+  .queue-summary{
+    font-size:12px;
+    line-height:1.7;
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:1px dashed rgba(255,180,84,.2);
+  }
+  .queue-summary b{color:var(--screen-fg);}
+
+  .log-line{
+    font-size:11.5px;
+    line-height:1.75;
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .log-line .tag{display:inline-block; width:16px;}
+  .log-line.ok .tag{color:var(--success);}
+  .log-line.skip .tag{color:var(--screen-fg-dim);}
+  .log-line.fail .tag{color:var(--danger);}
+  .log-line .name{color:var(--screen-fg);}
+  .log-line .note{color:var(--screen-fg-dim);}
+
+  .summary-line{
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px dashed rgba(255,180,84,.25);
+    font-size:12.5px;
+    line-height:1.7;
+  }
+  .summary-line .n{color:var(--screen-fg);}
+  .summary-line .n.ok{color:var(--success);}
+  .summary-line .n.fail{color:var(--danger);}
+
+  /* ---- meter (progress) ---- */
+  .meter-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .meter{
+    flex:1;
+    display:flex;
+    gap:3px;
+    padding:6px;
+    background:var(--chassis-edge);
+    border-radius:6px;
+    box-shadow:0 1px 0 rgba(255,255,255,.05) inset;
+  }
+  .meter i{
+    flex:1;
+    height:12px;
+    border-radius:2px;
+    background:#241f18;
+    box-shadow:0 1px 0 rgba(255,255,255,.04) inset;
+    transition:background .12s ease, box-shadow .12s ease;
+  }
+  .meter i.on{
+    background:linear-gradient(180deg, var(--accent-hi), var(--accent));
+    box-shadow:0 0 6px rgba(255,90,31,.6);
+  }
+  .meter-pct{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--text-dim);
+    min-width:38px;
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ---- controls ---- */
+  .controls{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .pad-btn{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    border:none;
+    border-radius:10px;
+    padding:16px 10px;
+    cursor:pointer;
+    color:var(--text-main);
+    background:linear-gradient(160deg,#4a4436,#2b271f);
+    box-shadow:0 1px 0 rgba(255,255,255,.1) inset, 0 3px 0 rgba(0,0,0,.4), 0 4px 8px rgba(0,0,0,.35);
+    transition:transform .05s ease, box-shadow .05s ease, filter .15s ease;
+  }
+  .pad-btn:active:not(:disabled){
+    transform:translateY(2px);
+    box-shadow:0 1px 0 rgba(255,255,255,.1) inset, 0 1px 0 rgba(0,0,0,.4);
+  }
+  .pad-btn:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+  }
+  .pad-btn.primary{
+    background:linear-gradient(160deg, var(--accent-hi), var(--accent) 60%, var(--accent-press));
+    color:#1c0e04;
+    box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 0 var(--accent-press), 0 4px 10px rgba(255,90,31,.3);
+  }
+  .pad-btn.primary:disabled{
+    background:linear-gradient(160deg,#4a4436,#2b271f);
+    color:var(--text-main);
+    box-shadow:0 1px 0 rgba(255,255,255,.1) inset, 0 3px 0 rgba(0,0,0,.4);
+  }
+  .pad-btn.download{
+    grid-column:1 / -1;
+    background:linear-gradient(160deg,#7be3a3, var(--success) 55%, #2f9d63);
+    color:#062814;
+    box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 0 #2f9d63, 0 4px 10px rgba(94,224,138,.3);
+    display:none;
+  }
+  .pad-btn.download.show{display:block;}
+
+  input[type=file]{display:none;}
+
+  .footer{
+    margin-top:18px;
+    text-align:center;
+    font-size:11px;
+    line-height:1.7;
+    color:var(--text-faint);
+  }
+  .footer b{color:var(--text-dim);}
+
+  @media (max-width:420px){
+    .device{padding:16px 14px 20px;}
+    .pad-strip{grid-template-columns:repeat(4,1fr);}
+  }
+</style>
+
+</head>
+<body>
+<div class="page">
+  <div class="intro">
+    <div class="kicker">Sample prep utility</div>
+    <h1>SP-404 WAV Converter</h1>
+    <p>Drop in a folder of samples and get back 16-bit / 48kHz WAV files your sampler will load without a fuss. Everything happens in your browser — nothing is uploaded.</p>
+  </div>
+
+  <div class="device">
+    <span class="screw tl"></span><span class="screw tr"></span>
+    <span class="screw bl"></span><span class="screw br"></span>
+
+    <div class="brand-row">
+      <div class="wordmark">SP<span>·</span>404 <span>CONV</span></div>
+      <div class="tag">Batch Sample Prep</div>
+    </div>
+
+    <div class="pad-strip" id="padStrip" aria-hidden="true"></div>
+
+    <div class="screen-frame">
+      <div class="screen" id="screen" tabindex="0" role="button" aria-label="Drop audio files or folders here, or click to browse">
+        <div class="screen-idle" id="screenIdle">
+          <div class="drop-icon">▾ ▾ ▾</div>
+          <div class="drop-title">Drop samples or a folder here</div>
+          <div class="drop-sub">or <span class="browse-link">click to browse</span> — wav, mp3, aiff, flac</div>
+        </div>
+        <div id="screenBody" hidden></div>
+      </div>
+    </div>
+
+    <div class="meter-row">
+      <div class="meter" id="meter"></div>
+      <div class="meter-pct" id="meterPct">0%</div>
+    </div>
+
+    <div class="controls">
+      <button class="pad-btn" id="clearBtn" disabled>Clear</button>
+      <button class="pad-btn primary" id="convertBtn" disabled>▶ Convert</button>
+      <button class="pad-btn download" id="downloadBtn">⇩ Download ZIP</button>
+    </div>
+
+    <input type="file" id="fileInput" multiple accept="audio/*,.wav,.mp3,.aif,.aiff,.flac,.ogg,.m4a,.wma,.au">
+  </div>
+
+  <div class="footer">
+    <b>Output:</b> 16-bit / 48kHz PCM WAV, filenames and folder structure preserved in the ZIP.<br>
+    Runs entirely client-side — your samples never leave this device.<br>
+    Unofficial fan-made tool, not affiliated with Roland. MIT licensed.
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var EXT_RE = /\.(wav|mp3|aif|aiff|flac|ogg|oga|m4a|wma|au)$/i;
+  var TARGET_RATE = 48000;
+  var METER_SEGMENTS = 28;
+
+  var els = {
+    screen: document.getElementById('screen'),
+    screenIdle: document.getElementById('screenIdle'),
+    screenBody: document.getElementById('screenBody'),
+    fileInput: document.getElementById('fileInput'),
+    clearBtn: document.getElementById('clearBtn'),
+    convertBtn: document.getElementById('convertBtn'),
+    downloadBtn: document.getElementById('downloadBtn'),
+    meter: document.getElementById('meter'),
+    meterPct: document.getElementById('meterPct'),
+    padStrip: document.getElementById('padStrip')
+  };
+
+  // decorative pad grid
+  (function buildPadStrip(){
+    var lit = [2, 5];
+    for (var i = 0; i < 8; i++) {
+      var el = document.createElement('i');
+      if (lit.indexOf(i) !== -1) el.className = 'lit';
+      els.padStrip.appendChild(el);
+    }
+  })();
+
+  // segmented meter
+  var meterSegs = [];
+  for (var m = 0; m < METER_SEGMENTS; m++) {
+    var seg = document.createElement('i');
+    els.meter.appendChild(seg);
+    meterSegs.push(seg);
+  }
+  function setMeter(pct) {
+    var lit = Math.round((pct / 100) * METER_SEGMENTS);
+    for (var i = 0; i < meterSegs.length; i++) {
+      meterSegs[i].classList.toggle('on', i < lit);
+    }
+    els.meterPct.textContent = Math.round(pct) + '%';
+  }
+
+  var queue = [];       // {file, relPath}
+  var results = [];      // {relPath, outName, status, note}
+  var zipBlobCache = null;
+  var processing = false;
+
+  function fmtBytes(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    return (n / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function isAcceptable(name) {
+    if (!name || name.charAt(0) === '.' || name.indexOf('._') === 0) return false;
+    return EXT_RE.test(name);
+  }
+
+  function addFiles(entries) {
+    var added = 0;
+    for (var i = 0; i < entries.length; i++) {
+      var e = entries[i];
+      if (isAcceptable(e.relPath)) { queue.push(e); added++; }
+    }
+    renderIdleOrSummary();
+    els.convertBtn.disabled = queue.length === 0;
+    els.clearBtn.disabled = queue.length === 0;
+    return added;
+  }
+
+  function clearAll() {
+    queue = [];
+    results = [];
+    zipBlobCache = null;
+    els.convertBtn.disabled = true;
+    els.clearBtn.disabled = true;
+    els.downloadBtn.classList.remove('show');
+    els.convertBtn.textContent = '▶ Convert';
+    els.convertBtn.disabled = true;
+    setMeter(0);
+    els.screenIdle.hidden = false;
+    els.screenBody.hidden = true;
+    els.screenBody.innerHTML = '';
+  }
+
+  function renderIdleOrSummary() {
+    if (queue.length === 0) {
+      els.screenIdle.hidden = false;
+      els.screenBody.hidden = true;
+      return;
+    }
+    els.screenIdle.hidden = true;
+    els.screenBody.hidden = false;
+    var totalBytes = queue.reduce(function (s, e) { return s + (e.file.size || 0); }, 0);
+    els.screenBody.innerHTML =
+      '<div class="queue-summary"><b>' + queue.length + '</b> file' + (queue.length === 1 ? '' : 's') +
+      ' queued &middot; ' + fmtBytes(totalBytes) +
+      '<br>Press <b>Convert</b> to prep them for the SP-404.</div>';
+  }
+
+  function appendLogLine(cls, tag, name, note) {
+    var row = document.createElement('div');
+    row.className = 'log-line ' + cls;
+    row.innerHTML =
+      '<span class="tag">' + tag + '</span>' +
+      '<span class="name">' + escapeHtml(name) + '</span> ' +
+      '<span class="note">' + escapeHtml(note) + '</span>';
+    els.screenBody.appendChild(row);
+    els.screen.scrollTop = els.screen.scrollHeight;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>]/g, function (c) {
+      return c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;';
+    });
+  }
+
+  function renderSummary(counts) {
+    var line = document.createElement('div');
+    line.className = 'summary-line';
+    line.innerHTML =
+      'Done &mdash; <span class="n">' + counts.total + '</span> analyzed, ' +
+      '<span class="n ok">' + counts.converted + '</span> converted, ' +
+      '<span class="n ok">' + counts.skipped + '</span> already OK, ' +
+      '<span class="n fail">' + counts.failed + '</span> failed.';
+    els.screenBody.appendChild(line);
+    els.screen.scrollTop = els.screen.scrollHeight;
+  }
+
+  // ---------------- audio conversion ----------------
+
+  var offlineCtx = null;
+  function getCtx() {
+    if (!offlineCtx) {
+      var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      offlineCtx = new OAC(1, 1, TARGET_RATE);
+    }
+    return offlineCtx;
+  }
+
+  function sniffWav(bytes) {
+    if (bytes.length < 44) return null;
+    var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    if (str4(dv, 0) !== 'RIFF' || str4(dv, 8) !== 'WAVE') return null;
+    var offset = 12;
+    var fmt = null;
+    while (offset + 8 <= dv.byteLength) {
+      var id = str4(dv, offset);
+      var size = dv.getUint32(offset + 4, true);
+      if (id === 'fmt ') {
+        fmt = {
+          audioFormat: dv.getUint16(offset + 8, true),
+          numChannels: dv.getUint16(offset + 10, true),
+          sampleRate: dv.getUint32(offset + 12, true),
+          bitsPerSample: dv.getUint16(offset + 22, true)
+        };
+        break;
+      }
+      offset += 8 + size + (size % 2);
+    }
+    return fmt;
+  }
+  function str4(dv, off) {
+    var s = '';
+    for (var i = 0; i < 4; i++) s += String.fromCharCode(dv.getUint8(off + i));
+    return s;
+  }
+
+  function encodeWav16(audioBuffer) {
+    var numCh = audioBuffer.numberOfChannels;
+    var rate = audioBuffer.sampleRate;
+    var frames = audioBuffer.length;
+    var blockAlign = numCh * 2;
+    var dataSize = frames * blockAlign;
+    var buf = new ArrayBuffer(44 + dataSize);
+    var dv = new DataView(buf);
+    writeStr(dv, 0, 'RIFF');
+    dv.setUint32(4, 36 + dataSize, true);
+    writeStr(dv, 8, 'WAVE');
+    writeStr(dv, 12, 'fmt ');
+    dv.setUint32(16, 16, true);
+    dv.setUint16(20, 1, true);
+    dv.setUint16(22, numCh, true);
+    dv.setUint32(24, rate, true);
+    dv.setUint32(28, rate * blockAlign, true);
+    dv.setUint16(32, blockAlign, true);
+    dv.setUint16(34, 16, true);
+    writeStr(dv, 36, 'data');
+    dv.setUint32(40, dataSize, true);
+
+    var channels = [];
+    for (var c = 0; c < numCh; c++) channels.push(audioBuffer.getChannelData(c));
+    var off = 44;
+    for (var i = 0; i < frames; i++) {
+      for (var ch = 0; ch < numCh; ch++) {
+        var s = channels[ch][i];
+        s = s < -1 ? -1 : s > 1 ? 1 : s;
+        dv.setInt16(off, s < 0 ? s * 32768 : s * 32767, true);
+        off += 2;
+      }
+    }
+    return new Uint8Array(buf);
+  }
+  function writeStr(dv, off, str) {
+    for (var i = 0; i < str.length; i++) dv.setUint8(off + i, str.charCodeAt(i));
+  }
+
+  function swapExt(name, newExt) {
+    var dot = name.lastIndexOf('.');
+    var base = dot === -1 ? name : name.substring(0, dot);
+    return base + newExt;
+  }
+
+  function processOne(entry) {
+    return entry.file.arrayBuffer().then(function (buf) {
+      var bytes = new Uint8Array(buf);
+      var lowerName = entry.file.name.toLowerCase();
+      if (lowerName.slice(-4) === '.wav') {
+        var fmt = sniffWav(bytes);
+        if (fmt && fmt.audioFormat === 1 && fmt.sampleRate === TARGET_RATE && fmt.bitsPerSample === 16) {
+          return { status: 'skipped', bytes: bytes, outPath: entry.relPath, note: 'already 16-bit/48kHz, kept as-is' };
+        }
+      }
+      return getCtx().decodeAudioData(buf).then(function (audioBuffer) {
+        var wavBytes = encodeWav16(audioBuffer);
+        var outPath = swapExt(entry.relPath, '.wav');
+        return { status: 'converted', bytes: wavBytes, outPath: outPath, note: 'converted to 48kHz/16-bit' };
+      });
+    })['catch'](function (err) {
+      return { status: 'failed', bytes: null, outPath: entry.relPath, note: 'could not decode (' + (err && err.message ? err.message : 'unreadable') + ')' };
+    });
+  }
+
+  // ---------------- minimal ZIP writer (STORE, no compression) ----------------
+
+  var CRC_TABLE = (function () {
+    var table = new Uint32Array(256);
+    for (var n = 0; n < 256; n++) {
+      var c = n;
+      for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      table[n] = c >>> 0;
+    }
+    return table;
+  })();
+  function crc32(bytes) {
+    var crc = 0xFFFFFFFF;
+    for (var i = 0; i < bytes.length; i++) {
+      crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+    }
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function MiniZip() { this.entries = []; }
+  MiniZip.prototype.addFile = function (path, bytes) {
+    this.entries.push({ path: path.replace(/\\/g, '/'), bytes: bytes });
+  };
+  MiniZip.prototype.generate = function () {
+    var parts = [];
+    var central = [];
+    var offset = 0;
+    var encoder = new TextEncoder();
+
+    this.entries.forEach(function (entry) {
+      var nameBytes = encoder.encode(entry.path);
+      var bytes = entry.bytes;
+      var crc = crc32(bytes);
+      var localHeader = new ArrayBuffer(30);
+      var dv = new DataView(localHeader);
+      dv.setUint32(0, 0x04034b50, true);
+      dv.setUint16(4, 20, true);
+      dv.setUint16(6, 0, true);
+      dv.setUint16(8, 0, true);   // no compression (store)
+      dv.setUint16(10, 0, true);
+      dv.setUint16(12, 0, true);
+      dv.setUint32(14, crc, true);
+      dv.setUint32(18, bytes.length, true);
+      dv.setUint32(22, bytes.length, true);
+      dv.setUint16(26, nameBytes.length, true);
+      dv.setUint16(28, 0, true);
+
+      parts.push(new Uint8Array(localHeader), nameBytes, bytes);
+
+      var centralHeader = new ArrayBuffer(46);
+      var cdv = new DataView(centralHeader);
+      cdv.setUint32(0, 0x02014b50, true);
+      cdv.setUint16(4, 20, true);
+      cdv.setUint16(6, 20, true);
+      cdv.setUint16(8, 0, true);
+      cdv.setUint16(10, 0, true);
+      cdv.setUint16(12, 0, true);
+      cdv.setUint16(14, 0, true);
+      cdv.setUint32(16, crc, true);
+      cdv.setUint32(20, bytes.length, true);
+      cdv.setUint32(24, bytes.length, true);
+      cdv.setUint16(28, nameBytes.length, true);
+      cdv.setUint16(30, 0, true);
+      cdv.setUint16(32, 0, true);
+      cdv.setUint16(34, 0, true);
+      cdv.setUint16(36, 0, true);
+      cdv.setUint32(38, 0, true);
+      cdv.setUint32(42, offset, true);
+
+      central.push(new Uint8Array(centralHeader), nameBytes);
+      offset += localHeader.byteLength + nameBytes.length + bytes.length;
+    });
+
+    var centralStart = offset;
+    var centralParts = central;
+    var centralSize = 0;
+    centralParts.forEach(function (p) { centralSize += p.length; });
+
+    var eocd = new ArrayBuffer(22);
+    var edv = new DataView(eocd);
+    edv.setUint32(0, 0x06054b50, true);
+    edv.setUint16(4, 0, true);
+    edv.setUint16(6, 0, true);
+    edv.setUint16(8, this.entries.length, true);
+    edv.setUint16(10, this.entries.length, true);
+    edv.setUint32(12, centralSize, true);
+    edv.setUint32(16, centralStart, true);
+    edv.setUint16(20, 0, true);
+
+    var all = parts.concat(central, [new Uint8Array(eocd)]);
+    return new Blob(all, { type: 'application/zip' });
+  };
+
+  // ---------------- drag & drop / browse ----------------
+
+  function traverseEntry(entry, path) {
+    return new Promise(function (resolve) {
+      if (entry.isFile) {
+        entry.file(function (file) {
+          resolve([{ file: file, relPath: path + file.name }]);
+        }, function () { resolve([]); });
+      } else if (entry.isDirectory) {
+        var reader = entry.createReader();
+        var all = [];
+        (function readMore() {
+          reader.readEntries(function (batch) {
+            if (!batch.length) {
+              Promise.all(all.map(function (child) {
+                return traverseEntry(child, path + entry.name + '/');
+              })).then(function (nested) {
+                resolve(nested.reduce(function (a, b) { return a.concat(b); }, []));
+              });
+            } else {
+              all = all.concat(batch);
+              readMore();
+            }
+          }, function () { resolve([]); });
+        })();
+      } else {
+        resolve([]);
+      }
+    });
+  }
+
+  function handleDataTransfer(dataTransfer) {
+    var items = dataTransfer.items;
+    if (items && items.length && items[0].webkitGetAsEntry) {
+      var entries = [];
+      for (var i = 0; i < items.length; i++) {
+        var entry = items[i].webkitGetAsEntry();
+        if (entry) entries.push(entry);
+      }
+      return Promise.all(entries.map(function (e) { return traverseEntry(e, ''); }))
+        .then(function (nested) { return nested.reduce(function (a, b) { return a.concat(b); }, []); });
+    }
+    var files = dataTransfer.files;
+    var flat = [];
+    for (var j = 0; j < files.length; j++) flat.push({ file: files[j], relPath: files[j].name });
+    return Promise.resolve(flat);
+  }
+
+  els.screen.addEventListener('click', function (e) {
+    if (processing) return;
+    els.fileInput.click();
+  });
+  els.screen.addEventListener('keydown', function (e) {
+    if ((e.key === 'Enter' || e.key === ' ') && !processing) { e.preventDefault(); els.fileInput.click(); }
+  });
+  els.fileInput.addEventListener('change', function () {
+    var flat = [];
+    for (var i = 0; i < els.fileInput.files.length; i++) {
+      flat.push({ file: els.fileInput.files[i], relPath: els.fileInput.files[i].name });
+    }
+    addFiles(flat);
+    els.fileInput.value = '';
+  });
+  ['dragenter', 'dragover'].forEach(function (evt) {
+    els.screen.addEventListener(evt, function (e) {
+      e.preventDefault();
+      if (!processing) els.screen.classList.add('drag-over');
+    });
+  });
+  ['dragleave', 'drop'].forEach(function (evt) {
+    els.screen.addEventListener(evt, function (e) {
+      e.preventDefault();
+      els.screen.classList.remove('drag-over');
+    });
+  });
+  els.screen.addEventListener('drop', function (e) {
+    if (processing) return;
+    handleDataTransfer(e.dataTransfer).then(addFiles);
+  });
+
+  els.clearBtn.addEventListener('click', function () {
+    if (processing) return;
+    clearAll();
+  });
+
+  els.convertBtn.addEventListener('click', function () {
+    if (processing || !queue.length) return;
+    runConversion();
+  });
+
+  els.downloadBtn.addEventListener('click', function () {
+    if (!zipBlobCache) return;
+    downloadFile(zipBlobCache, 'SP404-converted.zip');
+  });
+
+  function downloadFile(blob, filename) {
+    if (window.claude && typeof window.claude.use === 'function') {
+      window.claude.use('downloads').then(function (downloads) {
+        if (!downloads) { fallbackDownload(blob, filename); return; }
+        downloads.save({ filename: filename, data: blob })['catch'](function () {
+          /* declined or unavailable: nothing more to do without user action */
+        });
+      })['catch'](function () { fallbackDownload(blob, filename); });
+    } else {
+      fallbackDownload(blob, filename);
+    }
+  }
+  function fallbackDownload(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  }
+
+  function runConversion() {
+    processing = true;
+    els.convertBtn.disabled = true;
+    els.clearBtn.disabled = true;
+    els.convertBtn.textContent = 'Converting…';
+    els.downloadBtn.classList.remove('show');
+    els.screenBody.innerHTML = '';
+    setMeter(0);
+
+    var total = queue.length;
+    var done = 0;
+    var counts = { total: total, converted: 0, skipped: 0, failed: 0 };
+    var zip = new MiniZip();
+    var reportLines = [];
+
+    function next(i) {
+      if (i >= queue.length) return finish();
+      return processOne(queue[i]).then(function (res) {
+        done++;
+        setMeter((done / total) * 100);
+        if (res.status === 'converted') {
+          counts.converted++;
+          zip.addFile(res.outPath, res.bytes);
+          appendLogLine('ok', '✓', res.outPath, res.note);
+        } else if (res.status === 'skipped') {
+          counts.skipped++;
+          zip.addFile(res.outPath, res.bytes);
+          appendLogLine('skip', '•', res.outPath, res.note);
+        } else {
+          counts.failed++;
+          appendLogLine('fail', '✕', res.outPath, res.note);
+        }
+        reportLines.push(res.status.toUpperCase() + '  ' + res.outPath + '  (' + res.note + ')');
+        return next(i + 1);
+      });
+    }
+
+    function finish() {
+      var reportText =
+        'SP-404 WAV Converter — conversion report\n' +
+        counts.total + ' files analyzed: ' + counts.converted + ' converted, ' +
+        counts.skipped + ' already OK, ' + counts.failed + ' failed.\n\n' +
+        reportLines.join('\n') + '\n';
+      zip.addFile('CONVERSION_REPORT.txt', new TextEncoder().encode(reportText));
+
+      renderSummary(counts);
+      zipBlobCache = zip.generate();
+
+      processing = false;
+      els.convertBtn.textContent = '▶ Convert';
+      els.clearBtn.disabled = false;
+      els.convertBtn.disabled = false;
+      if (counts.converted + counts.skipped > 0) {
+        els.downloadBtn.classList.add('show');
+      }
+    }
+
+    next(0);
+  }
+
+  clearAll();
+})();
+</script>
+</body>
+</html>
