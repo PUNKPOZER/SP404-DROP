@@ -3,414 +3,579 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Convert audio samples to 16-bit/48kHz WAV for the Roland SP-404, entirely in your browser.">
-<title>SP-404 WAV Converter</title>
+<meta name="description" content="SP404 STOOL — convert audio to SP-404-ready WAV and chop/loop tracks into numbered samples. Runs entirely in your browser.">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<title>SP404 STOOL</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --page-bg:#1b1c1e;
-    --metal-1:#e2e4e5;
-    --metal-2:#bcbfc1;
-    --metal-3:#989b9e;
-    --metal-4:#7a7d80;
-    --pad-face:#aeb1b3;
-    --pad-face-hi:#c1c4c6;
-    --pad-active:#d9636f;
-    --pad-active-hi:#e58893;
-    --pad-active-press:#b8434e;
-    --ink:#131315;
-    --ink-soft:#48484a;
-    --ink-faint:#78797b;
-    --navy:#12172a;
-    --navy-2:#1c2340;
-    --led-bg:#0c0b0a;
-    --led-white:#eef0ef;
-    --led-green:#3ddc72;
-    --led-red:#ff4433;
-    --screw:#5b5e60;
-    --font-display:'Anton','Arial Narrow',sans-serif;
-    --font-mono:'Space Mono','Courier New',monospace;
+    --page:#131311;
+    --card:#f0efe8;
+    --card-2:#e4e2d6;
+    --ink:#0c0c0a;
+    --ink-soft:#55524a;
+    --ink-faint:#8b8778;
+    --white:#f6f5ef;
+    --font-ui:'Pixelify Sans',system-ui,sans-serif;
+    --font-lcd:'Silkscreen','Pixelify Sans',monospace;
     color-scheme: dark;
-    background:var(--page-bg);
+    background:var(--page);
   }
   *{box-sizing:border-box;}
+  [hidden]{display:none !important;}
   body{
     margin:0;
     min-height:100%;
-    background:var(--page-bg);
-    font-family:var(--font-mono);
-    color:var(--metal-1);
+    background:var(--page);
+    font-family:var(--font-ui);
+    color:var(--white);
     display:flex;
     justify-content:center;
-    padding-block: 40px 56px;
+    padding-block:32px 48px;
   }
-  .page{
-    width:100%;
-    max-width:640px;
-    padding:0 16px;
-  }
-  .intro{
-    text-align:center;
-    margin-bottom:20px;
-  }
-  .intro .kicker{
-    font-size:11px;
-    letter-spacing:.2em;
-    text-transform:uppercase;
-    color:var(--metal-3);
-  }
-  .intro h1{
-    font-family:var(--font-display);
-    font-weight:400;
-    font-size:clamp(30px,7vw,44px);
-    letter-spacing:.01em;
-    margin:4px 0 8px;
-    text-wrap:balance;
-    color:var(--metal-1);
-    text-transform:uppercase;
-  }
-  .intro p{
-    font-size:12.5px;
-    color:var(--metal-3);
-    margin:0 auto;
-    max-width:440px;
-    line-height:1.6;
-  }
+  .page{width:100%;max-width:640px;padding:0 14px;}
+  button{font-family:inherit;}
 
-  /* ---- poster/chassis card ---- */
+  /* ---- shared card ---- */
   .device{
     position:relative;
-    background:
-      repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 3px),
-      linear-gradient(155deg, var(--metal-1) 0%, var(--metal-2) 45%, var(--metal-3) 100%);
-    border-radius:16px;
-    padding:20px 20px 24px;
-    box-shadow:8px 8px 0 #000, 0 1px 0 rgba(255,255,255,.4) inset;
-    border:1px solid var(--metal-4);
+    background:var(--card);
+    color:var(--ink);
+    border-radius:22px;
+    padding:18px 18px 20px;
+    box-shadow:0 24px 50px -20px rgba(0,0,0,.7);
   }
-  .screw{
-    position:absolute;
-    width:8px;height:8px;border-radius:50%;
-    background:radial-gradient(circle at 35% 30%, #8c8f91, var(--screw) 65%, #2c2d2e 100%);
-    box-shadow:0 1px 0 rgba(255,255,255,.3);
-  }
-  .screw.tl{top:11px;left:11px;} .screw.tr{top:11px;right:11px;}
-  .screw.bl{bottom:11px;left:11px;} .screw.br{bottom:11px;right:11px;}
+  .screen{display:none;}
+  .screen.active{display:block;}
 
-  .brand-row{
+  /* dot texture used inside solid black fills */
+  .dots{
+    background-image:radial-gradient(rgba(255,255,255,.35) .6px, transparent .6px);
+    background-size:3px 3px;
+  }
+
+  /* ---- top bar (Convert / Chop screens) ---- */
+  .topbar{
     display:flex;
     align-items:center;
-    gap:12px;
-    padding-bottom:14px;
-    margin-bottom:16px;
-    border-bottom:2px solid var(--ink);
+    gap:10px;
+    padding-bottom:12px;
+    margin-bottom:14px;
+    border-bottom:3px dashed var(--ink);
   }
-  .loop-icon{flex:none;width:34px;height:34px;}
-  .brand-text{flex:1;min-width:0;}
-  .brand-text .wordmark{
-    font-family:var(--font-display);
-    font-size:25px;
-    letter-spacing:.02em;
-    text-transform:uppercase;
-    color:var(--ink);
-    line-height:1;
-  }
-  .brand-text .wordmark span{color:var(--pad-active-press);}
-  .brand-text .tag{
-    font-size:10px;
-    letter-spacing:.14em;
-    text-transform:uppercase;
-    color:var(--ink-soft);
-    margin-top:3px;
-  }
-  .brand-stamp{
+  .back-btn{
     flex:none;
-    font-family:var(--font-display);
-    font-size:11px;
-    letter-spacing:.05em;
-    text-transform:uppercase;
-    color:var(--metal-1);
-    background:var(--ink);
-    padding:5px 9px 4px;
-    border-radius:3px;
-    white-space:nowrap;
-  }
-
-  /* ---- status tiles (replaces decorative pad strip) ---- */
-  .stat-row{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:7px;
-    margin-bottom:16px;
-  }
-  .stat-tile{
-    background:var(--led-bg);
-    border:2px solid var(--ink);
-    border-radius:5px;
-    padding:7px 4px 6px;
-    text-align:center;
-    box-shadow:0 1px 0 rgba(255,255,255,.15) inset;
-  }
-  .stat-num{
-    font-family:var(--font-mono);
+    width:34px;height:34px;
+    border:2.5px solid var(--ink);
+    border-radius:8px;
+    background:var(--card);
+    color:var(--ink);
+    font-family:var(--font-ui);
     font-weight:700;
-    font-size:22px;
-    line-height:1.1;
-    font-variant-numeric:tabular-nums;
-    color:var(--led-white);
-    text-shadow:0 0 6px currentColor;
+    font-size:16px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
   }
-  .stat-tile.total .stat-num{color:var(--led-white);}
-  .stat-tile.ok .stat-num{color:var(--led-green);}
-  .stat-tile.asis .stat-num{color:var(--led-white);}
-  .stat-tile.err .stat-num{color:var(--led-red);}
-  .stat-label{
-    font-size:8.5px;
+  .back-btn:active{background:var(--ink);color:var(--card);}
+  .topbar h2{
+    flex:1;
+    margin:0;
+    font-family:var(--font-lcd);
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+  .topbar .sub{
+    font-size:9.5px;
     letter-spacing:.1em;
     text-transform:uppercase;
-    color:var(--metal-4);
-    margin-top:2px;
+    color:var(--ink-faint);
   }
 
-  /* ---- screen / drop area ---- */
-  .screen-frame{
-    background:var(--navy);
-    border-radius:10px;
-    padding:7px;
-    box-shadow:0 2px 4px rgba(0,0,0,.4) inset;
-    margin-bottom:16px;
+  /* =========================================================
+     HOME
+     ========================================================= */
+  .home-head{text-align:center;margin-bottom:6px;}
+  .stool-logo{width:54px;height:62px;color:var(--ink);margin:0 auto 8px;display:block;}
+  .home-wordmark{
+    font-family:var(--font-lcd);
+    font-weight:700;
+    font-size:clamp(30px,8vw,42px);
+    letter-spacing:.02em;
+    line-height:1;
   }
-  .screen{
-    position:relative;
-    background:#181d33;
-    background-image:radial-gradient(rgba(255,255,255,.05) 1px, transparent 1.3px);
-    background-size:4px 4px;
-    border-radius:6px;
-    min-height:150px;
-    max-height:260px;
-    overflow-y:auto;
-    padding:16px;
-    font-family:var(--font-mono);
-    color:#dfe3ea;
-    box-shadow:0 0 0 1px rgba(0,0,0,.5) inset;
+  .home-wordmark .n404{color:var(--ink-faint);}
+  .home-tag{
+    margin-top:8px;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
   }
-  .screen.drag-over{
-    box-shadow:0 0 0 3px var(--pad-active) inset;
+  .home-tiles{
+    margin-top:22px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
   }
-  .screen-idle{
+  .nav-tile{
+    border:3px solid var(--ink);
+    border-radius:16px;
+    padding:20px 14px 16px;
+    background:var(--card);
+    cursor:pointer;
+    text-align:left;
     display:flex;
     flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    min-height:118px;
-    gap:10px;
-    cursor:pointer;
+    gap:34px;
+    min-height:150px;
   }
-  .screen-idle .drop-icon{font-size:18px;color:#5a6280;letter-spacing:.3em;}
-  .screen-idle .drop-title{
-    font-family:var(--font-display);
-    font-size:15px;
-    letter-spacing:.03em;
-    text-transform:uppercase;
-    color:#eef0f5;
-  }
-  .screen-idle .drop-sub{font-size:11px;color:#8b93ad;}
-  .screen-idle .browse-link{
-    color:var(--pad-active-hi);
-    text-decoration:underline;
-    text-decoration-color:rgba(229,136,147,.5);
+  .nav-tile .tile-icon{width:30px;height:30px;}
+  .nav-tile .tile-title{
+    font-family:var(--font-lcd);
     font-weight:700;
+    font-size:19px;
+    letter-spacing:.02em;
+    text-transform:uppercase;
+    line-height:1.15;
+  }
+  .nav-tile .tile-desc{
+    font-size:10px;
+    letter-spacing:.03em;
+    color:var(--ink-soft);
+    margin-top:4px;
+    line-height:1.5;
+  }
+  .home-info{
+    margin-top:16px;
+    background:var(--ink);
+    color:var(--white);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:10px;
+    line-height:1.8;
+    letter-spacing:.02em;
+  }
+  .home-info b{color:#fff;}
+  .home-foot{
+    margin-top:14px;
+    text-align:center;
+    font-size:9px;
+    letter-spacing:.08em;
+    color:var(--ink-faint);
+    text-transform:uppercase;
   }
 
-  .queue-summary{
-    font-size:12px;
-    line-height:1.7;
-    margin-bottom:10px;
-    padding-bottom:8px;
-    border-bottom:1px dashed #4a5170;
-    color:#c7ccdc;
-  }
-  .queue-summary b{color:#fff;}
-
-  .log-line{font-size:11.5px;line-height:1.8;white-space:pre-wrap;word-break:break-word;}
-  .log-line .tag{display:inline-block;width:16px;font-weight:700;}
-  .log-line.ok .tag{color:var(--led-green);}
-  .log-line.skip .tag{color:#aab1c8;}
-  .log-line.fail .tag{color:var(--led-red);}
-  .log-line .name{color:#f2f4f8;font-weight:700;}
-  .log-line .note{color:#8b93ad;}
-
-  .summary-line{
-    margin-top:10px;
-    padding-top:10px;
-    border-top:1px dashed #4a5170;
-    font-size:12.5px;
-    line-height:1.7;
-    color:#c7ccdc;
-  }
-  .summary-line .n{color:#fff;font-weight:700;}
-  .summary-line .n.fail{color:var(--led-red);}
-
-  /* ---- meter (progress) ---- */
-  .meter-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
-  .meter{flex:1;display:flex;gap:3px;}
-  .meter i{
-    flex:1;height:13px;
-    border:2px solid var(--ink);
-    border-radius:1px;
-    background:var(--metal-1);
-  }
-  .meter i.on{background:var(--ink);}
-  .meter-pct{
-    font-size:12px;color:var(--ink-soft);min-width:38px;text-align:right;
-    font-variant-numeric:tabular-nums;font-weight:700;
-  }
-
-  /* ---- controls ---- */
-  .controls{display:grid;grid-template-columns:1fr;gap:10px;}
-  .pad-btn{
-    font-family:var(--font-display);
-    font-size:15px;
+  /* =========================================================
+     SHARED: pill buttons / mode tiles / stat tiles
+     ========================================================= */
+  .pill{
+    font-family:var(--font-ui);
+    font-weight:700;
+    font-size:13px;
     letter-spacing:.03em;
     text-transform:uppercase;
-    border:2px solid var(--ink);
-    border-radius:6px;
-    padding:14px 10px;
+    border:2.5px solid var(--ink);
+    border-radius:999px;
+    padding:11px 14px;
     cursor:pointer;
+    background:var(--card);
     color:var(--ink);
-    background:var(--pad-face);
-    box-shadow:3px 3px 0 var(--ink);
-    transition:transform .05s ease, box-shadow .05s ease;
+    text-align:center;
   }
-  .pad-btn:active:not(:disabled){transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
-  .pad-btn:disabled{
-    color:var(--metal-3);
-    border-color:var(--metal-3);
-    background:var(--metal-2);
-    box-shadow:none;
-    cursor:not-allowed;
+  .pill.solid{background:var(--ink);color:var(--white);}
+  .pill:disabled{opacity:.35;cursor:not-allowed;}
+  .pill:active:not(:disabled){transform:translateY(1px);}
+
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px;}
+  .stat-tile{
+    border:2.5px solid var(--ink);
+    border-radius:8px;
+    padding:7px 4px 6px;
+    text-align:center;
+    background:var(--card);
   }
-  .pad-btn.download{
-    background:var(--pad-active);
-    color:#2a0509;
-    display:none;
+  .stat-tile.hot{background:var(--ink);color:var(--white);}
+  .stat-num{font-family:var(--font-lcd);font-weight:700;font-size:20px;line-height:1.1;font-variant-numeric:tabular-nums;}
+  .stat-label{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px;}
+  .stat-tile.hot .stat-label{color:#cfcdc3;}
+
+  /* =========================================================
+     CONVERT
+     ========================================================= */
+  .drop{
+    position:relative;
+    border:3px dashed var(--ink);
+    border-radius:12px;
+    background:var(--card-2);
+    min-height:140px;
+    max-height:250px;
+    overflow-y:auto;
+    padding:16px;
+    margin-bottom:14px;
   }
-  .pad-btn.download.show{display:block;}
+  .drop.drag-over{background:var(--ink);color:var(--white);}
+  .drop-idle{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;min-height:108px;gap:8px;cursor:pointer;
+  }
+  .drop-idle .di{font-size:18px;color:var(--ink-faint);letter-spacing:.3em;}
+  .drop-idle .dt{font-family:var(--font-lcd);font-weight:700;font-size:14px;letter-spacing:.02em;text-transform:uppercase;}
+  .drop-idle .ds{font-size:10.5px;color:var(--ink-soft);}
+  .drop-idle .dl{color:var(--ink);text-decoration:underline;font-weight:700;}
+
+  .q-summary{font-size:11.5px;line-height:1.7;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--ink-faint);}
+  .q-summary b{color:var(--ink);}
+
+  .log-line{font-size:11px;line-height:1.75;font-family:var(--font-ui);white-space:pre-wrap;word-break:break-word;}
+  .log-line .tag{display:inline-block;width:15px;font-weight:700;}
+  .log-line .name{font-weight:600;}
+  .log-line .note{color:var(--ink-soft);}
+
+  .summary-line{margin-top:8px;padding-top:8px;border-top:1px dashed var(--ink-faint);font-size:11.5px;line-height:1.7;}
+  .summary-line .n{font-weight:700;}
+
+  .meter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .meter{flex:1;display:flex;gap:2px;}
+  .meter i{flex:1;height:10px;border:2px solid var(--ink);background:var(--card);}
+  .meter i.on{background:var(--ink);}
+  .meter-pct{font-family:var(--font-lcd);font-size:11px;min-width:34px;text-align:right;font-weight:700;}
+
+  .controls-2{display:grid;grid-template-columns:1fr;gap:8px;}
+  .controls-2 .pill.download{display:none;}
+  .controls-2 .pill.download.show{display:block;}
 
   input[type=file]{display:none;}
 
-  .footer{margin-top:20px;}
-  .footer-rule{border-top:2px solid var(--ink); opacity:.5; margin-bottom:12px;}
-  .footer-text{
-    text-align:center;font-size:10.5px;line-height:1.8;color:var(--ink-soft);margin-bottom:14px;
+  .conv-foot{margin-top:16px;text-align:center;font-size:9.5px;line-height:1.8;color:var(--ink-faint);}
+
+  /* =========================================================
+     CHOP
+     ========================================================= */
+  .chop-drop{
+    border:3px dashed var(--ink);
+    border-radius:12px;
+    background:var(--card-2);
+    min-height:180px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    flex-direction:column;gap:10px;text-align:center;padding:20px;
   }
-  .footer-text b{color:var(--ink);}
-  .barcode-row{display:flex;align-items:center;justify-content:center;gap:14px;}
-  .barcode{
-    width:120px;height:28px;
-    background-image:repeating-linear-gradient(
-      90deg,
-      var(--ink) 0 2px, transparent 2px 3px,
-      var(--ink) 3px 4px, transparent 4px 7px,
-      var(--ink) 7px 8px, transparent 8px 9px,
-      var(--ink) 9px 12px, transparent 12px 13px,
-      var(--ink) 13px 14px, transparent 14px 17px,
-      var(--ink) 17px 19px, transparent 19px 21px,
-      var(--ink) 21px 22px, transparent 22px 25px
-    );
-    background-size:25px 100%;
-    opacity:.75;
+  .chop-drop .dt{font-family:var(--font-lcd);font-weight:700;font-size:16px;text-transform:uppercase;}
+  .chop-drop .ds{font-size:10.5px;color:var(--ink-soft);}
+
+  .chop-toolbar{
+    display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;
   }
-  .barcode-code{font-size:11px;letter-spacing:.08em;color:var(--ink-soft);}
+  .icon-btn{
+    width:36px;height:36px;flex:none;
+    border:2.5px solid var(--ink);border-radius:8px;
+    background:var(--card);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;font-size:14px;font-weight:700;
+  }
+  .icon-btn.active{background:var(--ink);color:var(--white);}
+  .icon-btn:active{transform:translateY(1px);}
+  .chop-filename{
+    flex:1;min-width:60px;
+    font-size:10.5px;
+    color:var(--ink-soft);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .zoom-label{font-family:var(--font-lcd);font-size:11px;font-weight:700;min-width:30px;text-align:center;}
+
+  .wave-frame{
+    border:2.5px solid var(--ink);
+    border-radius:10px;
+    background:var(--white);
+    margin-bottom:10px;
+    overflow:hidden;
+  }
+  .wave-wrap{
+    overflow-x:auto;
+    overflow-y:hidden;
+    position:relative;
+    -webkit-overflow-scrolling:touch;
+  }
+  .wave-stage{position:relative;height:180px;}
+  .wave-stage canvas{position:absolute;left:0;top:0;display:block;}
+  .wave-empty-hint{
+    padding:10px 12px;font-size:10px;color:var(--ink-faint);text-align:center;
+  }
+  .marker-handle{
+    position:absolute;top:0;
+    width:16px;height:16px;
+    margin-left:-8px;
+    background:var(--ink);
+    cursor:ew-resize;
+    touch-action:none;
+    clip-path:polygon(0 0,100% 0,100% 60%,50% 100%,0 60%);
+  }
+  .marker-handle:active{background:var(--ink-soft);}
+
+  .mode-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;}
+  .mode-tile{
+    border:2.5px solid var(--ink);border-radius:8px;
+    padding:9px 4px;text-align:center;cursor:pointer;
+    font-family:var(--font-ui);font-weight:700;font-size:11px;
+    letter-spacing:.03em;text-transform:uppercase;
+    background:var(--card);color:var(--ink);
+  }
+  .mode-tile.active{background:var(--ink);color:var(--white);}
+
+  .mode-panel{
+    background:var(--card-2);
+    border:2px dashed var(--ink);
+    border-radius:10px;
+    padding:12px;
+    margin-bottom:10px;
+    font-size:11px;
+  }
+  .mode-panel .row{display:flex;align-items:center;gap:10px;}
+  .mode-panel .row + .row{margin-top:10px;}
+  .sens-label{
+    font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);
+    display:flex;justify-content:space-between;margin-bottom:4px;
+  }
+  input[type=range]{
+    -webkit-appearance:none;width:100%;height:18px;background:transparent;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:6px;background:var(--ink-faint);border-radius:3px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:16px;height:16px;margin-top:-5px;
+    background:var(--ink);border-radius:3px;cursor:pointer;
+  }
+  input[type=range]::-moz-range-track{height:6px;background:var(--ink-faint);border-radius:3px;}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;background:var(--ink);border:none;border-radius:3px;cursor:pointer;}
+
+  .parts-row{display:flex;gap:6px;flex:1;}
+  .part-chip{
+    flex:1;border:2px solid var(--ink);border-radius:6px;
+    padding:7px 0;text-align:center;font-family:var(--font-lcd);font-weight:700;font-size:12px;
+    cursor:pointer;background:var(--card);
+  }
+  .part-chip.active{background:var(--ink);color:var(--white);}
+  .go-btn{flex:none;}
+
+  .samples-head{
+    display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;
+  }
+  .samples-head h3{
+    margin:0;font-family:var(--font-lcd);font-size:13px;text-transform:uppercase;letter-spacing:.03em;
+  }
+  .clear-link{
+    font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);
+    background:none;border:none;text-decoration:underline;cursor:pointer;font-family:var(--font-ui);
+    padding:0;
+  }
+  .samples-row{
+    display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;
+  }
+  .sample-chip{
+    flex:none;min-width:56px;
+    border:2.5px solid var(--ink);border-radius:8px;
+    padding:6px 8px;text-align:center;cursor:pointer;background:var(--card);
+  }
+  .sample-chip.active{background:var(--ink);color:var(--white);}
+  .sample-chip .sc-num{font-family:var(--font-lcd);font-weight:700;font-size:14px;}
+  .sample-chip .sc-len{font-size:8px;color:var(--ink-faint);margin-top:1px;}
+  .sample-chip.active .sc-len{color:#cfcdc3;}
+
+  .sample-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+  .export-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;}
+
+  .chop-hint{font-size:9.5px;color:var(--ink-faint);text-align:center;line-height:1.7;margin-top:4px;}
 
   @media (max-width:420px){
-    .device{padding:16px 14px 20px;}
+    .device{padding:14px 12px 16px;}
+    .home-tiles{grid-template-columns:1fr;}
+    .nav-tile{min-height:0;flex-direction:row;align-items:center;gap:14px;padding:14px;}
+    .nav-tile .tile-desc{margin-top:2px;}
     .stat-row{grid-template-columns:repeat(2,1fr);}
   }
 </style>
 
+
 </head>
 <body>
 <div class="page">
-  <div class="intro">
-    <div class="kicker">Sample Prep Utility &middot; No.404</div>
-    <h1>SP-404 WAV Converter</h1>
-    <p>Drop in a folder of samples and get back 16-bit / 48kHz WAV files your sampler will load without a fuss. Everything happens in your browser &mdash; nothing is uploaded.</p>
-  </div>
+  <div class="device" id="device">
 
-  <div class="device">
-    <span class="screw tl"></span><span class="screw tr"></span>
-    <span class="screw bl"></span><span class="screw br"></span>
+    <!-- ============ HOME ============ -->
+    <section class="screen active" id="screenHome">
+      <div class="home-head">
+        <svg class="stool-logo" id="homeLogo" viewBox="0 0 42 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+        <div class="home-wordmark">SP<span class="n404">404</span> STOOL</div>
+        <div class="home-tag">Sample Prep &middot; SP-404MKII</div>
+      </div>
 
-    <div class="brand-row">
-      <svg class="loop-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M20 6c7.7 0 14 6.3 14 14M34 20a14 14 0 0 1-14 14M6 20C6 12.3 12.3 6 20 6M6 20a14 14 0 0 0 14 14" stroke="#131315" stroke-width="3" stroke-linecap="round"/>
-        <path d="M34 6v9h-9" stroke="#131315" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M6 34v-9h9" stroke="#131315" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <div class="brand-text">
-        <div class="wordmark">SP&middot;404 <span>Conv</span></div>
-        <div class="tag">Batch Sample Prep</div>
+      <div class="home-tiles">
+        <div class="nav-tile" id="tileConvert">
+          <svg class="tile-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M4 12h11M11 7l4 5-4 5" stroke="#0c0c0a" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter"/>
+            <path d="M20 5v14" stroke="#0c0c0a" stroke-width="2.4" stroke-linecap="square"/>
+          </svg>
+          <div>
+            <div class="tile-title">Convert</div>
+            <div class="tile-desc">Batch fix WAV/MP3/AIFF to 16-bit / 48kHz for the sampler.</div>
+          </div>
+        </div>
+        <div class="nav-tile" id="tileChop">
+          <svg class="tile-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M3 12h3l2-7 3 14 3-11 2 4h5" stroke="#0c0c0a" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter"/>
+          </svg>
+          <div>
+            <div class="tile-title">Chop / Loop</div>
+            <div class="tile-desc">Slice one track into samples, find a loop, export.</div>
+          </div>
+        </div>
       </div>
-      <div class="brand-stamp">Web Ed.</div>
-    </div>
 
-    <div class="stat-row" id="statRow">
-      <div class="stat-tile total">
-        <div class="stat-num" id="statTotal">0</div>
-        <div class="stat-label">Tracks</div>
+      <div class="home-info">
+        <b>How it works:</b> CONVERT &rarr; CHOP &rarr; LOOP &rarr; EXPORT.<br>
+        Everything runs on this device &mdash; nothing is uploaded anywhere.
       </div>
-      <div class="stat-tile ok">
-        <div class="stat-num" id="statOk">0</div>
-        <div class="stat-label">Good</div>
-      </div>
-      <div class="stat-tile asis">
-        <div class="stat-num" id="statAsis">0</div>
-        <div class="stat-label">As-is</div>
-      </div>
-      <div class="stat-tile err">
-        <div class="stat-num" id="statErr">0</div>
-        <div class="stat-label">Err</div>
-      </div>
-    </div>
+      <div class="home-foot">Unofficial &middot; not affiliated with Roland &middot; MIT</div>
+    </section>
 
-    <div class="screen-frame">
-      <div class="screen" id="screen" tabindex="0" role="button" aria-label="Drop audio files or folders here, or click to browse">
-        <div class="screen-idle" id="screenIdle">
-          <div class="drop-icon">▾ ▾ ▾</div>
-          <div class="drop-title">Drop samples or a folder here</div>
-          <div class="drop-sub">or <span class="browse-link">click to browse</span> &mdash; analysis starts automatically</div>
+    <!-- ============ CONVERT ============ -->
+    <section class="screen" id="screenConvert">
+      <div class="topbar">
+        <button class="back-btn" data-nav="home" aria-label="Back">&#8592;</button>
+        <div>
+          <h2>Convert</h2>
+          <div class="sub">PCM WAV &middot; 16-bit &middot; 48kHz</div>
+        </div>
+      </div>
+
+      <div class="stat-row" id="statRow">
+        <div class="stat-tile"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Tracks</div></div>
+        <div class="stat-tile"><div class="stat-num" id="statOk">0</div><div class="stat-label">Good</div></div>
+        <div class="stat-tile"><div class="stat-num" id="statAsis">0</div><div class="stat-label">As-is</div></div>
+        <div class="stat-tile" id="statErrTile"><div class="stat-num" id="statErr">0</div><div class="stat-label">Err</div></div>
+      </div>
+
+      <div class="drop" id="screen" tabindex="0" role="button" aria-label="Drop audio files or folders here, or click to browse">
+        <div class="drop-idle" id="screenIdle">
+          <div class="di">&#9662; &#9662; &#9662;</div>
+          <div class="dt">Drop samples or a folder</div>
+          <div class="ds">or <span class="dl">click to browse</span> &mdash; analysis starts automatically</div>
         </div>
         <div id="screenBody" hidden></div>
       </div>
-    </div>
 
-    <div class="meter-row">
-      <div class="meter" id="meter"></div>
-      <div class="meter-pct" id="meterPct">0%</div>
-    </div>
-
-    <div class="controls">
-      <button class="pad-btn" id="clearBtn" disabled>Clear</button>
-      <button class="pad-btn download" id="downloadBtn">&#8681; Download ZIP</button>
-    </div>
-
-    <input type="file" id="fileInput" multiple accept="audio/*,.wav,.mp3,.aif,.aiff,.flac,.ogg,.m4a,.wma,.au">
-
-    <div class="footer">
-      <div class="footer-rule"></div>
-      <div class="footer-text">
-        <b>Output:</b> 16-bit / 48kHz PCM WAV, filenames and folders preserved in the ZIP.<br>
-        Runs entirely client-side. Unofficial fan-made tool, not affiliated with Roland. MIT licensed.
+      <div class="meter-row">
+        <div class="meter" id="meter"></div>
+        <div class="meter-pct" id="meterPct">0%</div>
       </div>
-      <div class="barcode-row">
-        <div class="barcode" aria-hidden="true"></div>
-        <div class="barcode-code">SP404&middot;WAV&middot;WEB</div>
+
+      <div class="controls-2">
+        <button class="pill" id="clearBtn" disabled>Clear</button>
+        <button class="pill solid download" id="downloadBtn">&#8681; Download ZIP</button>
       </div>
-    </div>
+
+      <input type="file" id="fileInput" multiple accept="audio/*,.wav,.mp3,.aif,.aiff,.flac,.ogg,.m4a,.wma,.au">
+
+      <div class="conv-foot">Filenames and folders preserved in the ZIP. No loudness/level changes applied.</div>
+    </section>
+
+    <!-- ============ CHOP / LOOP ============ -->
+    <section class="screen" id="screenChop">
+      <div class="topbar">
+        <button class="back-btn" data-nav="home" aria-label="Back">&#8592;</button>
+        <div>
+          <h2>Chop / Loop</h2>
+          <div class="sub" id="chopSub">No track loaded</div>
+        </div>
+      </div>
+
+      <div class="chop-drop" id="chopDrop">
+        <div class="dt">&#9662; Drop a track</div>
+        <div class="ds">or click to browse &mdash; one file at a time</div>
+      </div>
+      <input type="file" id="chopFileInput" accept="audio/*,.wav,.mp3,.aif,.aiff,.flac,.ogg,.m4a">
+
+      <div id="chopWorkspace" hidden>
+        <div class="chop-toolbar">
+          <button class="icon-btn" id="playBtn" aria-label="Play/Pause">&#9654;</button>
+          <button class="icon-btn" id="zoomOutBtn" aria-label="Zoom out">&minus;</button>
+          <div class="zoom-label" id="zoomLabel">1x</div>
+          <button class="icon-btn" id="zoomInBtn" aria-label="Zoom in">+</button>
+          <button class="icon-btn" id="markBtn" aria-label="Toggle add-marker mode" title="Click waveform to add a marker">M</button>
+          <button class="icon-btn active" id="snapBtn" aria-label="Toggle snap to zero crossing" title="Snap to zero crossing">0&#8942;</button>
+          <div class="chop-filename" id="chopFilename"></div>
+        </div>
+
+        <div class="wave-frame">
+          <div class="wave-wrap" id="waveWrap">
+            <div class="wave-stage" id="waveStage">
+              <canvas id="waveCanvas"></canvas>
+              <canvas id="overlayCanvas"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="chop-hint">Click waveform to seek &middot; toggle <b>M</b> to add markers &middot; drag a marker tab to move it &middot; double-click a marker to delete it</div>
+
+        <div class="mode-row" id="modeRow">
+          <div class="mode-tile active" data-mode="transient">Transient</div>
+          <div class="mode-tile" data-mode="equal">Equal</div>
+          <div class="mode-tile" data-mode="manual">Manual</div>
+        </div>
+
+        <div class="mode-panel" id="panelTransient">
+          <div class="sens-label"><span>Sensitivity</span><span id="sensVal">50</span></div>
+          <input type="range" id="sensSlider" min="0" max="100" value="50">
+          <div class="row" style="margin-top:10px;">
+            <button class="pill solid" id="autoChopBtn" style="flex:1;">Auto Chop</button>
+            <button class="pill" id="clearMarkersBtn1">Clear</button>
+          </div>
+        </div>
+
+        <div class="mode-panel" id="panelEqual" hidden>
+          <div class="row">
+            <div class="parts-row" id="partsRow">
+              <div class="part-chip" data-parts="4">4</div>
+              <div class="part-chip active" data-parts="8">8</div>
+              <div class="part-chip" data-parts="16">16</div>
+              <div class="part-chip" data-parts="32">32</div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="pill solid" id="splitBtn" style="flex:1;">Split</button>
+            <button class="pill" id="clearMarkersBtn2">Clear</button>
+          </div>
+        </div>
+
+        <div class="mode-panel" id="panelManual" hidden>
+          Manual mode &mdash; toggle <b>M</b> above, then click the waveform to drop markers. Drag tabs to fine-tune, double-click to remove.
+          <div class="row" style="margin-top:10px;">
+            <button class="pill" id="clearMarkersBtn3" style="flex:1;">Clear All Markers</button>
+          </div>
+        </div>
+
+        <div class="samples-head">
+          <h3 id="samplesCount">0 Samples</h3>
+        </div>
+        <div class="samples-row" id="samplesRow"></div>
+
+        <div class="sample-actions">
+          <button class="pill" id="playSampleBtn" disabled>&#9654; Play Sample</button>
+          <button class="pill" id="loopBtn" disabled>&#8635; Loop</button>
+        </div>
+
+        <div class="export-actions">
+          <button class="pill" id="exportSelectedBtn" disabled>Export Selected</button>
+          <button class="pill solid" id="exportAllBtn" disabled>Export All</button>
+        </div>
+        <div class="chop-hint">Export renders each sample fresh from the source audio &mdash; 16-bit / 48kHz, no normalization.</div>
+      </div>
+    </section>
+
   </div>
 </div>
 
@@ -418,171 +583,92 @@
 (function(){
   "use strict";
 
+  /* =========================================================
+     Pixel stool icon (generative, shared)
+     ========================================================= */
+  function stoolCells(){
+    var cells = [];
+    for (var r=1; r<=3; r++){
+      var c0 = r===1?3:2, c1 = r===1?10:11;
+      for (var c=c0;c<=c1;c++) cells.push([c,r]);
+    }
+    for (var rr=4; rr<=15; rr++){
+      var leftCol = rr<=7?3:(rr<=11?2:1);
+      var rightCol = rr<=7?10:(rr<=11?11:12);
+      cells.push([leftCol,rr]);
+      cells.push([6,rr]);
+      cells.push([7,rr]);
+      cells.push([rightCol,rr]);
+    }
+    for (var c2=2;c2<=11;c2++) cells.push([c2,11]);
+    return cells;
+  }
+  function renderPixelIcon(svgEl, cells, cols, rows){
+    var cell = 3;
+    svgEl.setAttribute('viewBox', '0 0 ' + (cols*cell) + ' ' + (rows*cell));
+    var seen = {};
+    var frag = document.createDocumentFragment();
+    cells.forEach(function(p){
+      var key = p[0]+','+p[1];
+      if (seen[key]) return;
+      seen[key] = true;
+      var rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      rect.setAttribute('x', p[0]*cell);
+      rect.setAttribute('y', p[1]*cell);
+      rect.setAttribute('width', cell);
+      rect.setAttribute('height', cell);
+      rect.setAttribute('fill', 'currentColor');
+      frag.appendChild(rect);
+    });
+    svgEl.appendChild(frag);
+  }
+  renderPixelIcon(document.getElementById('homeLogo'), stoolCells(), 14, 16);
+
+  /* =========================================================
+     Navigation
+     ========================================================= */
+  var screens = {
+    home: document.getElementById('screenHome'),
+    convert: document.getElementById('screenConvert'),
+    chop: document.getElementById('screenChop')
+  };
+  function showScreen(name){
+    Object.keys(screens).forEach(function(k){
+      screens[k].classList.toggle('active', k === name);
+    });
+    if (name !== 'chop') Chop.stopAll();
+  }
+  document.getElementById('tileConvert').addEventListener('click', function(){ showScreen('convert'); });
+  document.getElementById('tileChop').addEventListener('click', function(){ showScreen('chop'); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-nav="home"]'), function(btn){
+    btn.addEventListener('click', function(){ showScreen('home'); });
+  });
+
+  /* =========================================================
+     Shared helpers
+     ========================================================= */
   var EXT_RE = /\.(wav|mp3|aif|aiff|flac|ogg|oga|m4a|wma|au)$/i;
   var TARGET_RATE = 48000;
-  var METER_SEGMENTS = 28;
-
-  var els = {
-    screen: document.getElementById('screen'),
-    screenIdle: document.getElementById('screenIdle'),
-    screenBody: document.getElementById('screenBody'),
-    fileInput: document.getElementById('fileInput'),
-    clearBtn: document.getElementById('clearBtn'),
-    downloadBtn: document.getElementById('downloadBtn'),
-    meter: document.getElementById('meter'),
-    meterPct: document.getElementById('meterPct'),
-    statTotal: document.getElementById('statTotal'),
-    statOk: document.getElementById('statOk'),
-    statAsis: document.getElementById('statAsis'),
-    statErr: document.getElementById('statErr')
-  };
-
-  // segmented meter
-  var meterSegs = [];
-  for (var m = 0; m < METER_SEGMENTS; m++) {
-    var seg = document.createElement('i');
-    els.meter.appendChild(seg);
-    meterSegs.push(seg);
-  }
-  function setMeter(pct) {
-    var lit = Math.round((pct / 100) * METER_SEGMENTS);
-    for (var i = 0; i < meterSegs.length; i++) {
-      meterSegs[i].classList.toggle('on', i < lit);
-    }
-    els.meterPct.textContent = Math.round(pct) + '%';
-  }
-  function setStats(counts) {
-    els.statTotal.textContent = counts.total;
-    els.statOk.textContent = counts.converted;
-    els.statAsis.textContent = counts.skipped;
-    els.statErr.textContent = counts.failed;
-  }
-
-  var queue = [];       // {file, relPath}
-  var zipBlobCache = null;
-  var processing = false;
 
   function fmtBytes(n) {
     if (n < 1024) return n + ' B';
     if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
     return (n / (1024 * 1024)).toFixed(1) + ' MB';
   }
-
-  function isAcceptable(name) {
-    if (!name || name.charAt(0) === '.' || name.indexOf('._') === 0) return false;
-    return EXT_RE.test(name);
+  function fmtTime(s){
+    if (!isFinite(s)) return '0:00.0';
+    var m = Math.floor(s/60);
+    var sec = s - m*60;
+    return m + ':' + (sec<10?'0':'') + sec.toFixed(1);
   }
-
-  function addFiles(entries) {
-    var added = 0;
-    for (var i = 0; i < entries.length; i++) {
-      var e = entries[i];
-      if (isAcceptable(e.relPath)) { queue.push(e); added++; }
-    }
-    renderIdleOrSummary();
-    els.clearBtn.disabled = queue.length === 0;
-    setStats({ total: queue.length, converted: 0, skipped: 0, failed: 0 });
-    if (added > 0 && !processing) {
-      runConversion();
-    }
-    return added;
-  }
-
-  function clearAll() {
-    queue = [];
-    zipBlobCache = null;
-    els.clearBtn.disabled = true;
-    els.downloadBtn.classList.remove('show');
-    setMeter(0);
-    setStats({ total: 0, converted: 0, skipped: 0, failed: 0 });
-    els.screenIdle.hidden = false;
-    els.screenBody.hidden = true;
-    els.screenBody.innerHTML = '';
-  }
-
-  function renderIdleOrSummary() {
-    if (queue.length === 0) {
-      els.screenIdle.hidden = false;
-      els.screenBody.hidden = true;
-      return;
-    }
-    els.screenIdle.hidden = true;
-    els.screenBody.hidden = false;
-    var totalBytes = queue.reduce(function (s, e) { return s + (e.file.size || 0); }, 0);
-    els.screenBody.innerHTML =
-      '<div class="queue-summary"><b>' + queue.length + '</b> file' + (queue.length === 1 ? '' : 's') +
-      ' queued &middot; ' + fmtBytes(totalBytes) +
-      '<br>Analyzing automatically&hellip;</div>';
-  }
-
-  function appendLogLine(cls, tag, name, note) {
-    var row = document.createElement('div');
-    row.className = 'log-line ' + cls;
-    row.innerHTML =
-      '<span class="tag">' + tag + '</span>' +
-      '<span class="name">' + escapeHtml(name) + '</span> ' +
-      '<span class="note">' + escapeHtml(note) + '</span>';
-    els.screenBody.appendChild(row);
-    els.screen.scrollTop = els.screen.scrollHeight;
-  }
-
   function escapeHtml(s) {
     return String(s).replace(/[&<>]/g, function (c) {
       return c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;';
     });
   }
-
-  function renderSummary(counts) {
-    var line = document.createElement('div');
-    line.className = 'summary-line';
-    line.innerHTML =
-      'Done &mdash; <span class="n">' + counts.total + '</span> analyzed, ' +
-      '<span class="n">' + counts.converted + '</span> converted, ' +
-      '<span class="n">' + counts.skipped + '</span> already OK, ' +
-      '<span class="n fail">' + counts.failed + '</span> failed.';
-    els.screenBody.appendChild(line);
-    els.screen.scrollTop = els.screen.scrollHeight;
+  function writeStr(dv, off, str) {
+    for (var i = 0; i < str.length; i++) dv.setUint8(off + i, str.charCodeAt(i));
   }
-
-  // ---------------- audio conversion ----------------
-
-  var offlineCtx = null;
-  function getCtx() {
-    if (!offlineCtx) {
-      var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-      offlineCtx = new OAC(1, 1, TARGET_RATE);
-    }
-    return offlineCtx;
-  }
-
-  function sniffWav(bytes) {
-    if (bytes.length < 44) return null;
-    var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    if (str4(dv, 0) !== 'RIFF' || str4(dv, 8) !== 'WAVE') return null;
-    var offset = 12;
-    var fmt = null;
-    while (offset + 8 <= dv.byteLength) {
-      var id = str4(dv, offset);
-      var size = dv.getUint32(offset + 4, true);
-      if (id === 'fmt ') {
-        fmt = {
-          audioFormat: dv.getUint16(offset + 8, true),
-          numChannels: dv.getUint16(offset + 10, true),
-          sampleRate: dv.getUint32(offset + 12, true),
-          bitsPerSample: dv.getUint16(offset + 22, true)
-        };
-        break;
-      }
-      offset += 8 + size + (size % 2);
-    }
-    return fmt;
-  }
-  function str4(dv, off) {
-    var s = '';
-    for (var i = 0; i < 4; i++) s += String.fromCharCode(dv.getUint8(off + i));
-    return s;
-  }
-
   function encodeWav16(audioBuffer) {
     var numCh = audioBuffer.numberOfChannels;
     var rate = audioBuffer.sampleRate;
@@ -604,7 +690,6 @@
     dv.setUint16(34, 16, true);
     writeStr(dv, 36, 'data');
     dv.setUint32(40, dataSize, true);
-
     var channels = [];
     for (var c = 0; c < numCh; c++) channels.push(audioBuffer.getChannelData(c));
     var off = 44;
@@ -618,37 +703,6 @@
     }
     return new Uint8Array(buf);
   }
-  function writeStr(dv, off, str) {
-    for (var i = 0; i < str.length; i++) dv.setUint8(off + i, str.charCodeAt(i));
-  }
-
-  function swapExt(name, newExt) {
-    var dot = name.lastIndexOf('.');
-    var base = dot === -1 ? name : name.substring(0, dot);
-    return base + newExt;
-  }
-
-  function processOne(entry) {
-    return entry.file.arrayBuffer().then(function (buf) {
-      var bytes = new Uint8Array(buf);
-      var lowerName = entry.file.name.toLowerCase();
-      if (lowerName.slice(-4) === '.wav') {
-        var fmt = sniffWav(bytes);
-        if (fmt && fmt.audioFormat === 1 && fmt.sampleRate === TARGET_RATE && fmt.bitsPerSample === 16) {
-          return { status: 'skipped', bytes: bytes, outPath: entry.relPath, note: 'already 16-bit/48kHz, kept as-is' };
-        }
-      }
-      return getCtx().decodeAudioData(buf).then(function (audioBuffer) {
-        var wavBytes = encodeWav16(audioBuffer);
-        var outPath = swapExt(entry.relPath, '.wav');
-        return { status: 'converted', bytes: wavBytes, outPath: outPath, note: 'converted to 48kHz/16-bit' };
-      });
-    })['catch'](function (err) {
-      return { status: 'failed', bytes: null, outPath: entry.relPath, note: 'could not decode (' + (err && err.message ? err.message : 'unreadable') + ')' };
-    });
-  }
-
-  // ---------------- minimal ZIP writer (STORE, no compression) ----------------
 
   var CRC_TABLE = (function () {
     var table = new Uint32Array(256);
@@ -661,174 +715,44 @@
   })();
   function crc32(bytes) {
     var crc = 0xFFFFFFFF;
-    for (var i = 0; i < bytes.length; i++) {
-      crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
-    }
+    for (var i = 0; i < bytes.length; i++) crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
     return (crc ^ 0xFFFFFFFF) >>> 0;
   }
-
   function MiniZip() { this.entries = []; }
   MiniZip.prototype.addFile = function (path, bytes) {
     this.entries.push({ path: path.replace(/\\/g, '/'), bytes: bytes });
   };
   MiniZip.prototype.generate = function () {
-    var parts = [];
-    var central = [];
-    var offset = 0;
+    var parts = [], central = [], offset = 0;
     var encoder = new TextEncoder();
-
     this.entries.forEach(function (entry) {
       var nameBytes = encoder.encode(entry.path);
       var bytes = entry.bytes;
       var crc = crc32(bytes);
-      var localHeader = new ArrayBuffer(30);
-      var dv = new DataView(localHeader);
-      dv.setUint32(0, 0x04034b50, true);
-      dv.setUint16(4, 20, true);
-      dv.setUint16(6, 0, true);
-      dv.setUint16(8, 0, true);
-      dv.setUint16(10, 0, true);
-      dv.setUint16(12, 0, true);
-      dv.setUint32(14, crc, true);
-      dv.setUint32(18, bytes.length, true);
-      dv.setUint32(22, bytes.length, true);
-      dv.setUint16(26, nameBytes.length, true);
-      dv.setUint16(28, 0, true);
+      var lh = new ArrayBuffer(30), dv = new DataView(lh);
+      dv.setUint32(0, 0x04034b50, true); dv.setUint16(4, 20, true); dv.setUint16(6, 0, true);
+      dv.setUint16(8, 0, true); dv.setUint16(10, 0, true); dv.setUint16(12, 0, true);
+      dv.setUint32(14, crc, true); dv.setUint32(18, bytes.length, true); dv.setUint32(22, bytes.length, true);
+      dv.setUint16(26, nameBytes.length, true); dv.setUint16(28, 0, true);
+      parts.push(new Uint8Array(lh), nameBytes, bytes);
 
-      parts.push(new Uint8Array(localHeader), nameBytes, bytes);
-
-      var centralHeader = new ArrayBuffer(46);
-      var cdv = new DataView(centralHeader);
-      cdv.setUint32(0, 0x02014b50, true);
-      cdv.setUint16(4, 20, true);
-      cdv.setUint16(6, 20, true);
-      cdv.setUint16(8, 0, true);
-      cdv.setUint16(10, 0, true);
-      cdv.setUint16(12, 0, true);
-      cdv.setUint16(14, 0, true);
-      cdv.setUint32(16, crc, true);
-      cdv.setUint32(20, bytes.length, true);
-      cdv.setUint32(24, bytes.length, true);
-      cdv.setUint16(28, nameBytes.length, true);
-      cdv.setUint16(30, 0, true);
-      cdv.setUint16(32, 0, true);
-      cdv.setUint16(34, 0, true);
-      cdv.setUint16(36, 0, true);
-      cdv.setUint32(38, 0, true);
-      cdv.setUint32(42, offset, true);
-
-      central.push(new Uint8Array(centralHeader), nameBytes);
-      offset += localHeader.byteLength + nameBytes.length + bytes.length;
+      var ch = new ArrayBuffer(46), cdv = new DataView(ch);
+      cdv.setUint32(0, 0x02014b50, true); cdv.setUint16(4, 20, true); cdv.setUint16(6, 20, true);
+      cdv.setUint16(8, 0, true); cdv.setUint16(10, 0, true); cdv.setUint16(12, 0, true); cdv.setUint16(14, 0, true);
+      cdv.setUint32(16, crc, true); cdv.setUint32(20, bytes.length, true); cdv.setUint32(24, bytes.length, true);
+      cdv.setUint16(28, nameBytes.length, true); cdv.setUint16(30, 0, true); cdv.setUint16(32, 0, true);
+      cdv.setUint16(34, 0, true); cdv.setUint16(36, 0, true); cdv.setUint32(38, 0, true); cdv.setUint32(42, offset, true);
+      central.push(new Uint8Array(ch), nameBytes);
+      offset += lh.byteLength + nameBytes.length + bytes.length;
     });
-
-    var centralStart = offset;
-    var centralSize = 0;
+    var centralStart = offset, centralSize = 0;
     central.forEach(function (p) { centralSize += p.length; });
-
-    var eocd = new ArrayBuffer(22);
-    var edv = new DataView(eocd);
-    edv.setUint32(0, 0x06054b50, true);
-    edv.setUint16(4, 0, true);
-    edv.setUint16(6, 0, true);
-    edv.setUint16(8, this.entries.length, true);
-    edv.setUint16(10, this.entries.length, true);
-    edv.setUint32(12, centralSize, true);
-    edv.setUint32(16, centralStart, true);
-    edv.setUint16(20, 0, true);
-
-    var all = parts.concat(central, [new Uint8Array(eocd)]);
-    return new Blob(all, { type: 'application/zip' });
+    var eocd = new ArrayBuffer(22), edv = new DataView(eocd);
+    edv.setUint32(0, 0x06054b50, true); edv.setUint16(4, 0, true); edv.setUint16(6, 0, true);
+    edv.setUint16(8, this.entries.length, true); edv.setUint16(10, this.entries.length, true);
+    edv.setUint32(12, centralSize, true); edv.setUint32(16, centralStart, true); edv.setUint16(20, 0, true);
+    return new Blob(parts.concat(central, [new Uint8Array(eocd)]), { type: 'application/zip' });
   };
-
-  // ---------------- drag & drop / browse ----------------
-
-  function traverseEntry(entry, path) {
-    return new Promise(function (resolve) {
-      if (entry.isFile) {
-        entry.file(function (file) {
-          resolve([{ file: file, relPath: path + file.name }]);
-        }, function () { resolve([]); });
-      } else if (entry.isDirectory) {
-        var reader = entry.createReader();
-        var all = [];
-        (function readMore() {
-          reader.readEntries(function (batch) {
-            if (!batch.length) {
-              Promise.all(all.map(function (child) {
-                return traverseEntry(child, path + entry.name + '/');
-              })).then(function (nested) {
-                resolve(nested.reduce(function (a, b) { return a.concat(b); }, []));
-              });
-            } else {
-              all = all.concat(batch);
-              readMore();
-            }
-          }, function () { resolve([]); });
-        })();
-      } else {
-        resolve([]);
-      }
-    });
-  }
-
-  function handleDataTransfer(dataTransfer) {
-    var items = dataTransfer.items;
-    if (items && items.length && items[0].webkitGetAsEntry) {
-      var entries = [];
-      for (var i = 0; i < items.length; i++) {
-        var entry = items[i].webkitGetAsEntry();
-        if (entry) entries.push(entry);
-      }
-      return Promise.all(entries.map(function (e) { return traverseEntry(e, ''); }))
-        .then(function (nested) { return nested.reduce(function (a, b) { return a.concat(b); }, []); });
-    }
-    var files = dataTransfer.files;
-    var flat = [];
-    for (var j = 0; j < files.length; j++) flat.push({ file: files[j], relPath: files[j].name });
-    return Promise.resolve(flat);
-  }
-
-  els.screen.addEventListener('click', function () {
-    if (processing) return;
-    els.fileInput.click();
-  });
-  els.screen.addEventListener('keydown', function (e) {
-    if ((e.key === 'Enter' || e.key === ' ') && !processing) { e.preventDefault(); els.fileInput.click(); }
-  });
-  els.fileInput.addEventListener('change', function () {
-    var flat = [];
-    for (var i = 0; i < els.fileInput.files.length; i++) {
-      flat.push({ file: els.fileInput.files[i], relPath: els.fileInput.files[i].name });
-    }
-    addFiles(flat);
-    els.fileInput.value = '';
-  });
-  ['dragenter', 'dragover'].forEach(function (evt) {
-    els.screen.addEventListener(evt, function (e) {
-      e.preventDefault();
-      if (!processing) els.screen.classList.add('drag-over');
-    });
-  });
-  ['dragleave', 'drop'].forEach(function (evt) {
-    els.screen.addEventListener(evt, function (e) {
-      e.preventDefault();
-      els.screen.classList.remove('drag-over');
-    });
-  });
-  els.screen.addEventListener('drop', function (e) {
-    if (processing) return;
-    handleDataTransfer(e.dataTransfer).then(addFiles);
-  });
-
-  els.clearBtn.addEventListener('click', function () {
-    if (processing) return;
-    clearAll();
-  });
-
-  els.downloadBtn.addEventListener('click', function () {
-    if (!zipBlobCache) return;
-    downloadFile(zipBlobCache, 'SP404-converted.zip');
-  });
 
   function downloadFile(blob, filename) {
     if (window.claude && typeof window.claude.use === 'function') {
@@ -843,74 +767,911 @@
   function fallbackDownload(blob, filename) {
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   }
 
-  function runConversion() {
-    processing = true;
-    els.clearBtn.disabled = true;
-    els.downloadBtn.classList.remove('show');
-    els.screenBody.innerHTML = '';
-    setMeter(0);
+  /* =========================================================
+     CONVERT screen
+     ========================================================= */
+  (function ConvertModule(){
+    var els = {
+      screen: document.getElementById('screen'),
+      screenIdle: document.getElementById('screenIdle'),
+      screenBody: document.getElementById('screenBody'),
+      fileInput: document.getElementById('fileInput'),
+      clearBtn: document.getElementById('clearBtn'),
+      downloadBtn: document.getElementById('downloadBtn'),
+      meter: document.getElementById('meter'),
+      meterPct: document.getElementById('meterPct'),
+      statTotal: document.getElementById('statTotal'),
+      statOk: document.getElementById('statOk'),
+      statAsis: document.getElementById('statAsis'),
+      statErr: document.getElementById('statErr'),
+      statErrTile: document.getElementById('statErrTile')
+    };
+    var METER_SEGMENTS = 26;
+    var meterSegs = [];
+    for (var m = 0; m < METER_SEGMENTS; m++) {
+      var seg = document.createElement('i');
+      els.meter.appendChild(seg);
+      meterSegs.push(seg);
+    }
+    function setMeter(pct) {
+      var lit = Math.round((pct / 100) * METER_SEGMENTS);
+      for (var i = 0; i < meterSegs.length; i++) meterSegs[i].classList.toggle('on', i < lit);
+      els.meterPct.textContent = Math.round(pct) + '%';
+    }
+    function setStats(counts) {
+      els.statTotal.textContent = counts.total;
+      els.statOk.textContent = counts.converted;
+      els.statAsis.textContent = counts.skipped;
+      els.statErr.textContent = counts.failed;
+      els.statErrTile.classList.toggle('hot', counts.failed > 0);
+    }
 
-    var total = queue.length;
-    var done = 0;
-    var counts = { total: total, converted: 0, skipped: 0, failed: 0 };
-    setStats(counts);
-    var zip = new MiniZip();
-    var reportLines = [];
+    var queue = [], zipBlobCache = null, processing = false;
 
-    function next(i) {
-      if (i >= queue.length) return finish();
-      return processOne(queue[i]).then(function (res) {
-        done++;
-        setMeter((done / total) * 100);
-        if (res.status === 'converted') {
-          counts.converted++;
-          zip.addFile(res.outPath, res.bytes);
-          appendLogLine('ok', '✓', res.outPath, res.note);
-        } else if (res.status === 'skipped') {
-          counts.skipped++;
-          zip.addFile(res.outPath, res.bytes);
-          appendLogLine('skip', '•', res.outPath, res.note);
-        } else {
-          counts.failed++;
-          appendLogLine('fail', '✕', res.outPath, res.note);
+    function isAcceptable(name) {
+      if (!name || name.charAt(0) === '.' || name.indexOf('._') === 0) return false;
+      return EXT_RE.test(name);
+    }
+    function addFiles(entries) {
+      var added = 0;
+      for (var i = 0; i < entries.length; i++) {
+        if (isAcceptable(entries[i].relPath)) { queue.push(entries[i]); added++; }
+      }
+      renderIdleOrSummary();
+      els.clearBtn.disabled = queue.length === 0;
+      setStats({ total: queue.length, converted: 0, skipped: 0, failed: 0 });
+      if (added > 0 && !processing) runConversion();
+      return added;
+    }
+    function clearAll() {
+      queue = []; zipBlobCache = null;
+      els.clearBtn.disabled = true;
+      els.downloadBtn.classList.remove('show');
+      setMeter(0);
+      setStats({ total: 0, converted: 0, skipped: 0, failed: 0 });
+      els.screenIdle.hidden = false;
+      els.screenBody.hidden = true;
+      els.screenBody.innerHTML = '';
+    }
+    function renderIdleOrSummary() {
+      if (queue.length === 0) { els.screenIdle.hidden = false; els.screenBody.hidden = true; return; }
+      els.screenIdle.hidden = true; els.screenBody.hidden = false;
+      var totalBytes = queue.reduce(function (s, e) { return s + (e.file.size || 0); }, 0);
+      els.screenBody.innerHTML =
+        '<div class="q-summary"><b>' + queue.length + '</b> file' + (queue.length === 1 ? '' : 's') +
+        ' queued &middot; ' + fmtBytes(totalBytes) + '<br>Analyzing automatically&hellip;</div>';
+    }
+    function appendLogLine(cls, tag, name, note) {
+      var row = document.createElement('div');
+      row.className = 'log-line ' + cls;
+      row.innerHTML = '<span class="tag">' + tag + '</span><span class="name">' + escapeHtml(name) + '</span> <span class="note">' + escapeHtml(note) + '</span>';
+      els.screenBody.appendChild(row);
+      els.screen.scrollTop = els.screen.scrollHeight;
+    }
+    function renderSummary(counts) {
+      var line = document.createElement('div');
+      line.className = 'summary-line';
+      line.innerHTML = 'Done &mdash; <span class="n">' + counts.total + '</span> analyzed, <span class="n">' + counts.converted +
+        '</span> converted, <span class="n">' + counts.skipped + '</span> already OK, <span class="n">' + counts.failed + '</span> failed.';
+      els.screenBody.appendChild(line);
+      els.screen.scrollTop = els.screen.scrollHeight;
+    }
+
+    var offlineCtx = null;
+    function getCtx() {
+      if (!offlineCtx) {
+        var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        offlineCtx = new OAC(1, 1, TARGET_RATE);
+      }
+      return offlineCtx;
+    }
+    function str4(dv, off) {
+      var s = '';
+      for (var i = 0; i < 4; i++) s += String.fromCharCode(dv.getUint8(off + i));
+      return s;
+    }
+    function sniffWav(bytes) {
+      if (bytes.length < 44) return null;
+      var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      if (str4(dv, 0) !== 'RIFF' || str4(dv, 8) !== 'WAVE') return null;
+      var offset = 12, fmt = null;
+      while (offset + 8 <= dv.byteLength) {
+        var id = str4(dv, offset), size = dv.getUint32(offset + 4, true);
+        if (id === 'fmt ') {
+          fmt = { audioFormat: dv.getUint16(offset + 8, true), numChannels: dv.getUint16(offset + 10, true),
+            sampleRate: dv.getUint32(offset + 12, true), bitsPerSample: dv.getUint16(offset + 22, true) };
+          break;
         }
-        setStats(counts);
-        reportLines.push(res.status.toUpperCase() + '  ' + res.outPath + '  (' + res.note + ')');
-        return next(i + 1);
+        offset += 8 + size + (size % 2);
+      }
+      return fmt;
+    }
+    function swapExt(name, newExt) {
+      var dot = name.lastIndexOf('.');
+      return (dot === -1 ? name : name.substring(0, dot)) + newExt;
+    }
+    function processOne(entry) {
+      return entry.file.arrayBuffer().then(function (buf) {
+        var bytes = new Uint8Array(buf);
+        if (entry.file.name.toLowerCase().slice(-4) === '.wav') {
+          var fmt = sniffWav(bytes);
+          if (fmt && fmt.audioFormat === 1 && fmt.sampleRate === TARGET_RATE && fmt.bitsPerSample === 16) {
+            return { status: 'skipped', bytes: bytes, outPath: entry.relPath, note: 'already 16-bit/48kHz, kept as-is' };
+          }
+        }
+        return getCtx().decodeAudioData(buf).then(function (audioBuffer) {
+          var wavBytes = encodeWav16(audioBuffer);
+          return { status: 'converted', bytes: wavBytes, outPath: swapExt(entry.relPath, '.wav'), note: 'converted to 48kHz/16-bit' };
+        });
+      })['catch'](function (err) {
+        return { status: 'failed', bytes: null, outPath: entry.relPath, note: 'could not decode (' + (err && err.message ? err.message : 'unreadable') + ')' };
       });
     }
 
-    function finish() {
-      var reportText =
-        'SP-404 WAV Converter — conversion report\n' +
-        counts.total + ' files analyzed: ' + counts.converted + ' converted, ' +
-        counts.skipped + ' already OK, ' + counts.failed + ' failed.\n\n' +
-        reportLines.join('\n') + '\n';
-      zip.addFile('CONVERSION_REPORT.txt', new TextEncoder().encode(reportText));
-
-      renderSummary(counts);
-      zipBlobCache = zip.generate();
-
-      processing = false;
-      els.clearBtn.disabled = false;
-      if (counts.converted + counts.skipped > 0) {
-        els.downloadBtn.classList.add('show');
+    function traverseEntry(entry, path) {
+      return new Promise(function (resolve) {
+        if (entry.isFile) {
+          entry.file(function (file) { resolve([{ file: file, relPath: path + file.name }]); }, function () { resolve([]); });
+        } else if (entry.isDirectory) {
+          var reader = entry.createReader(); var all = [];
+          (function readMore() {
+            reader.readEntries(function (batch) {
+              if (!batch.length) {
+                Promise.all(all.map(function (child) { return traverseEntry(child, path + entry.name + '/'); }))
+                  .then(function (nested) { resolve(nested.reduce(function (a, b) { return a.concat(b); }, [])); });
+              } else { all = all.concat(batch); readMore(); }
+            }, function () { resolve([]); });
+          })();
+        } else { resolve([]); }
+      });
+    }
+    function handleDataTransfer(dataTransfer) {
+      var items = dataTransfer.items;
+      if (items && items.length && items[0].webkitGetAsEntry) {
+        var entries = [];
+        for (var i = 0; i < items.length; i++) { var entry = items[i].webkitGetAsEntry(); if (entry) entries.push(entry); }
+        return Promise.all(entries.map(function (e) { return traverseEntry(e, ''); }))
+          .then(function (nested) { return nested.reduce(function (a, b) { return a.concat(b); }, []); });
       }
+      var files = dataTransfer.files, flat = [];
+      for (var j = 0; j < files.length; j++) flat.push({ file: files[j], relPath: files[j].name });
+      return Promise.resolve(flat);
     }
 
-    next(0);
-  }
+    els.screen.addEventListener('click', function () { if (!processing) els.fileInput.click(); });
+    els.screen.addEventListener('keydown', function (e) {
+      if ((e.key === 'Enter' || e.key === ' ') && !processing) { e.preventDefault(); els.fileInput.click(); }
+    });
+    els.fileInput.addEventListener('change', function () {
+      var flat = [];
+      for (var i = 0; i < els.fileInput.files.length; i++) flat.push({ file: els.fileInput.files[i], relPath: els.fileInput.files[i].name });
+      addFiles(flat);
+      els.fileInput.value = '';
+    });
+    ['dragenter', 'dragover'].forEach(function (evt) {
+      els.screen.addEventListener(evt, function (e) { e.preventDefault(); if (!processing) els.screen.classList.add('drag-over'); });
+    });
+    ['dragleave', 'drop'].forEach(function (evt) {
+      els.screen.addEventListener(evt, function (e) { e.preventDefault(); els.screen.classList.remove('drag-over'); });
+    });
+    els.screen.addEventListener('drop', function (e) { if (!processing) handleDataTransfer(e.dataTransfer).then(addFiles); });
+    els.clearBtn.addEventListener('click', function () { if (!processing) clearAll(); });
+    els.downloadBtn.addEventListener('click', function () { if (zipBlobCache) downloadFile(zipBlobCache, 'SP404-converted.zip'); });
 
-  clearAll();
+    function runConversion() {
+      processing = true;
+      els.clearBtn.disabled = true;
+      els.downloadBtn.classList.remove('show');
+      els.screenBody.innerHTML = '';
+      setMeter(0);
+      var total = queue.length, done = 0;
+      var counts = { total: total, converted: 0, skipped: 0, failed: 0 };
+      setStats(counts);
+      var zip = new MiniZip(), reportLines = [];
+      function next(i) {
+        if (i >= queue.length) return finish();
+        return processOne(queue[i]).then(function (res) {
+          done++; setMeter((done / total) * 100);
+          if (res.status === 'converted') { counts.converted++; zip.addFile(res.outPath, res.bytes); appendLogLine('ok', '✓', res.outPath, res.note); }
+          else if (res.status === 'skipped') { counts.skipped++; zip.addFile(res.outPath, res.bytes); appendLogLine('skip', '•', res.outPath, res.note); }
+          else { counts.failed++; appendLogLine('fail', '✕', res.outPath, res.note); }
+          setStats(counts);
+          reportLines.push(res.status.toUpperCase() + '  ' + res.outPath + '  (' + res.note + ')');
+          return next(i + 1);
+        });
+      }
+      function finish() {
+        var reportText = 'SP404 STOOL — conversion report\n' + counts.total + ' files analyzed: ' + counts.converted +
+          ' converted, ' + counts.skipped + ' already OK, ' + counts.failed + ' failed.\n\n' + reportLines.join('\n') + '\n';
+        zip.addFile('CONVERSION_REPORT.txt', new TextEncoder().encode(reportText));
+        renderSummary(counts);
+        zipBlobCache = zip.generate();
+        processing = false;
+        els.clearBtn.disabled = false;
+        if (counts.converted + counts.skipped > 0) els.downloadBtn.classList.add('show');
+      }
+      next(0);
+    }
+    clearAll();
+  })();
+
+  /* =========================================================
+     CHOP / LOOP screen
+     ========================================================= */
+  var Chop = (function ChopModule(){
+    var els = {
+      drop: document.getElementById('chopDrop'),
+      fileInput: document.getElementById('chopFileInput'),
+      workspace: document.getElementById('chopWorkspace'),
+      sub: document.getElementById('chopSub'),
+      filename: document.getElementById('chopFilename'),
+      playBtn: document.getElementById('playBtn'),
+      zoomOutBtn: document.getElementById('zoomOutBtn'),
+      zoomInBtn: document.getElementById('zoomInBtn'),
+      zoomLabel: document.getElementById('zoomLabel'),
+      markBtn: document.getElementById('markBtn'),
+      snapBtn: document.getElementById('snapBtn'),
+      waveWrap: document.getElementById('waveWrap'),
+      waveStage: document.getElementById('waveStage'),
+      waveCanvas: document.getElementById('waveCanvas'),
+      overlayCanvas: document.getElementById('overlayCanvas'),
+      modeRow: document.getElementById('modeRow'),
+      panelTransient: document.getElementById('panelTransient'),
+      panelEqual: document.getElementById('panelEqual'),
+      panelManual: document.getElementById('panelManual'),
+      sensSlider: document.getElementById('sensSlider'),
+      sensVal: document.getElementById('sensVal'),
+      autoChopBtn: document.getElementById('autoChopBtn'),
+      partsRow: document.getElementById('partsRow'),
+      splitBtn: document.getElementById('splitBtn'),
+      clearMarkersBtn1: document.getElementById('clearMarkersBtn1'),
+      clearMarkersBtn2: document.getElementById('clearMarkersBtn2'),
+      clearMarkersBtn3: document.getElementById('clearMarkersBtn3'),
+      samplesCount: document.getElementById('samplesCount'),
+      samplesRow: document.getElementById('samplesRow'),
+      playSampleBtn: document.getElementById('playSampleBtn'),
+      loopBtn: document.getElementById('loopBtn'),
+      exportSelectedBtn: document.getElementById('exportSelectedBtn'),
+      exportAllBtn: document.getElementById('exportAllBtn')
+    };
+
+    var PX_PER_SEC_MIN = 70; // floor so very short clips still get a workable click target
+    var ZOOM_STEPS = [0.25, 0.5, 1, 2, 4, 8, 16];
+    var CHUNK = 512;
+    var MIN_GAP = 0.03; // seconds, min spacing between markers / file edges
+
+    var state = {
+      audioBuffer: null,
+      fileName: '',
+      peaksMin: null,
+      peaksMax: null,
+      zoomIdx: 2,
+      markers: [],      // [{id, time}]
+      nextMarkerId: 1,
+      mode: 'transient',
+      sensitivity: 50,
+      equalParts: 8,
+      snap: true,
+      markMode: false,
+      selected: 0,
+      cursorTime: 0,
+      playing: false,
+      playStartCtx: 0,
+      playStartOffset: 0,
+      loopPlaying: false,
+      draggingId: null
+    };
+
+    var actx = null;
+    function getActx(){
+      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      return actx;
+    }
+    var currentSource = null;
+    var rafId = null;
+
+    function reset(){
+      stopAll();
+      state.audioBuffer = null;
+      state.fileName = '';
+      state.peaksMin = null; state.peaksMax = null;
+      state.markers = [];
+      state.selected = 0;
+      state.cursorTime = 0;
+      els.workspace.hidden = true;
+      els.drop.hidden = false;
+      els.sub.textContent = 'No track loaded';
+    }
+
+    function loadFile(file){
+      var ctx = getActx();
+      file.arrayBuffer().then(function(buf){
+        return ctx.decodeAudioData(buf);
+      }).then(function(audioBuffer){
+        state.audioBuffer = audioBuffer;
+        state.fileName = file.name;
+        state.markers = [];
+        state.selected = 0;
+        state.cursorTime = 0;
+        state.zoomIdx = 2;
+        computePeaks();
+        els.drop.hidden = true;
+        els.workspace.hidden = false;
+        els.filename.textContent = file.name;
+        els.sub.textContent = fmtTime(audioBuffer.duration) + ' · ' + audioBuffer.numberOfChannels + 'ch · ' + audioBuffer.sampleRate + 'Hz';
+        layoutStage();
+        drawOverlay();
+        renderSamples();
+      })['catch'](function(err){
+        els.sub.textContent = 'Could not load: ' + (err && err.message ? err.message : 'unreadable file');
+      });
+    }
+
+    function computePeaks(){
+      var buf = state.audioBuffer;
+      var ch0 = buf.getChannelData(0);
+      var ch1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : null;
+      var n = ch0.length;
+      var chunks = Math.ceil(n / CHUNK);
+      var mins = new Float32Array(chunks), maxs = new Float32Array(chunks);
+      for (var i = 0; i < chunks; i++) {
+        var start = i * CHUNK, end = Math.min(n, start + CHUNK);
+        var mn = 1, mx = -1;
+        for (var j = start; j < end; j++) {
+          var v = ch1 ? (ch0[j] + ch1[j]) * 0.5 : ch0[j];
+          if (v < mn) mn = v;
+          if (v > mx) mx = v;
+        }
+        mins[i] = mn; maxs[i] = mx;
+      }
+      state.peaksMin = mins; state.peaksMax = maxs;
+    }
+
+    function containerWidth(){
+      return (els.waveWrap && els.waveWrap.clientWidth) || 280;
+    }
+    // Baseline px/sec at the default zoom (index 2, "1x") fills the available frame
+    // width exactly, so a loaded track's waveform reads as the large, central element
+    // the spec calls for instead of a sliver on the left of a mostly-empty frame.
+    // Zooming in (higher ZOOM_STEPS) scales up from that fit baseline and the wrap
+    // scrolls; zooming out is clamped to the container width since there's nothing
+    // gained by shrinking past "fits already".
+    function stageWidth(){
+      var d = state.audioBuffer ? state.audioBuffer.duration : 0;
+      var cw = containerWidth();
+      if (!d) return cw;
+      var fitPxPerSec = Math.max(PX_PER_SEC_MIN, cw / d);
+      var w = Math.round(d * fitPxPerSec * ZOOM_STEPS[state.zoomIdx]);
+      return Math.max(cw, w);
+    }
+    function timeToX(t){ return (t / state.audioBuffer.duration) * stageWidth(); }
+    function xToTime(x){ return Math.max(0, Math.min(state.audioBuffer.duration, (x / stageWidth()) * state.audioBuffer.duration)); }
+
+    function layoutStage(){
+      var w = stageWidth(), h = 180;
+      els.waveStage.style.width = w + 'px';
+      [els.waveCanvas, els.overlayCanvas].forEach(function(cv){
+        cv.width = w; cv.height = h; cv.style.width = w+'px'; cv.style.height = h+'px';
+      });
+      els.zoomLabel.textContent = ZOOM_STEPS[state.zoomIdx] + 'x';
+      // Resizing a canvas's width/height (even to an unchanged value) wipes its pixel
+      // content, so the static waveform layer must be repainted every time this runs —
+      // not just after the initial load. Every marker edit (add/remove/clear/auto-chop)
+      // and every zoom change calls layoutStage(), so centralizing the redraw here is
+      // what keeps the waveform from silently disappearing after those actions.
+      if (state.peaksMin) drawWave();
+      rebuildHandles();
+    }
+
+    function drawWave(){
+      var cv = els.waveCanvas, ctx = cv.getContext('2d');
+      var w = cv.width, h = cv.height, mid = h/2;
+      ctx.clearRect(0,0,w,h);
+      ctx.fillStyle = '#f6f5ef';
+      ctx.fillRect(0,0,w,h);
+      var mins = state.peaksMin, maxs = state.peaksMax;
+      var totalChunks = mins.length;
+      var buf = state.audioBuffer;
+      var totalSamples = buf.length;
+      var samplesPerPixel = totalSamples / w;
+      ctx.strokeStyle = '#0c0c0a';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (var x = 0; x < w; x++){
+        var s0 = Math.floor(x * samplesPerPixel);
+        var s1 = Math.max(s0+1, Math.floor((x+1) * samplesPerPixel));
+        var c0 = Math.min(totalChunks-1, Math.floor(s0 / CHUNK));
+        var c1 = Math.min(totalChunks-1, Math.floor((s1-1) / CHUNK));
+        var mn = 1, mx = -1;
+        for (var c = c0; c <= c1; c++){
+          if (mins[c] < mn) mn = mins[c];
+          if (maxs[c] > mx) mx = maxs[c];
+        }
+        if (mx < mn) { mn = 0; mx = 0; }
+        var y0 = mid - mx * (mid-4);
+        var y1 = mid - mn * (mid-4);
+        if (y1 - y0 < 1) y1 = y0 + 1;
+        ctx.moveTo(x+0.5, y0);
+        ctx.lineTo(x+0.5, y1);
+      }
+      ctx.stroke();
+      ctx.strokeStyle = '#c9c7ba';
+      ctx.beginPath();
+      ctx.moveTo(0, mid+0.5); ctx.lineTo(w, mid+0.5);
+      ctx.stroke();
+    }
+
+    function segments(){
+      var d = state.audioBuffer.duration;
+      var times = [0].concat(state.markers.map(function(m){return m.time;}).sort(function(a,b){return a-b;})).concat([d]);
+      var segs = [];
+      for (var i=0;i<times.length-1;i++){
+        segs.push({ start: times[i], end: times[i+1], index: i });
+      }
+      return segs;
+    }
+
+    function drawOverlay(){
+      var cv = els.overlayCanvas, ctx = cv.getContext('2d');
+      var w = cv.width, h = cv.height;
+      ctx.clearRect(0,0,w,h);
+      var segs = segments();
+      if (state.selected != null && segs[state.selected]){
+        var seg = segs[state.selected];
+        var x0 = timeToX(seg.start), x1 = timeToX(seg.end);
+        ctx.fillStyle = 'rgba(12,12,10,0.08)';
+        ctx.fillRect(x0, 0, Math.max(1,x1-x0), h);
+        ctx.fillStyle = '#0c0c0a';
+        ctx.fillRect(x0, h-4, Math.max(1,x1-x0), 4);
+      }
+      ctx.strokeStyle = '#0c0c0a';
+      ctx.lineWidth = 2;
+      state.markers.forEach(function(m){
+        var x = timeToX(m.time);
+        ctx.beginPath();
+        ctx.setLineDash([4,3]);
+        ctx.moveTo(x+0.5, 0); ctx.lineTo(x+0.5, h);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      });
+      // playhead
+      var cx = timeToX(state.cursorTime);
+      ctx.strokeStyle = '#0c0c0a';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(cx+0.5, 0); ctx.lineTo(cx+0.5, h);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx-4, 0); ctx.lineTo(cx+4,0); ctx.lineTo(cx,6); ctx.closePath();
+      ctx.fill();
+    }
+
+    function rebuildHandles(){
+      Array.prototype.slice.call(els.waveStage.querySelectorAll('.marker-handle')).forEach(function(h){ h.remove(); });
+      state.markers.forEach(function(m){
+        var h = document.createElement('div');
+        h.className = 'marker-handle';
+        h.style.left = timeToX(m.time) + 'px';
+        h.dataset.id = m.id;
+        h.addEventListener('pointerdown', onHandlePointerDown);
+        h.addEventListener('dblclick', function(){ removeMarker(m.id); });
+        els.waveStage.appendChild(h);
+      });
+    }
+
+    function onHandlePointerDown(e){
+      e.stopPropagation();
+      e.preventDefault();
+      var id = Number(e.currentTarget.dataset.id);
+      state.draggingId = id;
+      e.currentTarget.setPointerCapture && e.currentTarget.setPointerCapture(e.pointerId);
+      document.addEventListener('pointermove', onHandlePointerMove);
+      document.addEventListener('pointerup', onHandlePointerUp);
+    }
+    function neighborsOf(id){
+      var sorted = state.markers.slice().sort(function(a,b){return a.time-b.time;});
+      var idx = sorted.findIndex(function(m){return m.id===id;});
+      var prev = idx>0 ? sorted[idx-1].time : 0;
+      var next = idx<sorted.length-1 ? sorted[idx+1].time : state.audioBuffer.duration;
+      return { prev: prev, next: next };
+    }
+    function onHandlePointerMove(e){
+      if (state.draggingId == null) return;
+      var rect = els.waveStage.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var t = xToTime(x);
+      var nb = neighborsOf(state.draggingId);
+      t = Math.max(nb.prev + MIN_GAP, Math.min(nb.next - MIN_GAP, t));
+      var marker = state.markers.find(function(m){return m.id===state.draggingId;});
+      if (marker){
+        marker.time = t;
+        var handle = els.waveStage.querySelector('.marker-handle[data-id="'+state.draggingId+'"]');
+        if (handle) handle.style.left = timeToX(t) + 'px';
+        drawOverlay();
+      }
+    }
+    function onHandlePointerUp(){
+      if (state.draggingId != null && state.snap) snapMarker(state.draggingId);
+      var wasDragging = state.draggingId;
+      state.draggingId = null;
+      document.removeEventListener('pointermove', onHandlePointerMove);
+      document.removeEventListener('pointerup', onHandlePointerUp);
+      renderSamples();
+      if (state.loopPlaying && wasDragging != null) startLoop();
+    }
+
+    function findZeroCrossing(t){
+      var buf = state.audioBuffer.getChannelData(0);
+      var sr = state.audioBuffer.sampleRate;
+      var center = Math.round(t * sr);
+      var window = Math.round(sr * 0.015);
+      var lo = Math.max(1, center - window), hi = Math.min(buf.length-1, center + window);
+      var best = -1, bestDist = Infinity;
+      for (var i = lo; i <= hi; i++){
+        if ((buf[i-1] < 0 && buf[i] >= 0) || (buf[i-1] > 0 && buf[i] <= 0)){
+          var dist = Math.abs(i - center);
+          if (dist < bestDist){ bestDist = dist; best = i; }
+        }
+      }
+      if (best === -1) return t;
+      return best / sr;
+    }
+    function snapMarker(id){
+      var marker = state.markers.find(function(m){return m.id===id;});
+      if (!marker) return;
+      var nb = neighborsOf(id);
+      var snapped = findZeroCrossing(marker.time);
+      snapped = Math.max(nb.prev + MIN_GAP, Math.min(nb.next - MIN_GAP, snapped));
+      marker.time = snapped;
+      // Reposition just this handle instead of a full layoutStage()/rebuildHandles() —
+      // rebuilding the DOM node here would fire on every plain click (pointerdown+pointerup),
+      // not just drags, which breaks the dblclick-to-delete gesture by swapping out the
+      // element mid double-click.
+      var handle = els.waveStage.querySelector('.marker-handle[data-id="'+id+'"]');
+      if (handle) handle.style.left = timeToX(snapped) + 'px';
+      drawOverlay();
+    }
+
+    function addMarkerAt(t){
+      if (!state.audioBuffer) return;
+      var d = state.audioBuffer.duration;
+      if (t < MIN_GAP || t > d - MIN_GAP) return;
+      // enforce min gap from existing markers
+      for (var i=0;i<state.markers.length;i++){
+        if (Math.abs(state.markers[i].time - t) < MIN_GAP) return;
+      }
+      var id = state.nextMarkerId++;
+      state.markers.push({ id: id, time: t });
+      if (state.snap) {
+        var snapped = findZeroCrossing(t);
+        state.markers[state.markers.length-1].time = snapped;
+      }
+      layoutStage(); drawOverlay(); renderSamples();
+    }
+    function removeMarker(id){
+      state.markers = state.markers.filter(function(m){return m.id!==id;});
+      layoutStage(); drawOverlay(); renderSamples();
+    }
+    function clearMarkers(){
+      state.markers = [];
+      state.selected = 0;
+      layoutStage(); drawOverlay(); renderSamples();
+    }
+
+    els.waveStage.addEventListener('click', function(e){
+      if (state.draggingId != null) return;
+      if (!state.audioBuffer) return;
+      var rect = els.waveStage.getBoundingClientRect();
+      var t = xToTime(e.clientX - rect.left);
+      if (state.markMode) {
+        addMarkerAt(t);
+      } else {
+        state.cursorTime = t;
+        if (state.playing) restartPlaybackFrom(t);
+        drawOverlay();
+      }
+    });
+
+    /* ---- mode row ---- */
+    Array.prototype.forEach.call(els.modeRow.children, function(tile){
+      tile.addEventListener('click', function(){
+        state.mode = tile.dataset.mode;
+        Array.prototype.forEach.call(els.modeRow.children, function(t2){ t2.classList.toggle('active', t2===tile); });
+        els.panelTransient.hidden = state.mode !== 'transient';
+        els.panelEqual.hidden = state.mode !== 'equal';
+        els.panelManual.hidden = state.mode !== 'manual';
+      });
+    });
+    els.sensSlider.addEventListener('input', function(){
+      state.sensitivity = Number(els.sensSlider.value);
+      els.sensVal.textContent = state.sensitivity;
+    });
+    Array.prototype.forEach.call(els.partsRow.children, function(chip){
+      chip.addEventListener('click', function(){
+        state.equalParts = Number(chip.dataset.parts);
+        Array.prototype.forEach.call(els.partsRow.children, function(c2){ c2.classList.toggle('active', c2===chip); });
+      });
+    });
+    [els.clearMarkersBtn1, els.clearMarkersBtn2, els.clearMarkersBtn3].forEach(function(btn){
+      btn.addEventListener('click', clearMarkers);
+    });
+
+    /* ---- auto chop: transient detection ---- */
+    function autoChopTransient(){
+      var buf = state.audioBuffer.getChannelData(0);
+      var sr = state.audioBuffer.sampleRate;
+      var frame = 1024, hop = 512;
+      var nFrames = Math.max(1, Math.floor((buf.length - frame) / hop));
+      var energy = new Float32Array(nFrames);
+      for (var i = 0; i < nFrames; i++){
+        var start = i*hop, sum = 0;
+        for (var j = 0; j < frame; j++){ var v = buf[start+j] || 0; sum += v*v; }
+        energy[i] = Math.sqrt(sum / frame);
+      }
+      var smooth = new Float32Array(nFrames);
+      var SM = 4;
+      for (var k = 0; k < nFrames; k++){
+        var s = 0, c = 0;
+        for (var q = Math.max(0,k-SM); q < k; q++){ s += energy[q]; c++; }
+        smooth[k] = c ? s/c : energy[k];
+      }
+      var flux = new Float32Array(nFrames);
+      var maxFlux = 0.0001;
+      for (var f = 0; f < nFrames; f++){
+        flux[f] = Math.max(0, energy[f] - smooth[f]);
+        if (flux[f] > maxFlux) maxFlux = flux[f];
+      }
+      for (var nf = 0; nf < nFrames; nf++) flux[nf] /= maxFlux;
+
+      var threshold = 0.82 - (state.sensitivity/100) * 0.72; // 0.82..0.10
+      var minSepFrames = Math.round((0.12 * sr) / hop);
+      var candidates = [];
+      for (var p = 1; p < nFrames-1; p++){
+        if (flux[p] > threshold && flux[p] >= flux[p-1] && flux[p] >= flux[p+1]) {
+          candidates.push({ idx: p, strength: flux[p] });
+        }
+      }
+      candidates.sort(function(a,b){ return b.strength - a.strength; });
+      var accepted = [];
+      candidates.forEach(function(cd){
+        for (var a=0;a<accepted.length;a++){
+          if (Math.abs(accepted[a] - cd.idx) < minSepFrames) return;
+        }
+        if (accepted.length < 63) accepted.push(cd.idx);
+      });
+      accepted.sort(function(a,b){ return a-b; });
+
+      state.markers = [];
+      accepted.forEach(function(idx){
+        var t = (idx*hop)/sr;
+        if (t < MIN_GAP || t > state.audioBuffer.duration - MIN_GAP) return;
+        var tt = state.snap ? findZeroCrossing(t) : t;
+        state.markers.push({ id: state.nextMarkerId++, time: tt });
+      });
+      state.selected = 0;
+      layoutStage(); drawOverlay(); renderSamples();
+    }
+    function autoChopEqual(){
+      var n = state.equalParts, d = state.audioBuffer.duration;
+      state.markers = [];
+      for (var i=1;i<n;i++){
+        var t = d*i/n;
+        var tt = state.snap ? findZeroCrossing(t) : t;
+        state.markers.push({ id: state.nextMarkerId++, time: tt });
+      }
+      state.selected = 0;
+      layoutStage(); drawOverlay(); renderSamples();
+    }
+    els.autoChopBtn.addEventListener('click', function(){ if (state.audioBuffer) autoChopTransient(); });
+    els.splitBtn.addEventListener('click', function(){ if (state.audioBuffer) autoChopEqual(); });
+
+    /* ---- sample list ---- */
+    function renderSamples(){
+      var segs = segments();
+      els.samplesCount.textContent = segs.length + (segs.length===1?' Sample':' Samples');
+      els.samplesRow.innerHTML = '';
+      if (state.selected >= segs.length) state.selected = segs.length-1;
+      segs.forEach(function(seg, i){
+        var chip = document.createElement('div');
+        chip.className = 'sample-chip' + (i===state.selected?' active':'');
+        var num = (i+1) < 10 ? '0'+(i+1) : String(i+1);
+        chip.innerHTML = '<div class="sc-num">'+num+'</div><div class="sc-len">'+(seg.end-seg.start).toFixed(2)+'s</div>';
+        chip.addEventListener('click', function(){
+          state.selected = i;
+          renderSamples();
+          drawOverlay();
+        });
+        els.samplesRow.appendChild(chip);
+      });
+      var hasSel = segs.length > 0;
+      els.playSampleBtn.disabled = !hasSel;
+      els.loopBtn.disabled = !hasSel;
+      els.exportSelectedBtn.disabled = !hasSel;
+      els.exportAllBtn.disabled = !hasSel;
+      drawOverlay();
+    }
+
+    /* ---- playback ---- */
+    function stopSource(){
+      if (currentSource){
+        try { currentSource.onended = null; currentSource.stop(); } catch(e){}
+        currentSource = null;
+      }
+    }
+    function stopAll(){
+      stopSource();
+      state.playing = false;
+      state.loopPlaying = false;
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      if (els.playBtn) els.playBtn.innerHTML = '&#9654;';
+      if (els.loopBtn) els.loopBtn.classList.remove('active');
+    }
+    function tick(){
+      if (!state.playing) return;
+      var ctx = getActx();
+      var elapsed = ctx.currentTime - state.playStartCtx;
+      state.cursorTime = Math.min(state.audioBuffer.duration, state.playStartOffset + elapsed);
+      drawOverlay();
+      if (state.cursorTime >= state.audioBuffer.duration - 0.01){
+        state.playing = false;
+        els.playBtn.innerHTML = '&#9654;';
+        return;
+      }
+      rafId = requestAnimationFrame(tick);
+    }
+    function playFrom(t){
+      var ctx = getActx();
+      ctx.resume();
+      stopSource();
+      var src = ctx.createBufferSource();
+      src.buffer = state.audioBuffer;
+      src.connect(ctx.destination);
+      var remain = state.audioBuffer.duration - t;
+      src.start(ctx.currentTime, t);
+      src.onended = function(){ if (currentSource === src) { state.playing = false; els.playBtn.innerHTML = '&#9654;'; } };
+      currentSource = src;
+      state.playing = true;
+      state.playStartCtx = ctx.currentTime;
+      state.playStartOffset = t;
+      els.playBtn.innerHTML = '&#10074;&#10074;';
+      rafId = requestAnimationFrame(tick);
+    }
+    function restartPlaybackFrom(t){ playFrom(t); }
+    els.playBtn.addEventListener('click', function(){
+      if (!state.audioBuffer) return;
+      if (state.playing) {
+        stopSource();
+        state.playing = false;
+        els.playBtn.innerHTML = '&#9654;';
+      } else {
+        var startAt = state.cursorTime >= state.audioBuffer.duration - 0.02 ? 0 : state.cursorTime;
+        playFrom(startAt);
+      }
+    });
+
+    function playSegment(seg){
+      var ctx = getActx();
+      ctx.resume();
+      stopSource();
+      var src = ctx.createBufferSource();
+      src.buffer = state.audioBuffer;
+      src.connect(ctx.destination);
+      src.start(ctx.currentTime, seg.start, Math.max(0.01, seg.end-seg.start));
+      currentSource = src;
+    }
+    els.playSampleBtn.addEventListener('click', function(){
+      var segs = segments();
+      var seg = segs[state.selected];
+      if (seg) { state.loopPlaying = false; els.loopBtn.classList.remove('active'); playSegment(seg); }
+    });
+
+    function startLoop(){
+      var segs = segments();
+      var seg = segs[state.selected];
+      if (!seg) return;
+      var ctx = getActx();
+      ctx.resume();
+      stopSource();
+      var src = ctx.createBufferSource();
+      src.buffer = state.audioBuffer;
+      src.loop = true;
+      src.loopStart = seg.start;
+      src.loopEnd = Math.max(seg.start + 0.01, seg.end);
+      src.connect(ctx.destination);
+      src.start(ctx.currentTime, seg.start);
+      currentSource = src;
+    }
+    els.loopBtn.addEventListener('click', function(){
+      state.loopPlaying = !state.loopPlaying;
+      els.loopBtn.classList.toggle('active', state.loopPlaying);
+      if (state.loopPlaying) startLoop(); else stopSource();
+    });
+
+    /* ---- toolbar ---- */
+    els.zoomInBtn.addEventListener('click', function(){
+      state.zoomIdx = Math.min(ZOOM_STEPS.length-1, state.zoomIdx+1);
+      layoutStage(); drawOverlay();
+    });
+    els.zoomOutBtn.addEventListener('click', function(){
+      state.zoomIdx = Math.max(0, state.zoomIdx-1);
+      layoutStage(); drawOverlay();
+    });
+    els.markBtn.addEventListener('click', function(){
+      state.markMode = !state.markMode;
+      els.markBtn.classList.toggle('active', state.markMode);
+    });
+    els.snapBtn.addEventListener('click', function(){
+      state.snap = !state.snap;
+      els.snapBtn.classList.toggle('active', state.snap);
+    });
+
+    /* ---- drop / browse ---- */
+    els.drop.addEventListener('click', function(){ els.fileInput.click(); });
+    els.fileInput.addEventListener('change', function(){
+      if (els.fileInput.files[0]) loadFile(els.fileInput.files[0]);
+      els.fileInput.value = '';
+    });
+    ['dragenter','dragover'].forEach(function(evt){
+      els.drop.addEventListener(evt, function(e){ e.preventDefault(); });
+    });
+    els.drop.addEventListener('drop', function(e){
+      e.preventDefault();
+      var f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) loadFile(f);
+    });
+
+    /* ---- export ---- */
+    function renderSegmentTo48k(seg){
+      var buf = state.audioBuffer;
+      var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      var dur = Math.max(0.02, seg.end - seg.start);
+      var length = Math.max(1, Math.round(dur * TARGET_RATE));
+      var octx = new OAC(buf.numberOfChannels, length, TARGET_RATE);
+      var src = octx.createBufferSource();
+      src.buffer = buf;
+      src.connect(octx.destination);
+      src.start(0, seg.start, dur);
+      return octx.startRendering().then(function(rendered){
+        return encodeWav16(rendered);
+      });
+    }
+    function padNum(n){ return n<10 ? '0'+n : String(n); }
+
+    els.exportSelectedBtn.addEventListener('click', function(){
+      var segs = segments();
+      var seg = segs[state.selected];
+      if (!seg) return;
+      renderSegmentTo48k(seg).then(function(bytes){
+        var blob = new Blob([bytes], { type: 'audio/wav' });
+        downloadFile(blob, 'sample_' + padNum(state.selected+1) + '.wav');
+      });
+    });
+    els.exportAllBtn.addEventListener('click', function(){
+      var segs = segments();
+      if (!segs.length) return;
+      var zip = new MiniZip();
+      var chain = Promise.resolve();
+      segs.forEach(function(seg, i){
+        chain = chain.then(function(){
+          return renderSegmentTo48k(seg).then(function(bytes){
+            zip.addFile('sample_' + padNum(i+1) + '.wav', bytes);
+          });
+        });
+      });
+      chain.then(function(){
+        downloadFile(zip.generate(), 'SP404-STOOL-samples.zip');
+      });
+    });
+
+    return { reset: reset, stopAll: stopAll };
+  })();
 })();
 </script>
+
 </body>
 </html>

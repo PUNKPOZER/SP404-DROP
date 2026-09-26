@@ -1,17 +1,25 @@
-# SP-404 Sample Toolkit
+<p align="center"><img src="icon.svg" width="70" height="80" alt="SP404 STOOL"></p>
 
-Small tools for getting sample packs ready for the Roland SP-404 (and SP-404SX / MK2 / A).
+# SP404 STOOL
 
-The SP-404 is picky about its WAV files — it wants 16-bit / 48kHz PCM, and silently
-fails to load or plays back garbled audio if you feed it something else. These tools
-fix that, plus a few other chores that come up when prepping downloaded sample packs.
+A small tool that sits between your music library and a Roland SP-404 (SX / MKII / A).
+It does two things, and stays out of your way otherwise:
+
+- **CONVERT** — batch-fix any folder of samples to the 16-bit / 48kHz PCM WAV the
+  SP-404 actually wants, so nothing fails to load or plays back garbled.
+- **CHOP / LOOP** — load one track, see a big waveform, auto-detect transients or
+  split it into equal parts, drag markers by hand, find a loop, and export numbered
+  samples (`sample_01.wav`, `sample_02.wav`, …) ready to drag onto the sampler.
+
+It is not a DAW and isn't trying to become one — just a fast utility for the one
+chore that comes up over and over when prepping sample packs for this machine.
 
 ## What's here
 
-- **[`web/`](web/)** — a drag-and-drop WAV converter that runs entirely in the browser.
-  No install, no upload: point it at a folder of samples, get back a ZIP of
-  16-bit/48kHz WAVs. Open [`web/index.html`](web/index.html) directly, or host it
-  with GitHub Pages. See [`web/README.md`](web/README.md).
+- **[`web/`](web/)** — the app itself: a single self-contained HTML page, runs
+  entirely in the browser, nothing uploaded anywhere. Open
+  [`web/index.html`](web/index.html) directly, or host it with GitHub Pages. See
+  [`web/README.md`](web/README.md).
 - **[`cli/`](cli/)** — the original Python command-line scripts this project started
   from: batch WAV conversion, renaming, metadata prepending, and sorting samples into
   category folders (kicks, snares, etc). See [`cli/README.md`](cli/README.md).
@@ -19,8 +27,8 @@ fix that, plus a few other chores that come up when prepping downloaded sample p
 ## Why both?
 
 The CLI scripts are handy if you already live in a terminal and want to script this
-into a bigger pipeline. The web converter is for everyone else — drop in a folder,
-download a ZIP, done.
+into a bigger pipeline. SP404 STOOL (the web app) is for everyone else, and it's
+where the Chop/Loop workflow lives — drop in a track, chop it, export, done.
 
 ## License
 
