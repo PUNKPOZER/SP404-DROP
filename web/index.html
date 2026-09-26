@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="SP404 STOOL — convert audio to SP-404-ready WAV and chop/loop tracks into numbered samples. Runs entirely in your browser.">
+<meta name="description" content="SP404 DROP — convert audio to SP-404-ready WAV and chop/loop tracks into numbered samples. Runs entirely in your browser.">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
-<title>SP404 STOOL</title>
+<title>SP404 DROP</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
@@ -99,7 +99,7 @@
      HOME
      ========================================================= */
   .home-head{text-align:center;margin-bottom:6px;}
-  .stool-logo{width:54px;height:62px;color:var(--ink);margin:0 auto 8px;display:block;}
+  .brand-logo{width:74px;height:71px;color:var(--ink);margin:0 auto 8px;display:block;}
   .home-wordmark{
     font-family:var(--font-lcd);
     font-weight:700;
@@ -286,6 +286,14 @@
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
   .zoom-label{font-family:var(--font-lcd);font-size:11px;font-weight:700;min-width:30px;text-align:center;}
+  .zoom-group{
+    display:flex;align-items:center;gap:2px;flex:none;
+    background:var(--card-2);border:2px solid var(--ink);border-radius:9px;
+    padding:2px;
+  }
+  .zoom-group .icon-btn{border:none;background:transparent;width:30px;height:30px;}
+  .zoom-group .icon-btn.active,
+  .zoom-group .icon-btn:active{background:var(--ink);color:var(--white);border-radius:6px;}
 
   .wave-frame{
     border:2.5px solid var(--ink);
@@ -294,6 +302,8 @@
     margin-bottom:10px;
     overflow:hidden;
   }
+  .wave-frame.add-mode{border-style:dashed;}
+  .wave-stage.add-mode{cursor:crosshair;}
   .wave-wrap{
     overflow-x:auto;
     overflow-y:hidden;
@@ -409,8 +419,327 @@
     <!-- ============ HOME ============ -->
     <section class="screen active" id="screenHome">
       <div class="home-head">
-        <svg class="stool-logo" id="homeLogo" viewBox="0 0 42 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
-        <div class="home-wordmark">SP<span class="n404">404</span> STOOL</div>
+        <svg class="brand-logo" id="homeLogo" viewBox="0 0 348 336" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="currentColor">
+    <rect x="212" y="8" width="16" height="4"/>
+    <rect x="208" y="12" width="32" height="4"/>
+    <rect x="208" y="16" width="44" height="4"/>
+    <rect x="208" y="20" width="44" height="4"/>
+    <rect x="208" y="24" width="44" height="4"/>
+    <rect x="272" y="24" width="16" height="4"/>
+    <rect x="204" y="28" width="52" height="4"/>
+    <rect x="272" y="28" width="28" height="4"/>
+    <rect x="204" y="32" width="24" height="4"/>
+    <rect x="232" y="32" width="84" height="4"/>
+    <rect x="204" y="36" width="20" height="4"/>
+    <rect x="232" y="36" width="84" height="4"/>
+    <rect x="204" y="40" width="20" height="4"/>
+    <rect x="232" y="40" width="84" height="4"/>
+    <rect x="200" y="44" width="24" height="4"/>
+    <rect x="248" y="44" width="68" height="4"/>
+    <rect x="200" y="48" width="24" height="4"/>
+    <rect x="264" y="48" width="24" height="4"/>
+    <rect x="292" y="48" width="20" height="4"/>
+    <rect x="200" y="52" width="20" height="4"/>
+    <rect x="228" y="52" width="20" height="4"/>
+    <rect x="276" y="52" width="8" height="4"/>
+    <rect x="292" y="52" width="20" height="4"/>
+    <rect x="196" y="56" width="24" height="4"/>
+    <rect x="228" y="56" width="36" height="4"/>
+    <rect x="292" y="56" width="20" height="4"/>
+    <rect x="196" y="60" width="24" height="4"/>
+    <rect x="228" y="60" width="48" height="4"/>
+    <rect x="292" y="60" width="16" height="4"/>
+    <rect x="196" y="64" width="20" height="4"/>
+    <rect x="232" y="64" width="48" height="4"/>
+    <rect x="288" y="64" width="20" height="4"/>
+    <rect x="196" y="68" width="20" height="4"/>
+    <rect x="248" y="68" width="32" height="4"/>
+    <rect x="288" y="68" width="20" height="4"/>
+    <rect x="192" y="72" width="24" height="4"/>
+    <rect x="224" y="72" width="12" height="4"/>
+    <rect x="264" y="72" width="16" height="4"/>
+    <rect x="288" y="72" width="20" height="4"/>
+    <rect x="192" y="76" width="24" height="4"/>
+    <rect x="224" y="76" width="24" height="4"/>
+    <rect x="284" y="76" width="20" height="4"/>
+    <rect x="192" y="80" width="20" height="4"/>
+    <rect x="220" y="80" width="44" height="4"/>
+    <rect x="284" y="80" width="20" height="4"/>
+    <rect x="176" y="84" width="8" height="4"/>
+    <rect x="192" y="84" width="20" height="4"/>
+    <rect x="220" y="84" width="56" height="4"/>
+    <rect x="284" y="84" width="20" height="4"/>
+    <rect x="172" y="88" width="40" height="4"/>
+    <rect x="220" y="88" width="56" height="4"/>
+    <rect x="284" y="88" width="20" height="4"/>
+    <rect x="172" y="92" width="40" height="4"/>
+    <rect x="216" y="92" width="56" height="4"/>
+    <rect x="280" y="92" width="20" height="4"/>
+    <rect x="156" y="96" width="52" height="4"/>
+    <rect x="216" y="96" width="56" height="4"/>
+    <rect x="280" y="96" width="20" height="4"/>
+    <rect x="152" y="100" width="56" height="4"/>
+    <rect x="220" y="100" width="52" height="4"/>
+    <rect x="280" y="100" width="20" height="4"/>
+    <rect x="152" y="104" width="48" height="4"/>
+    <rect x="236" y="104" width="36" height="4"/>
+    <rect x="280" y="104" width="16" height="4"/>
+    <rect x="152" y="108" width="44" height="4"/>
+    <rect x="204" y="108" width="16" height="4"/>
+    <rect x="252" y="108" width="16" height="4"/>
+    <rect x="276" y="108" width="20" height="4"/>
+    <rect x="152" y="112" width="36" height="4"/>
+    <rect x="196" y="112" width="40" height="4"/>
+    <rect x="264" y="112" width="4" height="4"/>
+    <rect x="276" y="112" width="20" height="4"/>
+    <rect x="148" y="116" width="32" height="4"/>
+    <rect x="188" y="116" width="4" height="4"/>
+    <rect x="196" y="116" width="56" height="4"/>
+    <rect x="276" y="116" width="20" height="4"/>
+    <rect x="148" y="120" width="24" height="4"/>
+    <rect x="188" y="120" width="76" height="4"/>
+    <rect x="272" y="120" width="20" height="4"/>
+    <rect x="148" y="124" width="20" height="4"/>
+    <rect x="192" y="124" width="72" height="4"/>
+    <rect x="272" y="124" width="20" height="4"/>
+    <rect x="148" y="128" width="20" height="4"/>
+    <rect x="208" y="128" width="48" height="4"/>
+    <rect x="272" y="128" width="20" height="4"/>
+    <rect x="144" y="132" width="24" height="4"/>
+    <rect x="224" y="132" width="24" height="4"/>
+    <rect x="272" y="132" width="20" height="4"/>
+    <rect x="80" y="136" width="84" height="4"/>
+    <rect x="236" y="136" width="8" height="4"/>
+    <rect x="268" y="136" width="20" height="4"/>
+    <rect x="80" y="140" width="84" height="4"/>
+    <rect x="268" y="140" width="20" height="4"/>
+    <rect x="40" y="144" width="124" height="4"/>
+    <rect x="172" y="144" width="8" height="4"/>
+    <rect x="268" y="144" width="20" height="4"/>
+    <rect x="40" y="148" width="124" height="4"/>
+    <rect x="172" y="148" width="16" height="4"/>
+    <rect x="268" y="148" width="20" height="4"/>
+    <rect x="40" y="152" width="120" height="4"/>
+    <rect x="168" y="152" width="16" height="4"/>
+    <rect x="192" y="152" width="16" height="4"/>
+    <rect x="248" y="152" width="8" height="4"/>
+    <rect x="264" y="152" width="20" height="4"/>
+    <rect x="40" y="156" width="120" height="4"/>
+    <rect x="168" y="156" width="16" height="4"/>
+    <rect x="192" y="156" width="32" height="4"/>
+    <rect x="240" y="156" width="16" height="4"/>
+    <rect x="264" y="156" width="20" height="4"/>
+    <rect x="40" y="160" width="60" height="4"/>
+    <rect x="128" y="160" width="32" height="4"/>
+    <rect x="168" y="160" width="16" height="4"/>
+    <rect x="192" y="160" width="40" height="4"/>
+    <rect x="240" y="160" width="16" height="4"/>
+    <rect x="264" y="160" width="40" height="4"/>
+    <rect x="40" y="164" width="60" height="4"/>
+    <rect x="128" y="164" width="32" height="4"/>
+    <rect x="168" y="164" width="16" height="4"/>
+    <rect x="192" y="164" width="36" height="4"/>
+    <rect x="236" y="164" width="16" height="4"/>
+    <rect x="260" y="164" width="44" height="4"/>
+    <rect x="24" y="168" width="44" height="4"/>
+    <rect x="100" y="168" width="28" height="4"/>
+    <rect x="144" y="168" width="12" height="4"/>
+    <rect x="164" y="168" width="16" height="4"/>
+    <rect x="188" y="168" width="40" height="4"/>
+    <rect x="236" y="168" width="16" height="4"/>
+    <rect x="260" y="168" width="56" height="4"/>
+    <rect x="24" y="172" width="44" height="4"/>
+    <rect x="96" y="172" width="36" height="4"/>
+    <rect x="144" y="172" width="12" height="4"/>
+    <rect x="164" y="172" width="16" height="4"/>
+    <rect x="188" y="172" width="40" height="4"/>
+    <rect x="236" y="172" width="16" height="4"/>
+    <rect x="260" y="172" width="56" height="4"/>
+    <rect x="24" y="176" width="36" height="4"/>
+    <rect x="68" y="176" width="88" height="4"/>
+    <rect x="164" y="176" width="16" height="4"/>
+    <rect x="188" y="176" width="40" height="4"/>
+    <rect x="236" y="176" width="16" height="4"/>
+    <rect x="260" y="176" width="56" height="4"/>
+    <rect x="24" y="180" width="36" height="4"/>
+    <rect x="68" y="180" width="32" height="4"/>
+    <rect x="116" y="180" width="8" height="4"/>
+    <rect x="128" y="180" width="24" height="4"/>
+    <rect x="160" y="180" width="16" height="4"/>
+    <rect x="184" y="180" width="40" height="4"/>
+    <rect x="232" y="180" width="16" height="4"/>
+    <rect x="256" y="180" width="72" height="4"/>
+    <rect x="12" y="184" width="48" height="4"/>
+    <rect x="68" y="184" width="32" height="4"/>
+    <rect x="128" y="184" width="24" height="4"/>
+    <rect x="160" y="184" width="20" height="4"/>
+    <rect x="184" y="184" width="40" height="4"/>
+    <rect x="232" y="184" width="16" height="4"/>
+    <rect x="256" y="184" width="12" height="4"/>
+    <rect x="284" y="184" width="44" height="4"/>
+    <rect x="8" y="188" width="40" height="4"/>
+    <rect x="60" y="188" width="24" height="4"/>
+    <rect x="100" y="188" width="32" height="4"/>
+    <rect x="136" y="188" width="16" height="4"/>
+    <rect x="160" y="188" width="64" height="4"/>
+    <rect x="232" y="188" width="16" height="4"/>
+    <rect x="256" y="188" width="72" height="4"/>
+    <rect x="8" y="192" width="36" height="4"/>
+    <rect x="60" y="192" width="24" height="4"/>
+    <rect x="100" y="192" width="28" height="4"/>
+    <rect x="136" y="192" width="16" height="4"/>
+    <rect x="160" y="192" width="64" height="4"/>
+    <rect x="232" y="192" width="16" height="4"/>
+    <rect x="256" y="192" width="28" height="4"/>
+    <rect x="300" y="192" width="40" height="4"/>
+    <rect x="8" y="196" width="32" height="4"/>
+    <rect x="44" y="196" width="104" height="4"/>
+    <rect x="156" y="196" width="64" height="4"/>
+    <rect x="228" y="196" width="16" height="4"/>
+    <rect x="252" y="196" width="48" height="4"/>
+    <rect x="304" y="196" width="36" height="4"/>
+    <rect x="8" y="200" width="28" height="4"/>
+    <rect x="44" y="200" width="104" height="4"/>
+    <rect x="156" y="200" width="64" height="4"/>
+    <rect x="228" y="200" width="16" height="4"/>
+    <rect x="252" y="200" width="48" height="4"/>
+    <rect x="308" y="200" width="32" height="4"/>
+    <rect x="8" y="204" width="24" height="4"/>
+    <rect x="36" y="204" width="40" height="4"/>
+    <rect x="84" y="204" width="64" height="4"/>
+    <rect x="156" y="204" width="64" height="4"/>
+    <rect x="228" y="204" width="80" height="4"/>
+    <rect x="312" y="204" width="28" height="4"/>
+    <rect x="8" y="208" width="20" height="4"/>
+    <rect x="36" y="208" width="40" height="4"/>
+    <rect x="84" y="208" width="132" height="4"/>
+    <rect x="224" y="208" width="84" height="4"/>
+    <rect x="316" y="208" width="24" height="4"/>
+    <rect x="8" y="212" width="20" height="4"/>
+    <rect x="36" y="212" width="48" height="4"/>
+    <rect x="100" y="212" width="116" height="4"/>
+    <rect x="224" y="212" width="52" height="4"/>
+    <rect x="292" y="212" width="24" height="4"/>
+    <rect x="320" y="212" width="20" height="4"/>
+    <rect x="8" y="216" width="20" height="4"/>
+    <rect x="36" y="216" width="48" height="4"/>
+    <rect x="100" y="216" width="116" height="4"/>
+    <rect x="224" y="216" width="52" height="4"/>
+    <rect x="292" y="216" width="24" height="4"/>
+    <rect x="324" y="216" width="16" height="4"/>
+    <rect x="8" y="220" width="28" height="4"/>
+    <rect x="52" y="220" width="48" height="4"/>
+    <rect x="108" y="220" width="16" height="4"/>
+    <rect x="128" y="220" width="88" height="4"/>
+    <rect x="224" y="220" width="36" height="4"/>
+    <rect x="276" y="220" width="40" height="4"/>
+    <rect x="320" y="220" width="20" height="4"/>
+    <rect x="8" y="224" width="28" height="4"/>
+    <rect x="52" y="224" width="48" height="4"/>
+    <rect x="108" y="224" width="16" height="4"/>
+    <rect x="128" y="224" width="88" height="4"/>
+    <rect x="220" y="224" width="40" height="4"/>
+    <rect x="276" y="224" width="40" height="4"/>
+    <rect x="320" y="224" width="20" height="4"/>
+    <rect x="8" y="228" width="44" height="4"/>
+    <rect x="60" y="228" width="40" height="4"/>
+    <rect x="108" y="228" width="20" height="4"/>
+    <rect x="152" y="228" width="92" height="4"/>
+    <rect x="260" y="228" width="48" height="4"/>
+    <rect x="316" y="228" width="24" height="4"/>
+    <rect x="12" y="232" width="40" height="4"/>
+    <rect x="60" y="232" width="40" height="4"/>
+    <rect x="108" y="232" width="24" height="4"/>
+    <rect x="152" y="232" width="92" height="4"/>
+    <rect x="260" y="232" width="48" height="4"/>
+    <rect x="316" y="232" width="24" height="4"/>
+    <rect x="20" y="236" width="40" height="4"/>
+    <rect x="68" y="236" width="32" height="4"/>
+    <rect x="108" y="236" width="44" height="4"/>
+    <rect x="168" y="236" width="16" height="4"/>
+    <rect x="200" y="236" width="36" height="4"/>
+    <rect x="244" y="236" width="48" height="4"/>
+    <rect x="308" y="236" width="32" height="4"/>
+    <rect x="20" y="240" width="40" height="4"/>
+    <rect x="68" y="240" width="32" height="4"/>
+    <rect x="108" y="240" width="44" height="4"/>
+    <rect x="168" y="240" width="16" height="4"/>
+    <rect x="200" y="240" width="36" height="4"/>
+    <rect x="244" y="240" width="48" height="4"/>
+    <rect x="308" y="240" width="32" height="4"/>
+    <rect x="20" y="244" width="56" height="4"/>
+    <rect x="84" y="244" width="24" height="4"/>
+    <rect x="116" y="244" width="52" height="4"/>
+    <rect x="184" y="244" width="52" height="4"/>
+    <rect x="244" y="244" width="40" height="4"/>
+    <rect x="292" y="244" width="48" height="4"/>
+    <rect x="32" y="248" width="44" height="4"/>
+    <rect x="84" y="248" width="24" height="4"/>
+    <rect x="116" y="248" width="52" height="4"/>
+    <rect x="184" y="248" width="52" height="4"/>
+    <rect x="244" y="248" width="40" height="4"/>
+    <rect x="292" y="248" width="36" height="4"/>
+    <rect x="32" y="252" width="44" height="4"/>
+    <rect x="84" y="252" width="24" height="4"/>
+    <rect x="116" y="252" width="92" height="4"/>
+    <rect x="228" y="252" width="8" height="4"/>
+    <rect x="244" y="252" width="32" height="4"/>
+    <rect x="284" y="252" width="44" height="4"/>
+    <rect x="32" y="256" width="44" height="4"/>
+    <rect x="80" y="256" width="28" height="4"/>
+    <rect x="116" y="256" width="92" height="4"/>
+    <rect x="228" y="256" width="8" height="4"/>
+    <rect x="244" y="256" width="32" height="4"/>
+    <rect x="284" y="256" width="44" height="4"/>
+    <rect x="36" y="260" width="32" height="4"/>
+    <rect x="76" y="260" width="40" height="4"/>
+    <rect x="152" y="260" width="76" height="4"/>
+    <rect x="236" y="260" width="48" height="4"/>
+    <rect x="292" y="260" width="24" height="4"/>
+    <rect x="48" y="264" width="20" height="4"/>
+    <rect x="76" y="264" width="156" height="4"/>
+    <rect x="236" y="264" width="48" height="4"/>
+    <rect x="292" y="264" width="20" height="4"/>
+    <rect x="48" y="268" width="20" height="4"/>
+    <rect x="76" y="268" width="76" height="4"/>
+    <rect x="176" y="268" width="108" height="4"/>
+    <rect x="292" y="268" width="20" height="4"/>
+    <rect x="48" y="272" width="20" height="4"/>
+    <rect x="76" y="272" width="208" height="4"/>
+    <rect x="292" y="272" width="20" height="4"/>
+    <rect x="48" y="276" width="20" height="4"/>
+    <rect x="76" y="276" width="208" height="4"/>
+    <rect x="292" y="276" width="20" height="4"/>
+    <rect x="48" y="280" width="28" height="4"/>
+    <rect x="112" y="280" width="164" height="4"/>
+    <rect x="284" y="280" width="28" height="4"/>
+    <rect x="48" y="284" width="28" height="4"/>
+    <rect x="112" y="284" width="164" height="4"/>
+    <rect x="284" y="284" width="28" height="4"/>
+    <rect x="48" y="288" width="64" height="4"/>
+    <rect x="144" y="288" width="24" height="4"/>
+    <rect x="184" y="288" width="24" height="4"/>
+    <rect x="244" y="288" width="16" height="4"/>
+    <rect x="276" y="288" width="36" height="4"/>
+    <rect x="48" y="292" width="64" height="4"/>
+    <rect x="144" y="292" width="24" height="4"/>
+    <rect x="184" y="292" width="24" height="4"/>
+    <rect x="244" y="292" width="16" height="4"/>
+    <rect x="276" y="292" width="36" height="4"/>
+    <rect x="56" y="296" width="128" height="4"/>
+    <rect x="208" y="296" width="36" height="4"/>
+    <rect x="260" y="296" width="52" height="4"/>
+    <rect x="60" y="300" width="124" height="4"/>
+    <rect x="208" y="300" width="36" height="4"/>
+    <rect x="260" y="300" width="36" height="4"/>
+    <rect x="60" y="304" width="236" height="4"/>
+    <rect x="92" y="308" width="204" height="4"/>
+    <rect x="96" y="312" width="200" height="4"/>
+    <rect x="164" y="316" width="116" height="4"/>
+    <rect x="164" y="320" width="116" height="4"/>
+    <rect x="164" y="324" width="116" height="4"/>
+  </svg>
+        <div class="home-wordmark">SP<span class="n404">404</span> DROP</div>
         <div class="home-tag">Sample Prep &middot; SP-404MKII</div>
       </div>
 
@@ -502,16 +831,18 @@
 
       <div id="chopWorkspace" hidden>
         <div class="chop-toolbar">
-          <button class="icon-btn" id="playBtn" aria-label="Play/Pause">&#9654;</button>
-          <button class="icon-btn" id="zoomOutBtn" aria-label="Zoom out">&minus;</button>
-          <div class="zoom-label" id="zoomLabel">1x</div>
-          <button class="icon-btn" id="zoomInBtn" aria-label="Zoom in">+</button>
-          <button class="icon-btn" id="markBtn" aria-label="Toggle add-marker mode" title="Click waveform to add a marker">M</button>
+          <button class="icon-btn" id="playBtn" aria-label="Play/Pause" title="Play / pause the whole track">&#9654;</button>
+          <div class="zoom-group" title="Zoom the waveform — you can also scroll/pinch over it">
+            <button class="icon-btn" id="zoomOutBtn" aria-label="Zoom out">&minus;</button>
+            <div class="zoom-label" id="zoomLabel">1x</div>
+            <button class="icon-btn" id="zoomInBtn" aria-label="Zoom in">+</button>
+          </div>
+          <button class="icon-btn" id="markBtn" aria-label="Toggle add-marker mode" title="Add marker on click, in any mode">+M</button>
           <button class="icon-btn active" id="snapBtn" aria-label="Toggle snap to zero crossing" title="Snap to zero crossing">0&#8942;</button>
           <div class="chop-filename" id="chopFilename"></div>
         </div>
 
-        <div class="wave-frame">
+        <div class="wave-frame" id="waveFrame">
           <div class="wave-wrap" id="waveWrap">
             <div class="wave-stage" id="waveStage">
               <canvas id="waveCanvas"></canvas>
@@ -519,7 +850,7 @@
             </div>
           </div>
         </div>
-        <div class="chop-hint">Click waveform to seek &middot; toggle <b>M</b> to add markers &middot; drag a marker tab to move it &middot; double-click a marker to delete it</div>
+        <div class="chop-hint" id="chopHint">Click waveform to seek &middot; drag a marker tab to move it &middot; double-click a marker to delete it</div>
 
         <div class="mode-row" id="modeRow">
           <div class="mode-tile active" data-mode="transient">Transient</div>
@@ -552,7 +883,7 @@
         </div>
 
         <div class="mode-panel" id="panelManual" hidden>
-          Manual mode &mdash; toggle <b>M</b> above, then click the waveform to drop markers. Drag tabs to fine-tune, double-click to remove.
+          <b>Manual mode is on</b> &mdash; click anywhere on the waveform to drop a marker there. Drag a marker's tab to move it, double-click a tab to remove it.
           <div class="row" style="margin-top:10px;">
             <button class="pill" id="clearMarkersBtn3" style="flex:1;">Clear All Markers</button>
           </div>
@@ -563,6 +894,7 @@
         </div>
         <div class="samples-row" id="samplesRow"></div>
 
+        <div class="chop-hint">Tap a numbered sample above to select it, then preview or loop just that piece:</div>
         <div class="sample-actions">
           <button class="pill" id="playSampleBtn" disabled>&#9654; Play Sample</button>
           <button class="pill" id="loopBtn" disabled>&#8635; Loop</button>
@@ -572,7 +904,7 @@
           <button class="pill" id="exportSelectedBtn" disabled>Export Selected</button>
           <button class="pill solid" id="exportAllBtn" disabled>Export All</button>
         </div>
-        <div class="chop-hint">Export renders each sample fresh from the source audio &mdash; 16-bit / 48kHz, no normalization.</div>
+        <div class="chop-hint">Export Selected saves just the sample picked above as one WAV. Export All saves every sample as a ZIP (sample_01.wav, sample_02.wav, &hellip;). Both render fresh from the source &mdash; 16-bit / 48kHz, no normalization.</div>
       </div>
     </section>
 
@@ -582,47 +914,6 @@
 <script>
 (function(){
   "use strict";
-
-  /* =========================================================
-     Pixel stool icon (generative, shared)
-     ========================================================= */
-  function stoolCells(){
-    var cells = [];
-    for (var r=1; r<=3; r++){
-      var c0 = r===1?3:2, c1 = r===1?10:11;
-      for (var c=c0;c<=c1;c++) cells.push([c,r]);
-    }
-    for (var rr=4; rr<=15; rr++){
-      var leftCol = rr<=7?3:(rr<=11?2:1);
-      var rightCol = rr<=7?10:(rr<=11?11:12);
-      cells.push([leftCol,rr]);
-      cells.push([6,rr]);
-      cells.push([7,rr]);
-      cells.push([rightCol,rr]);
-    }
-    for (var c2=2;c2<=11;c2++) cells.push([c2,11]);
-    return cells;
-  }
-  function renderPixelIcon(svgEl, cells, cols, rows){
-    var cell = 3;
-    svgEl.setAttribute('viewBox', '0 0 ' + (cols*cell) + ' ' + (rows*cell));
-    var seen = {};
-    var frag = document.createDocumentFragment();
-    cells.forEach(function(p){
-      var key = p[0]+','+p[1];
-      if (seen[key]) return;
-      seen[key] = true;
-      var rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
-      rect.setAttribute('x', p[0]*cell);
-      rect.setAttribute('y', p[1]*cell);
-      rect.setAttribute('width', cell);
-      rect.setAttribute('height', cell);
-      rect.setAttribute('fill', 'currentColor');
-      frag.appendChild(rect);
-    });
-    svgEl.appendChild(frag);
-  }
-  renderPixelIcon(document.getElementById('homeLogo'), stoolCells(), 14, 16);
 
   /* =========================================================
      Navigation
@@ -986,7 +1277,7 @@
         });
       }
       function finish() {
-        var reportText = 'SP404 STOOL — conversion report\n' + counts.total + ' files analyzed: ' + counts.converted +
+        var reportText = 'SP404 DROP — conversion report\n' + counts.total + ' files analyzed: ' + counts.converted +
           ' converted, ' + counts.skipped + ' already OK, ' + counts.failed + ' failed.\n\n' + reportLines.join('\n') + '\n';
         zip.addFile('CONVERSION_REPORT.txt', new TextEncoder().encode(reportText));
         renderSummary(counts);
@@ -1016,10 +1307,12 @@
       zoomLabel: document.getElementById('zoomLabel'),
       markBtn: document.getElementById('markBtn'),
       snapBtn: document.getElementById('snapBtn'),
+      waveFrame: document.getElementById('waveFrame'),
       waveWrap: document.getElementById('waveWrap'),
       waveStage: document.getElementById('waveStage'),
       waveCanvas: document.getElementById('waveCanvas'),
       overlayCanvas: document.getElementById('overlayCanvas'),
+      chopHint: document.getElementById('chopHint'),
       modeRow: document.getElementById('modeRow'),
       panelTransient: document.getElementById('panelTransient'),
       panelEqual: document.getElementById('panelEqual'),
@@ -1060,10 +1353,13 @@
       markMode: false,
       selected: 0,
       cursorTime: 0,
+      playKind: null,       // null | 'transport' | 'sample' | 'loop'
       playing: false,
       playStartCtx: 0,
       playStartOffset: 0,
       loopPlaying: false,
+      samplePlaying: false,
+      transientChopped: false,
       draggingId: null
     };
 
@@ -1083,6 +1379,7 @@
       state.markers = [];
       state.selected = 0;
       state.cursorTime = 0;
+      state.transientChopped = false;
       els.workspace.hidden = true;
       els.drop.hidden = false;
       els.sub.textContent = 'No track loaded';
@@ -1099,6 +1396,7 @@
         state.selected = 0;
         state.cursorTime = 0;
         state.zoomIdx = 2;
+        state.transientChopped = false;
         computePeaks();
         els.drop.hidden = true;
         els.workspace.hidden = false;
@@ -1377,6 +1675,22 @@
       }
     });
 
+    /* ---- add-marker mode (click waveform to drop a marker) ----
+       Manual mode turns this on automatically, since requiring a second,
+       separately-discovered toggle on top of picking "Manual" was the
+       main complaint about how confusing placing markers by hand was.
+       The +M button stays as a quick override so a marker can still be
+       added by hand while in Transient/Equal, on top of an auto-chop. */
+    function setMarkMode(on){
+      state.markMode = on;
+      els.markBtn.classList.toggle('active', on);
+      els.waveFrame.classList.toggle('add-mode', on);
+      els.waveStage.classList.toggle('add-mode', on);
+      els.chopHint.innerHTML = on
+        ? '<b>Click the waveform to add a marker</b> &middot; drag a tab to move it &middot; double-click a tab to delete it'
+        : 'Click waveform to seek &middot; drag a marker tab to move it &middot; double-click a marker to delete it';
+    }
+
     /* ---- mode row ---- */
     Array.prototype.forEach.call(els.modeRow.children, function(tile){
       tile.addEventListener('click', function(){
@@ -1385,11 +1699,20 @@
         els.panelTransient.hidden = state.mode !== 'transient';
         els.panelEqual.hidden = state.mode !== 'equal';
         els.panelManual.hidden = state.mode !== 'manual';
+        setMarkMode(state.mode === 'manual');
       });
     });
+    var sensRechopTimer = null;
     els.sensSlider.addEventListener('input', function(){
       state.sensitivity = Number(els.sensSlider.value);
       els.sensVal.textContent = state.sensitivity;
+      // Live-preview the effect of sensitivity once the user has run Auto Chop
+      // at least once — otherwise dragging the slider looks like it does
+      // nothing until the button is pressed again.
+      if (state.transientChopped && state.audioBuffer){
+        if (sensRechopTimer) clearTimeout(sensRechopTimer);
+        sensRechopTimer = setTimeout(function(){ autoChopTransient(); }, 120);
+      }
     });
     Array.prototype.forEach.call(els.partsRow.children, function(chip){
       chip.addEventListener('click', function(){
@@ -1421,14 +1744,23 @@
         smooth[k] = c ? s/c : energy[k];
       }
       var flux = new Float32Array(nFrames);
-      var maxFlux = 0.0001;
       for (var f = 0; f < nFrames; f++){
         flux[f] = Math.max(0, energy[f] - smooth[f]);
-        if (flux[f] > maxFlux) maxFlux = flux[f];
       }
-      for (var nf = 0; nf < nFrames; nf++) flux[nf] /= maxFlux;
-
-      var threshold = 0.82 - (state.sensitivity/100) * 0.72; // 0.82..0.10
+      // Adaptive threshold (mean + k*stddev of the onset-flux curve) instead of
+      // a fixed fraction of the single loudest transient in the file: a track
+      // with one dominant hit used to drown out every quieter one, no matter
+      // how far Sensitivity was pushed, which read as "it always cuts the same
+      // samples". Thresholding against the flux distribution itself responds
+      // to the actual dynamics of whatever was loaded.
+      var sum = 0;
+      for (var fi = 0; fi < nFrames; fi++) sum += flux[fi];
+      var mean = nFrames ? sum / nFrames : 0;
+      var sqsum = 0;
+      for (var fj = 0; fj < nFrames; fj++){ var dv = flux[fj] - mean; sqsum += dv*dv; }
+      var std = nFrames ? Math.sqrt(sqsum / nFrames) : 0;
+      var k = 3.2 - (state.sensitivity/100) * 3.0; // 3.2 (strict) .. 0.2 (very sensitive)
+      var threshold = mean + k * std;
       var minSepFrames = Math.round((0.12 * sr) / hop);
       var candidates = [];
       for (var p = 1; p < nFrames-1; p++){
@@ -1454,6 +1786,7 @@
         state.markers.push({ id: state.nextMarkerId++, time: tt });
       });
       state.selected = 0;
+      state.transientChopped = true;
       layoutStage(); drawOverlay(); renderSamples();
     }
     function autoChopEqual(){
@@ -1482,6 +1815,7 @@
         var num = (i+1) < 10 ? '0'+(i+1) : String(i+1);
         chip.innerHTML = '<div class="sc-num">'+num+'</div><div class="sc-len">'+(seg.end-seg.start).toFixed(2)+'s</div>';
         chip.addEventListener('click', function(){
+          if (state.playKind === 'sample' || state.playKind === 'loop') stopAll();
           state.selected = i;
           renderSamples();
           drawOverlay();
@@ -1493,35 +1827,63 @@
       els.loopBtn.disabled = !hasSel;
       els.exportSelectedBtn.disabled = !hasSel;
       els.exportAllBtn.disabled = !hasSel;
+      // Spell out exactly what each export button will do instead of a generic
+      // "Selected" / "All" label, so it's clear one saves a single file and the
+      // other saves a ZIP of everything.
+      els.exportSelectedBtn.textContent = hasSel ? ('Export Sample ' + padNum(state.selected+1)) : 'Export Selected';
+      els.exportAllBtn.textContent = hasSel ? ('Export All (' + segs.length + ')') : 'Export All';
       drawOverlay();
     }
 
-    /* ---- playback ---- */
+    /* ---- playback ----
+       Three things can play: the full-track transport (playBtn), a single
+       previewed sample (playSampleBtn), and a looped region (loopBtn). Only
+       one can ever really be sounding at once, so state.playKind tracks
+       which — this is what lets starting one correctly reset the other two
+       buttons' icons/labels instead of leaving a stale "playing" button
+       behind, and it's what lets Play Sample turn into an explicit Stop. */
     function stopSource(){
       if (currentSource){
         try { currentSource.onended = null; currentSource.stop(); } catch(e){}
         currentSource = null;
       }
     }
+    function updatePlaybackUI(){
+      if (els.playBtn) els.playBtn.innerHTML = (state.playKind === 'transport') ? '&#10074;&#10074;' : '&#9654;';
+      if (els.playSampleBtn) els.playSampleBtn.innerHTML = (state.playKind === 'sample') ? '&#9632; Stop' : '&#9654; Play Sample';
+      if (els.loopBtn) els.loopBtn.classList.toggle('active', state.playKind === 'loop');
+    }
     function stopAll(){
       stopSource();
+      state.playKind = null;
       state.playing = false;
       state.loopPlaying = false;
+      state.samplePlaying = false;
       if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-      if (els.playBtn) els.playBtn.innerHTML = '&#9654;';
-      if (els.loopBtn) els.loopBtn.classList.remove('active');
+      updatePlaybackUI();
     }
     function tick(){
-      if (!state.playing) return;
+      if (!state.playKind) return;
       var ctx = getActx();
       var elapsed = ctx.currentTime - state.playStartCtx;
-      state.cursorTime = Math.min(state.audioBuffer.duration, state.playStartOffset + elapsed);
-      drawOverlay();
-      if (state.cursorTime >= state.audioBuffer.duration - 0.01){
-        state.playing = false;
-        els.playBtn.innerHTML = '&#9654;';
-        return;
+      if (state.playKind === 'transport'){
+        state.cursorTime = Math.min(state.audioBuffer.duration, state.playStartOffset + elapsed);
+        if (state.cursorTime >= state.audioBuffer.duration - 0.01){
+          stopAll();
+          drawOverlay();
+          return;
+        }
+      } else if (state.playKind === 'loop'){
+        var loopSeg = segments()[state.selected];
+        if (loopSeg){
+          var len = Math.max(0.01, loopSeg.end - loopSeg.start);
+          state.cursorTime = loopSeg.start + (elapsed % len);
+        }
+      } else if (state.playKind === 'sample'){
+        var sampSeg = segments()[state.selected];
+        if (sampSeg) state.cursorTime = Math.min(sampSeg.end, sampSeg.start + elapsed);
       }
+      drawOverlay();
       rafId = requestAnimationFrame(tick);
     }
     function playFrom(t){
@@ -1531,23 +1893,23 @@
       var src = ctx.createBufferSource();
       src.buffer = state.audioBuffer;
       src.connect(ctx.destination);
-      var remain = state.audioBuffer.duration - t;
       src.start(ctx.currentTime, t);
-      src.onended = function(){ if (currentSource === src) { state.playing = false; els.playBtn.innerHTML = '&#9654;'; } };
+      src.onended = function(){ if (currentSource === src) stopAll(); };
       currentSource = src;
+      state.playKind = 'transport';
       state.playing = true;
+      state.loopPlaying = false;
+      state.samplePlaying = false;
       state.playStartCtx = ctx.currentTime;
       state.playStartOffset = t;
-      els.playBtn.innerHTML = '&#10074;&#10074;';
+      updatePlaybackUI();
       rafId = requestAnimationFrame(tick);
     }
     function restartPlaybackFrom(t){ playFrom(t); }
     els.playBtn.addEventListener('click', function(){
       if (!state.audioBuffer) return;
-      if (state.playing) {
-        stopSource();
-        state.playing = false;
-        els.playBtn.innerHTML = '&#9654;';
+      if (state.playKind === 'transport') {
+        stopAll();
       } else {
         var startAt = state.cursorTime >= state.audioBuffer.duration - 0.02 ? 0 : state.cursorTime;
         playFrom(startAt);
@@ -1562,12 +1924,22 @@
       src.buffer = state.audioBuffer;
       src.connect(ctx.destination);
       src.start(ctx.currentTime, seg.start, Math.max(0.01, seg.end-seg.start));
+      src.onended = function(){ if (currentSource === src) stopAll(); };
       currentSource = src;
+      state.playKind = 'sample';
+      state.playing = false;
+      state.loopPlaying = false;
+      state.samplePlaying = true;
+      state.playStartCtx = ctx.currentTime;
+      state.playStartOffset = seg.start;
+      updatePlaybackUI();
+      rafId = requestAnimationFrame(tick);
     }
     els.playSampleBtn.addEventListener('click', function(){
+      if (state.playKind === 'sample') { stopAll(); return; }
       var segs = segments();
       var seg = segs[state.selected];
-      if (seg) { state.loopPlaying = false; els.loopBtn.classList.remove('active'); playSegment(seg); }
+      if (seg) playSegment(seg);
     });
 
     function startLoop(){
@@ -1585,25 +1957,48 @@
       src.connect(ctx.destination);
       src.start(ctx.currentTime, seg.start);
       currentSource = src;
+      state.playKind = 'loop';
+      state.playing = false;
+      state.loopPlaying = true;
+      state.samplePlaying = false;
+      state.playStartCtx = ctx.currentTime;
+      updatePlaybackUI();
+      rafId = requestAnimationFrame(tick);
     }
     els.loopBtn.addEventListener('click', function(){
-      state.loopPlaying = !state.loopPlaying;
-      els.loopBtn.classList.toggle('active', state.loopPlaying);
-      if (state.loopPlaying) startLoop(); else stopSource();
+      if (state.playKind === 'loop') { stopAll(); } else { startLoop(); }
     });
 
     /* ---- toolbar ---- */
-    els.zoomInBtn.addEventListener('click', function(){
-      state.zoomIdx = Math.min(ZOOM_STEPS.length-1, state.zoomIdx+1);
+    // Zooming keeps whatever was under the anchor point (the mouse, or the
+    // wrap's center for the +/- buttons) under that same point afterward,
+    // instead of always re-anchoring to the left edge — otherwise every zoom
+    // step shoves the view somewhere else and it feels broken/disorienting.
+    function setZoom(newIdx, anchorClientX){
+      if (!state.audioBuffer) return;
+      newIdx = Math.max(0, Math.min(ZOOM_STEPS.length-1, newIdx));
+      if (newIdx === state.zoomIdx) return;
+      var wrap = els.waveWrap;
+      var rect = wrap.getBoundingClientRect();
+      var anchorX = (anchorClientX != null) ? (anchorClientX - rect.left) : (wrap.clientWidth/2);
+      var t = xToTime(wrap.scrollLeft + anchorX);
+      state.zoomIdx = newIdx;
       layoutStage(); drawOverlay();
-    });
-    els.zoomOutBtn.addEventListener('click', function(){
-      state.zoomIdx = Math.max(0, state.zoomIdx-1);
-      layoutStage(); drawOverlay();
-    });
+      wrap.scrollLeft = Math.max(0, timeToX(t) - anchorX);
+    }
+    els.zoomInBtn.addEventListener('click', function(){ setZoom(state.zoomIdx + 1); });
+    els.zoomOutBtn.addEventListener('click', function(){ setZoom(state.zoomIdx - 1); });
+    // Scroll/trackpad-wheel zoom over the waveform (the most-missed way to zoom
+    // per user feedback) — vertical wheel motion zooms, anchored at the cursor;
+    // horizontal wheel/trackpad motion is left alone so panning still works.
+    els.waveWrap.addEventListener('wheel', function(e){
+      if (!state.audioBuffer) return;
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      e.preventDefault();
+      setZoom(state.zoomIdx + (e.deltaY < 0 ? 1 : -1), e.clientX);
+    }, { passive: false });
     els.markBtn.addEventListener('click', function(){
-      state.markMode = !state.markMode;
-      els.markBtn.classList.toggle('active', state.markMode);
+      setMarkMode(!state.markMode);
     });
     els.snapBtn.addEventListener('click', function(){
       state.snap = !state.snap;
@@ -1664,7 +2059,7 @@
         });
       });
       chain.then(function(){
-        downloadFile(zip.generate(), 'SP404-STOOL-samples.zip');
+        downloadFile(zip.generate(), 'SP404-DROP-samples.zip');
       });
     });
 

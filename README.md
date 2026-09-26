@@ -1,6 +1,6 @@
-<p align="center"><img src="icon.svg" width="70" height="80" alt="SP404 STOOL"></p>
+<p align="center"><img src="icon.svg" width="90" height="87" alt="SP404 DROP"></p>
 
-# SP404 STOOL
+# SP404 DROP
 
 A small tool that sits between your music library and a Roland SP-404 (SX / MKII / A).
 It does two things, and stays out of your way otherwise:
@@ -27,7 +27,7 @@ chore that comes up over and over when prepping sample packs for this machine.
 ## Why both?
 
 The CLI scripts are handy if you already live in a terminal and want to script this
-into a bigger pipeline. SP404 STOOL (the web app) is for everyone else, and it's
+into a bigger pipeline. SP404 DROP (the web app) is for everyone else, and it's
 where the Chop/Loop workflow lives — drop in a track, chop it, export, done.
 
 ## License

@@ -1,4 +1,4 @@
-# SP404 STOOL (web)
+# SP404 DROP (web)
 
 A single self-contained HTML page — no install, no build, no server. Everything
 runs client-side (decoding, resampling, re-encoding, waveform analysis, zipping)
@@ -28,23 +28,36 @@ re-encoding, no re-compression, no loudness changes).
 
 Load one track at a time and slice it into numbered samples:
 
-- **Waveform** — loads full-width, click to seek, zoom in/out, scroll when zoomed.
-- **Auto Chop** — three modes:
+- **Waveform** — loads full-width (it's sized to fill the frame, not a sliver on
+  a mostly-empty one), click to seek. Zoom with the **−/+** buttons or by
+  scrolling/pinching over the waveform itself; it zooms around wherever your
+  cursor is, and scrolls when zoomed in.
+- **Auto Chop** — three modes, picked with the Transient / Equal / Manual tiles:
   - **Transient** — detects attacks/onsets in the signal and drops a marker at
-    each one. A **Sensitivity** slider controls how many cut points you get.
+    each one. The **Sensitivity** slider controls how many cut points you get —
+    drag it after a first Auto Chop and the markers update live, so you can see
+    the effect immediately instead of guessing and re-clicking.
   - **Equal** — splits the track into 4 / 8 / 16 / 32 equal parts.
-  - **Manual** — toggle **M**, then click the waveform to drop markers yourself.
+  - **Manual** — click anywhere on the waveform to drop a marker there. Picking
+    this tab turns on add-a-marker-by-clicking automatically, no extra toggle
+    to find first (the dashed border and crosshair cursor confirm it's on). A
+    **+M** button in the toolbar offers the same add-on-click behavior as a
+    quick override while in Transient/Equal, e.g. to hand-place one extra point
+    after an auto-chop.
 - Markers can always be fine-tuned afterward, in any mode: drag a marker's tab to
-  move it, double-click to delete it, or add more.
-- **Snap to zero crossing** (on by default, toggle in the toolbar) nudges a
-  marker to the nearest zero crossing so cuts don't click or pop.
-- Each region between two markers is a numbered sample (`01`, `02`, …). Click one
-  to select it, **Play Sample** previews just that region.
-- **Loop** a selected region and drag its start/end while it's playing to dial in
-  a clean loop point by ear.
-- **Export Selected** downloads the current sample as `sample_NN.wav`.
-  **Export All** downloads every sample as a ZIP, named `sample_01.wav`,
-  `sample_02.wav`, … in order. Exports are rendered fresh from the source audio at
+  move it, double-click a tab to delete it.
+- **Snap to zero crossing** (the `0⋮` toggle, on by default) nudges a marker to
+  the nearest zero crossing so cuts don't click or pop.
+- Each region between two markers is a numbered sample (`01`, `02`, …). Tap one
+  to select it — the buttons below act on whichever sample is selected:
+  - **Play Sample** previews just that region; it turns into **Stop** while
+    playing so you can cut it off, rather than only being able to restart it.
+  - **Loop** loops the selected region; drag its start/end markers while it's
+    playing to dial in a clean loop point by ear.
+- **Export Sample NN** saves just the selected sample as one WAV file.
+  **Export All (N)** saves every sample as a ZIP, named `sample_01.wav`,
+  `sample_02.wav`, … in order — the button labels spell out exactly what each
+  one is about to do. Exports are rendered fresh from the source audio at
   16-bit/48kHz — no normalization or other processing.
 
 ## Using it
