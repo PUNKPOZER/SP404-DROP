@@ -1,6 +1,8 @@
 <p align="center"><img src="icon.svg" width="90" height="87" alt="SP404 DROP"></p>
 
-# SP404 DROP https://punkpozer.github.io/SP404-DROP/web/index.html
+# SP404 DROP 
+
+web app: https://punkpozer.github.io/SP404-DROP/web/index.html
 
 A small tool that sits between your music library and a Roland SP-404 (SX / MKII / A).
 It does two things, and stays out of your way otherwise:
