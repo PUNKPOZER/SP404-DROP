@@ -305,41 +305,19 @@
   .wave-frame.add-mode{border-style:dashed;}
   .wave-stage.add-mode{cursor:crosshair;}
   .wave-wrap{
-    overflow-x:auto;
-    overflow-y:hidden;
+    overflow:hidden;
     position:relative;
-    -webkit-overflow-scrolling:touch;
   }
-  .wave-stage{position:relative;height:180px;}
+  .wave-stage{position:relative;height:220px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;}
+  .wave-stage.panning{cursor:grabbing;}
   .wave-stage canvas{position:absolute;left:0;top:0;display:block;}
-  .wave-scrollbar{
-    height:16px;
-    margin-bottom:8px;
-    border:2px solid var(--ink);
-    border-radius:8px;
-    background:var(--card-2);
-    position:relative;
-    display:none;
-    touch-action:none;
-    cursor:pointer;
-  }
-  .wave-scrollbar.visible{display:block;}
-  .wave-scrollbar-thumb{
-    position:absolute;
-    top:1px; bottom:1px; left:0;
-    background:var(--ink);
-    border-radius:6px;
-    min-width:22px;
-    cursor:grab;
-  }
-  .wave-scrollbar-thumb:active{cursor:grabbing;}
   .wave-empty-hint{
     padding:10px 12px;font-size:10px;color:var(--ink-faint);text-align:center;
   }
   .marker-handle{
     position:absolute;top:0;
-    width:16px;height:16px;
-    margin-left:-8px;
+    width:22px;height:16px;
+    margin-left:-11px;
     background:var(--ink);
     cursor:ew-resize;
     touch-action:none;
@@ -347,7 +325,31 @@
   }
   .marker-handle:active{background:var(--ink-soft);}
 
-  .mode-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;}
+  .wave-overview{
+    border:2.5px solid var(--ink);border-radius:8px;background:var(--card-2);
+    height:46px;margin-bottom:10px;overflow:hidden;position:relative;touch-action:none;cursor:pointer;
+  }
+  .wave-overview canvas{display:block;width:100%;height:100%;}
+  .view-panel{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
+    background:var(--card-2);border:2px solid var(--ink);border-radius:12px;
+    padding:10px 12px;margin-bottom:10px;
+  }
+  .knobs{display:flex;gap:14px;}
+  .knob{width:62px;text-align:center;cursor:ns-resize;outline:none;touch-action:none;user-select:none;-webkit-user-select:none;}
+  .knob svg{width:52px;height:52px;display:block;margin:0 auto;}
+  .knob:focus-visible svg circle.body{stroke-width:4;}
+  .knob .k-val{font-family:var(--font-lcd);font-weight:700;font-size:11px;margin-top:2px;}
+  .knob .k-name{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);}
+  .view-btns{display:grid;grid-template-columns:repeat(2,auto);gap:6px;}
+  .view-btns .pill{font-size:10.5px;padding:7px 12px;}
+  .view-btns .pill.on{background:var(--ink);color:var(--white);}
+  .bpm-input{
+    width:84px;font-family:var(--font-lcd);font-weight:700;font-size:16px;text-align:center;
+    border:2.5px solid var(--ink);border-radius:8px;padding:6px 4px;background:var(--card);color:var(--ink);
+  }
+  .mode-panel .mini{font-size:11px;padding:8px 10px;}
+  .mode-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
   .mode-tile{
     border:2.5px solid var(--ink);border-radius:8px;
     padding:9px 4px;text-align:center;cursor:pointer;
@@ -559,15 +561,28 @@
             </div>
           </div>
         </div>
-        <div class="wave-scrollbar" id="waveScrollbar">
-          <div class="wave-scrollbar-thumb" id="waveScrollbarThumb"></div>
+        <div class="wave-overview" id="waveOverview" title="Whole track — drag the box to move around"><canvas id="ovCanvas"></canvas></div>
+        <div class="view-panel">
+          <div class="knobs">
+            <div id="knobZoom"></div>
+            <div id="knobScrub"></div>
+            <div id="knobGain"></div>
+          </div>
+          <div class="view-btns">
+            <button class="pill" id="fitBtn" title="Show the whole track">Fit</button>
+            <button class="pill" id="selBtn" title="Zoom to the selected sample">Zoom to sample</button>
+            <button class="pill on" id="followBtn" title="Keep the playhead in view while playing">Follow</button>
+            <button class="pill" id="heightBtn" title="Make the waveform taller or shorter">&#8597; Height</button>
+          </div>
         </div>
-        <div class="chop-hint" id="chopHint">Click waveform to seek &middot; drag a marker tab to move it &middot; double-click a marker to delete it</div>
+        <div class="chop-hint" id="chopHint">Click waveform to seek &middot; drag it to scroll &middot; drag a marker tab to move it &middot; double-click a marker to delete it</div>
+        <div class="chop-hint">Keys: Space play &middot; M marker at playhead &middot; Del remove nearest marker &middot; &larr; &rarr; scroll &middot; + &minus; zoom &middot; 0 fit &middot; , . pick sample &middot; Enter play sample &middot; L loop</div>
 
         <div class="mode-row" id="modeRow">
           <div class="mode-tile active" data-mode="transient">Transient</div>
           <div class="mode-tile" data-mode="equal">Equal</div>
           <div class="mode-tile" data-mode="manual">Manual</div>
+          <div class="mode-tile" data-mode="beats">Beats</div>
         </div>
 
         <div class="mode-panel" id="panelTransient">
@@ -592,6 +607,32 @@
             <button class="pill solid" id="splitBtn" style="flex:1;">Split</button>
             <button class="pill" id="clearMarkersBtn2">Clear</button>
           </div>
+        </div>
+
+        <div class="mode-panel" id="panelBeats" hidden>
+          <div class="row">
+            <input type="number" class="bpm-input" id="bpmInput" min="30" max="300" step="0.1" value="120" aria-label="BPM">
+            <span class="sens-label" style="margin:0;">BPM</span>
+            <button class="pill mini" id="bpmHalfBtn">&divide;2</button>
+            <button class="pill mini" id="bpmDoubleBtn">&times;2</button>
+            <button class="pill mini" id="bpmDetectBtn">Detect</button>
+          </div>
+          <div class="row">
+            <button class="pill mini" id="beatOneBtn" style="flex:1;" title="Make the grid line up with the playhead">Beat 1 = playhead</button>
+          </div>
+          <div class="sens-label" style="margin-top:10px;"><span>Loop length</span></div>
+          <div class="parts-row" id="beatDivRow">
+            <div class="part-chip" data-div="1">1 beat</div>
+            <div class="part-chip" data-div="2">2 beats</div>
+            <div class="part-chip active" data-div="4">1 bar</div>
+            <div class="part-chip" data-div="8">2 bars</div>
+            <div class="part-chip" data-div="16">4 bars</div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="pill solid" id="beatMakeBtn" style="flex:1;">Make Loops</button>
+            <button class="pill" id="clearMarkersBtn4">Clear</button>
+          </div>
+          <div class="chop-hint" id="beatStatus" style="text-align:left;"></div>
         </div>
 
         <div class="mode-panel" id="panelManual" hidden>
@@ -636,6 +677,42 @@
      value then holds "one|few|many" forms. {x} are placeholders.
      ========================================================= */
   var RU = {
+    "Click waveform to seek · drag it to scroll · drag a marker tab to move it · double-click a marker to delete it": "Клик по волне — перемотка · тяни волну, чтобы прокрутить · тяни вкладку маркера, чтобы сдвинуть · двойной клик по маркеру — удалить",
+    "drag it to scroll": "тяни волну, чтобы прокрутить",
+    "Keys: Space play · M marker at playhead · Del remove nearest marker · ← → scroll · + − zoom · 0 fit · , . pick sample · Enter play sample · L loop": "Клавиши: Пробел — играть · M — маркер на курсоре · Del — убрать ближайший маркер · ← → — прокрутка · + − — масштаб · 0 — вся дорожка · , . — выбрать сэмпл · Enter — играть сэмпл · L — луп",
+    "Beats": "Биты",
+    "Whole track — drag the box to move around": "Вся дорожка — тяни рамку, чтобы перемещаться",
+    "Fit": "Вся дорожка",
+    "Zoom to sample": "К сэмплу",
+    "Follow": "Следить",
+    "↕ Height": "↕ Высота",
+    "Show the whole track": "Показать всю дорожку",
+    "Zoom to the selected sample": "Приблизить выбранный сэмпл",
+    "Keep the playhead in view while playing": "Держать курсор в кадре при воспроизведении",
+    "Make the waveform taller or shorter": "Сделать волну выше или ниже",
+    "BPM": "BPM",
+    "÷2": "÷2",
+    "×2": "×2",
+    "Detect": "Найти",
+    "Beat 1 = playhead": "Доля 1 = курсор",
+    "Make the grid line up with the playhead": "Выровнять сетку по курсору",
+    "Loop length": "Длина лупа",
+    "1 beat": "1 доля",
+    "2 beats": "2 доли",
+    "1 bar": "1 такт",
+    "2 bars": "2 такта",
+    "4 bars": "4 такта",
+    "Make Loops": "Создать лупы",
+    "Zoom": "Масштаб",
+    "Scrub": "Перемотка",
+    "Height": "Высота",
+    "Zoom — drag, scroll over it, or use arrow keys. Double-click to fit the whole track.": "Масштаб — тяни, крути колесо над ним или стрелки. Двойной клик — вся дорожка.",
+    "Scrub — turn to move along the track. Faster turn, bigger jump.": "Перемотка — крути, чтобы двигаться по треку. Быстрее крутишь — дальше прыжок.",
+    "Waveform gain — make quiet audio taller (display only). Double-click to reset.": "Усиление волны — делает тихий звук выше (только на экране). Двойной клик — сброс.",
+    "Grid: {b} BPM · loop = {s} s · {n} loops": "Сетка: {b} BPM · луп = {s} с · лупов: {n}",
+    "Detecting tempo…": "Определяю темп…",
+    "Could not find a steady tempo — type the BPM, then press Beat 1 = playhead on a downbeat.": "Не удалось найти ровный темп — введи BPM и нажми «Доля 1 = курсор» на сильной доле.",
+    "That would make over 500 loops — pick a longer loop length.": "Получилось бы больше 500 лупов — выбери длиннее.",
     "Everything runs on this device — nothing is uploaded anywhere.": "Всё работает на этом устройстве — ничего никуда не загружается.",
     "Sample Prep · SP-404MKII": "Подготовка сэмплов · SP-404MKII",
     "Convert": "Конвертер",
@@ -1174,8 +1251,12 @@
       waveStage: document.getElementById('waveStage'),
       waveCanvas: document.getElementById('waveCanvas'),
       overlayCanvas: document.getElementById('overlayCanvas'),
-      waveScrollbar: document.getElementById('waveScrollbar'),
-      waveScrollbarThumb: document.getElementById('waveScrollbarThumb'),
+      ovCanvas: document.getElementById('ovCanvas'),
+      waveOverview: document.getElementById('waveOverview'),
+      bpmInput: document.getElementById('bpmInput'),
+      beatStatus: document.getElementById('beatStatus'),
+      panelBeats: document.getElementById('panelBeats'),
+      clearMarkersBtn4: document.getElementById('clearMarkersBtn4'),
       chopHint: document.getElementById('chopHint'),
       modeRow: document.getElementById('modeRow'),
       panelTransient: document.getElementById('panelTransient'),
@@ -1198,7 +1279,6 @@
     };
 
     var PX_PER_SEC_MIN = 70; // floor so very short clips still get a workable click target
-    var ZOOM_STEPS = [0.25, 0.5, 1, 2, 4, 8, 16];
     var CHUNK = 512;
     var MIN_GAP = 0.03; // seconds, min spacing between markers / file edges
 
@@ -1207,7 +1287,7 @@
       fileName: '',
       peaksMin: null,
       peaksMax: null,
-      zoomIdx: 2,
+      grid: { bpm: 0, offset: 0, div: 4, show: false, detected: false },
       markers: [],      // [{id, time}]
       nextMarkerId: 1,
       mode: 'transient',
@@ -1259,7 +1339,9 @@
         state.markers = [];
         state.selected = 0;
         state.cursorTime = 0;
-        state.zoomIdx = 2;
+        state.grid = { bpm: 0, offset: 0, div: 4, show: false, detected: false };
+        viewCfg.gain = 1; view.start = 0; view.pps = 0;
+        els.beatStatus.textContent = '';
         state.transientChopped = false;
         computePeaks();
         els.drop.hidden = true;
@@ -1294,141 +1376,249 @@
       state.peaksMin = mins; state.peaksMax = maxs;
     }
 
-    function containerWidth(){
-      return (els.waveWrap && els.waveWrap.clientWidth) || 280;
+    /* =========================================================
+       Waveform view
+       ---------------------------------------------------------
+       The waveform is a viewport onto the track, not a giant scrolled
+       canvas: view.start (seconds at the left edge) and view.pps (pixels per
+       second). Zoom is continuous from "whole track" down to a couple of
+       samples per pixel, and everything — wheel, pinch, drag-to-scroll, the
+       overview strip, the ZOOM / SCRUB / GAIN knobs, keys — just changes
+       these two numbers and redraws.
+       ========================================================= */
+    var view = { start: 0, pps: 100 };
+    var viewCfg = { height: 220, gain: 1, follow: true };
+    var HEIGHTS = [220, 320, 440];
+    var RULER_H = 28;
+    var MAX_PPS = 24000;
+
+    function dpr(){ return Math.min(2, window.devicePixelRatio || 1); }
+    function containerWidth(){ return (els.waveWrap && els.waveWrap.clientWidth) || 280; }
+    function trackDur(){ return state.audioBuffer ? state.audioBuffer.duration : 0; }
+    function fitPps(){ var d = trackDur(); return d ? containerWidth() / d : 100; }
+    function maxPps(){ return Math.max(MAX_PPS, fitPps() * 2); }
+    function viewSpan(){ return containerWidth() / view.pps; }
+    function clampView(){
+      view.pps = Math.max(fitPps(), Math.min(maxPps(), view.pps));
+      view.start = Math.max(0, Math.min(Math.max(0, trackDur() - viewSpan()), view.start));
     }
-    // Baseline px/sec at the default zoom (index 2, "1x") fills the available frame
-    // width exactly, so a loaded track's waveform reads as the large, central element
-    // the spec calls for instead of a sliver on the left of a mostly-empty frame.
-    // Zooming in (higher ZOOM_STEPS) scales up from that fit baseline and the wrap
-    // scrolls; zooming out is clamped to the container width since there's nothing
-    // gained by shrinking past "fits already".
-    function stageWidth(){
-      var d = state.audioBuffer ? state.audioBuffer.duration : 0;
+    function timeToX(t){ return (t - view.start) * view.pps; }
+    function xToTime(x){ return Math.max(0, Math.min(trackDur(), view.start + x / view.pps)); }
+
+    function setView(start, pps){
+      if (!state.audioBuffer) return;
+      view.start = start; if (pps != null) view.pps = pps;
+      clampView();
+      redrawAll();
+    }
+    // Zoom by a factor, keeping the time under anchorX fixed on screen.
+    function zoomAround(factor, anchorX){
+      if (!state.audioBuffer) return;
       var cw = containerWidth();
-      if (!d) return cw;
-      var fitPxPerSec = Math.max(PX_PER_SEC_MIN, cw / d);
-      var w = Math.round(d * fitPxPerSec * ZOOM_STEPS[state.zoomIdx]);
-      return Math.max(cw, w);
+      if (anchorX == null) anchorX = cw / 2;
+      var t = view.start + anchorX / view.pps;
+      var pps = Math.max(fitPps(), Math.min(maxPps(), view.pps * factor));
+      setView(t - anchorX / pps, pps);
     }
-    function timeToX(t){ return (t / state.audioBuffer.duration) * stageWidth(); }
-    function xToTime(x){ return Math.max(0, Math.min(state.audioBuffer.duration, (x / stageWidth()) * state.audioBuffer.duration)); }
+    // Buttons/knob/keys zoom around the playhead if it is on screen, else the centre.
+    function zoomAnchor(){
+      var x = timeToX(state.cursorTime);
+      return (x >= 0 && x <= containerWidth()) ? x : containerWidth() / 2;
+    }
+    function fitView(){ setView(0, fitPps()); }
+    function zoomToSelection(){
+      var seg = segments()[state.selected];
+      if (!seg) return;
+      var len = Math.max(0.02, seg.end - seg.start), pad = len * 0.08;
+      var pps = containerWidth() / (len + 2 * pad);
+      setView(seg.start - pad, pps);
+    }
+    function panBy(dxPixels){ setView(view.start + dxPixels / view.pps, null); }
 
     function layoutStage(){
-      var w = stageWidth(), h = 180;
+      if (!state.audioBuffer) return;
+      var w = containerWidth(), h = viewCfg.height, r = dpr();
       els.waveStage.style.width = w + 'px';
+      els.waveStage.style.height = h + 'px';
       [els.waveCanvas, els.overlayCanvas].forEach(function(cv){
-        cv.width = w; cv.height = h; cv.style.width = w+'px'; cv.style.height = h+'px';
+        var pw = Math.round(w * r), ph = Math.round(h * r);
+        if (cv.width !== pw) cv.width = pw;
+        if (cv.height !== ph) cv.height = ph;
+        cv.style.width = w + 'px'; cv.style.height = h + 'px';
       });
-      els.zoomLabel.textContent = ZOOM_STEPS[state.zoomIdx] + 'x';
-      // Resizing a canvas's width/height (even to an unchanged value) wipes its pixel
-      // content, so the static waveform layer must be repainted every time this runs —
-      // not just after the initial load. Every marker edit (add/remove/clear/auto-chop)
-      // and every zoom change calls layoutStage(), so centralizing the redraw here is
-      // what keeps the waveform from silently disappearing after those actions.
-      if (state.peaksMin) drawWave();
+      var ov = els.ovCanvas, ow = Math.round(w * r), oh = Math.round(40 * r);
+      if (ov.width !== ow) ov.width = ow;
+      if (ov.height !== oh) ov.height = oh;
+      ovCache = null;
+      clampView();
+      redrawAll();
+    }
+    function redrawAll(){
+      if (!state.audioBuffer || !els.waveCanvas.width) return;
+      drawWave();
+      drawOverlay();
       rebuildHandles();
-      updateScrollbar();
+      drawOverview();
+      updateKnobs();
     }
+    window.addEventListener('resize', function(){ if (state.audioBuffer && !els.workspace.hidden) layoutStage(); });
 
-    // Custom always-visible scroll control for the waveform: native overflow-x
-    // scrollbars are thin/auto-hiding (especially on macOS) and the wheel-zoom
-    // handler above claims vertical wheel motion for zooming, so once you're
-    // zoomed in there's otherwise no obvious way to get back to the middle or
-    // end of a track. This bar shows/hides itself depending on whether the
-    // waveform is actually wider than its frame, and its thumb both reflects
-    // and drives els.waveWrap.scrollLeft.
-    var scrollDrag = null;
-    function updateScrollbar(){
-      var cw = containerWidth(), sw = stageWidth();
-      var bar = els.waveScrollbar, thumb = els.waveScrollbarThumb;
-      if (!state.audioBuffer || sw <= cw + 1){
-        bar.classList.remove('visible');
-        return;
-      }
-      bar.classList.add('visible');
-      var barW = bar.clientWidth;
-      var thumbW = Math.max(22, Math.round(barW * (cw / sw)));
-      var maxScroll = sw - cw;
-      var maxThumbX = Math.max(0, barW - thumbW);
-      var frac = maxScroll > 0 ? (els.waveWrap.scrollLeft / maxScroll) : 0;
-      thumb.style.width = thumbW + 'px';
-      thumb.style.left = Math.round(frac * maxThumbX) + 'px';
-    }
-    els.waveWrap.addEventListener('scroll', updateScrollbar);
-    window.addEventListener('resize', function(){ if (state.audioBuffer) updateScrollbar(); });
+    /* ---- drawing ---- */
+    function nicePeak(v){ return Math.max(-1, Math.min(1, v * viewCfg.gain)); }
 
-    function scrollFromThumbX(clientX){
-      var bar = els.waveScrollbar, thumb = els.waveScrollbarThumb;
-      var barRect = bar.getBoundingClientRect();
-      var barW = barRect.width, thumbW = thumb.offsetWidth;
-      var cw = containerWidth(), sw = stageWidth();
-      var maxScroll = sw - cw;
-      var maxThumbX = Math.max(0, barW - thumbW);
-      var x = clientX - barRect.left - scrollDrag.grabOffset;
-      x = Math.max(0, Math.min(maxThumbX, x));
-      els.waveWrap.scrollLeft = maxThumbX > 0 ? (x / maxThumbX) * maxScroll : 0;
-    }
-    els.waveScrollbarThumb.addEventListener('pointerdown', function(e){
-      e.preventDefault();
-      var thumbRect = els.waveScrollbarThumb.getBoundingClientRect();
-      scrollDrag = { grabOffset: e.clientX - thumbRect.left };
-      els.waveScrollbarThumb.setPointerCapture(e.pointerId);
-    });
-    els.waveScrollbarThumb.addEventListener('pointermove', function(e){
-      if (!scrollDrag) return;
-      scrollFromThumbX(e.clientX);
-    });
-    ['pointerup','pointercancel'].forEach(function(evt){
-      els.waveScrollbarThumb.addEventListener(evt, function(){ scrollDrag = null; });
-    });
-    // Clicking the track (not the thumb) jumps straight to that position —
-    // the thumb's own pointerdown above stops this from double-handling drags.
-    els.waveScrollbar.addEventListener('pointerdown', function(e){
-      if (e.target === els.waveScrollbarThumb) return;
-      var thumbW = els.waveScrollbarThumb.offsetWidth;
-      scrollDrag = { grabOffset: thumbW/2 };
-      scrollFromThumbX(e.clientX);
-      els.waveScrollbarThumb.setPointerCapture(e.pointerId);
-    });
-
-    function drawWave(){
-      var cv = els.waveCanvas, ctx = cv.getContext('2d');
-      var w = cv.width, h = cv.height, mid = h/2;
-      ctx.clearRect(0,0,w,h);
-      ctx.fillStyle = '#f6f5ef';
-      ctx.fillRect(0,0,w,h);
-      var mins = state.peaksMin, maxs = state.peaksMax;
-      var totalChunks = mins.length;
-      var buf = state.audioBuffer;
-      var totalSamples = buf.length;
-      var samplesPerPixel = totalSamples / w;
-      ctx.strokeStyle = '#0c0c0a';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      for (var x = 0; x < w; x++){
-        var s0 = Math.floor(x * samplesPerPixel);
-        var s1 = Math.max(s0+1, Math.floor((x+1) * samplesPerPixel));
-        var c0 = Math.min(totalChunks-1, Math.floor(s0 / CHUNK));
-        var c1 = Math.min(totalChunks-1, Math.floor((s1-1) / CHUNK));
-        var mn = 1, mx = -1;
-        for (var c = c0; c <= c1; c++){
-          if (mins[c] < mn) mn = mins[c];
-          if (maxs[c] > mx) mx = maxs[c];
+    // min/max of the visible audio for pixel column x (in CSS px)
+    function columnRange(x, spp, startSample, ch0, ch1){
+      var buf = state.audioBuffer, len = buf.length;
+      var s0 = Math.floor(startSample + x * spp), s1 = Math.max(s0 + 1, Math.floor(startSample + (x + 1) * spp));
+      if (s1 <= 0 || s0 >= len) return null;
+      s0 = Math.max(0, s0); s1 = Math.min(len, s1);
+      var mn = 1, mx = -1;
+      if (spp >= CHUNK){
+        var mins = state.peaksMin, maxs = state.peaksMax, tc = mins.length;
+        var c0 = Math.min(tc - 1, Math.floor(s0 / CHUNK)), c1 = Math.min(tc - 1, Math.floor((s1 - 1) / CHUNK));
+        for (var c = c0; c <= c1; c++){ if (mins[c] < mn) mn = mins[c]; if (maxs[c] > mx) mx = maxs[c]; }
+      } else {
+        for (var j = s0; j < s1; j++){
+          var v = ch1 ? (ch0[j] + ch1[j]) * 0.5 : ch0[j];
+          if (v < mn) mn = v; if (v > mx) mx = v;
         }
-        if (mx < mn) { mn = 0; mx = 0; }
-        var y0 = mid - mx * (mid-4);
-        var y1 = mid - mn * (mid-4);
+      }
+      return mx < mn ? null : [mn, mx];
+    }
+    // Adds the waveform columns for xFrom..xTo to the current path.
+    function tracePath(ctx, xFrom, xTo, mid, amp){
+      var buf = state.audioBuffer, sr = buf.sampleRate;
+      var spp = sr / view.pps, startSample = view.start * sr;
+      var ch0 = buf.getChannelData(0), ch1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : null;
+      for (var x = Math.max(0, Math.floor(xFrom)); x < xTo; x++){
+        var r = columnRange(x, spp, startSample, ch0, ch1);
+        if (!r) continue;
+        var y0 = mid - nicePeak(r[1]) * amp, y1 = mid - nicePeak(r[0]) * amp;
         if (y1 - y0 < 1) y1 = y0 + 1;
-        ctx.moveTo(x+0.5, y0);
-        ctx.lineTo(x+0.5, y1);
+        ctx.moveTo(x + 0.5, y0); ctx.lineTo(x + 0.5, y1);
+      }
+    }
+    function waveGeom(h){
+      var top = RULER_H, plot = h - top;
+      return { top: top, mid: top + plot / 2, amp: plot / 2 - 4 };
+    }
+    function niceStep(minSec){
+      var steps = [0.001,0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,15,30,60,120,300,600,1800];
+      for (var i = 0; i < steps.length; i++) if (steps[i] >= minSec) return steps[i];
+      return 3600;
+    }
+    function rulerLabel(t, step){
+      var m = Math.floor(t / 60), s = t - m * 60;
+      var dec = step >= 1 ? 0 : step >= 0.1 ? 1 : step >= 0.01 ? 2 : 3;
+      var ss = s.toFixed(dec);
+      if (parseFloat(ss) >= 60){ m++; ss = (0).toFixed(dec); }
+      return m + ':' + (parseFloat(ss) < 10 ? '0' : '') + ss;
+    }
+    function drawRuler(ctx, w){
+      ctx.fillStyle = '#e4e2d6';
+      ctx.fillRect(0, 0, w, RULER_H);
+      ctx.fillStyle = '#0c0c0a';
+      ctx.fillRect(0, RULER_H - 1, w, 1);
+      var step = niceStep(88 / view.pps), minor = step / 4;
+      ctx.font = '9px Silkscreen, monospace';
+      ctx.textBaseline = 'middle';
+      ctx.strokeStyle = '#8b8778'; ctx.lineWidth = 1; ctx.beginPath();
+      for (var t = Math.floor(view.start / minor) * minor; t <= view.start + w / view.pps; t += minor){
+        var x = Math.round(timeToX(t)) + 0.5;
+        if (x < 0 || x > w) continue;
+        var isMajor = Math.abs(t / step - Math.round(t / step)) < 1e-6;
+        ctx.moveTo(x, RULER_H - 1); ctx.lineTo(x, RULER_H - (isMajor ? 9 : 5));
       }
       ctx.stroke();
-      ctx.strokeStyle = '#c9c7ba';
-      ctx.beginPath();
-      ctx.moveTo(0, mid+0.5); ctx.lineTo(w, mid+0.5);
-      ctx.stroke();
+      ctx.fillStyle = '#55524a';
+      for (t = Math.ceil(view.start / step) * step; t <= view.start + w / view.pps; t += step){
+        var lx = timeToX(t);
+        if (lx < 0 || lx > w) continue;
+        ctx.fillText(rulerLabel(t, step), lx + 3, RULER_H - 14);
+      }
     }
+    function drawWave(){
+      var cv = els.waveCanvas, ctx = cv.getContext('2d'), r = dpr();
+      var w = cv.width / r, h = cv.height / r, g = waveGeom(h);
+      ctx.setTransform(r, 0, 0, r, 0, 0);
+      ctx.fillStyle = '#f6f5ef';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#c9c7ba'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, Math.round(g.mid) + 0.5); ctx.lineTo(w, Math.round(g.mid) + 0.5); ctx.stroke();
+      ctx.strokeStyle = '#0c0c0a'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      tracePath(ctx, 0, w, g.mid, g.amp);
+      ctx.stroke();
+      drawRuler(ctx, w);
+    }
+
+    /* ---- overview strip ---- */
+    var ovCache = null;
+    function drawOverview(){
+      var cv = els.ovCanvas, ctx = cv.getContext('2d'), r = dpr();
+      var w = cv.width / r, h = cv.height / r;
+      if (!w) return;
+      ctx.setTransform(r, 0, 0, r, 0, 0);
+      ctx.fillStyle = '#e4e2d6'; ctx.fillRect(0, 0, w, h);
+      var d = trackDur(), mid = h / 2, amp = h / 2 - 3;
+      if (!ovCache || ovCache.w !== w){
+        var mins = state.peaksMin, maxs = state.peaksMax, tc = mins.length, cols = [];
+        for (var x = 0; x < w; x++){
+          var c0 = Math.floor(x / w * tc), c1 = Math.max(c0, Math.min(tc - 1, Math.floor((x + 1) / w * tc) - 1));
+          var mn = 1, mx = -1;
+          for (var c = c0; c <= c1; c++){ if (mins[c] < mn) mn = mins[c]; if (maxs[c] > mx) mx = maxs[c]; }
+          cols.push(mx < mn ? [0, 0] : [mn, mx]);
+        }
+        ovCache = { w: w, cols: cols };
+      }
+      var segs = segments();
+      var sel = segs.length > 1 ? segs[state.selected] : null;
+      if (sel){
+        ctx.fillStyle = '#c9c7ba';
+        ctx.fillRect(sel.start / d * w, 0, Math.max(2, (sel.end - sel.start) / d * w), h);
+      }
+      ctx.strokeStyle = '#0c0c0a'; ctx.lineWidth = 1; ctx.beginPath();
+      for (var xx = 0; xx < w; xx++){
+        var cc = ovCache.cols[xx];
+        var y0 = mid - cc[1] * amp, y1 = mid - cc[0] * amp;
+        if (y1 - y0 < 1) y1 = y0 + 1;
+        ctx.moveTo(xx + 0.5, y0); ctx.lineTo(xx + 0.5, y1);
+      }
+      ctx.stroke();
+      ctx.strokeStyle = '#0c0c0a'; ctx.lineWidth = 1;
+      state.markers.forEach(function(m){
+        var mx2 = Math.round(m.time / d * w) + 0.5;
+        ctx.beginPath(); ctx.moveTo(mx2, 0); ctx.lineTo(mx2, h); ctx.stroke();
+      });
+      // viewport box
+      var vx = view.start / d * w, vw = Math.max(6, viewSpan() / d * w);
+      ctx.fillStyle = 'rgba(12,12,10,0.14)'; ctx.fillRect(vx, 0, vw, h);
+      ctx.strokeStyle = '#0c0c0a'; ctx.lineWidth = 2.5;
+      ctx.strokeRect(vx + 1.25, 1.25, Math.max(4, vw - 2.5), h - 2.5);
+      // playhead
+      var px = Math.round(state.cursorTime / d * w) + 0.5;
+      ctx.strokeStyle = '#0c0c0a'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, h); ctx.stroke();
+    }
+    var ovDrag = null;
+    function ovTime(e){
+      var rect = els.ovCanvas.getBoundingClientRect();
+      return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * trackDur();
+    }
+    els.waveOverview.addEventListener('pointerdown', function(e){
+      if (!state.audioBuffer) return;
+      e.preventDefault();
+      var t = ovTime(e), inside = t >= view.start && t <= view.start + viewSpan();
+      ovDrag = { grab: inside ? t - view.start : viewSpan() / 2 };
+      setView(t - ovDrag.grab, null);
+      els.waveOverview.setPointerCapture(e.pointerId);
+    });
+    els.waveOverview.addEventListener('pointermove', function(e){
+      if (ovDrag) setView(ovTime(e) - ovDrag.grab, null);
+    });
+    ['pointerup', 'pointercancel'].forEach(function(evt){
+      els.waveOverview.addEventListener(evt, function(){ ovDrag = null; });
+    });
 
     function segments(){
       var d = state.audioBuffer.duration;
@@ -1440,84 +1630,84 @@
       return segs;
     }
 
+    function drawGrid(ctx, w, h){
+      var gr = state.grid, beat = 60 / gr.bpm, px = beat * view.pps;
+      if (px < 3) return;
+      var first = Math.ceil((view.start - gr.offset) / beat), last = Math.floor((view.start + w / view.pps - gr.offset) / beat);
+      for (var k = first; k <= last; k++){
+        var isBar = ((k % 4) + 4) % 4 === 0;
+        if (!isBar && px < 10) continue;
+        var x = Math.round(timeToX(gr.offset + k * beat)) + 0.5;
+        ctx.strokeStyle = isBar ? '#55524a' : '#c9c7ba';
+        ctx.lineWidth = isBar ? 1.5 : 1;
+        ctx.beginPath(); ctx.moveTo(x, RULER_H); ctx.lineTo(x, h); ctx.stroke();
+      }
+    }
     function drawOverlay(){
-      var cv = els.overlayCanvas, ctx = cv.getContext('2d');
-      var w = cv.width, h = cv.height, mid = h/2;
-      ctx.clearRect(0,0,w,h);
+      var cv = els.overlayCanvas, ctx = cv.getContext('2d'), r = dpr();
+      var w = cv.width / r, h = cv.height / r;
+      if (!w || !state.audioBuffer) return;
+      var g = waveGeom(h);
+      ctx.setTransform(r, 0, 0, r, 0, 0);
+      ctx.clearRect(0, 0, w, h);
       var segs = segments();
-      var selX0 = null, selX1 = null;
-      if (state.selected != null && segs[state.selected]){
-        var seg = segs[state.selected];
-        var x0 = timeToX(seg.start), x1 = timeToX(seg.end);
-        selX0 = x0; selX1 = x1;
-        // A faint tint read as barely-there, and the app's own convention
-        // everywhere else (stat tiles, sample chips, mode tiles) is a hard
-        // ink/card inversion for "this one is active" — so the selected
-        // region gets the same treatment: a solid ink band, with the
-        // waveform for that stretch redrawn in card color on top of it so
-        // it still reads as a cutout, the way the pixel icons do.
-        ctx.fillStyle = '#0c0c0a';
-        ctx.fillRect(x0, 0, Math.max(1,x1-x0), h);
-        if (state.peaksMin && state.audioBuffer){
-          var mins = state.peaksMin, maxs = state.peaksMax;
-          var totalChunks = mins.length;
-          var totalSamples = state.audioBuffer.length;
-          var samplesPerPixel = totalSamples / w;
-          ctx.strokeStyle = '#f0efe8';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          var xStart = Math.max(0, Math.floor(x0)), xEnd = Math.min(w, Math.ceil(x1));
-          for (var sx = xStart; sx < xEnd; sx++){
-            var ss0 = Math.floor(sx * samplesPerPixel);
-            var ss1 = Math.max(ss0+1, Math.floor((sx+1) * samplesPerPixel));
-            var sc0 = Math.min(totalChunks-1, Math.floor(ss0 / CHUNK));
-            var sc1 = Math.min(totalChunks-1, Math.floor((ss1-1) / CHUNK));
-            var smn = 1, smx = -1;
-            for (var sc = sc0; sc <= sc1; sc++){
-              if (mins[sc] < smn) smn = mins[sc];
-              if (maxs[sc] > smx) smx = maxs[sc];
-            }
-            if (smx < smn) { smn = 0; smx = 0; }
-            var sy0 = mid - smx * (mid-4);
-            var sy1 = mid - smn * (mid-4);
-            if (sy1 - sy0 < 1) sy1 = sy0 + 1;
-            ctx.moveTo(sx+0.5, sy0);
-            ctx.lineTo(sx+0.5, sy1);
-          }
-          ctx.stroke();
+      if (state.grid.show && state.grid.bpm > 0) drawGrid(ctx, w, h);
+      // Selected sample: the app's usual hard ink/card inversion, with the
+      // waveform redrawn in card colour on top so it reads as a cutout.
+      var selX0 = null, selX1 = null, seg = segs.length > 1 ? segs[state.selected] : null;
+      if (seg){
+        selX0 = timeToX(seg.start); selX1 = timeToX(seg.end);
+        var cx0 = Math.max(0, selX0), cx1 = Math.min(w, selX1);
+        if (cx1 > cx0){
+          ctx.fillStyle = '#0c0c0a';
+          ctx.fillRect(cx0, RULER_H, Math.max(1, cx1 - cx0), h - RULER_H);
+          ctx.strokeStyle = '#f0efe8'; ctx.lineWidth = 1;
+          ctx.beginPath(); tracePath(ctx, cx0, cx1, g.mid, g.amp); ctx.stroke();
         }
       }
-      ctx.strokeStyle = '#0c0c0a';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#0c0c0a'; ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
       state.markers.forEach(function(m){
         var x = timeToX(m.time);
-        ctx.beginPath();
-        ctx.setLineDash([4,3]);
-        ctx.moveTo(x+0.5, 0); ctx.lineTo(x+0.5, h);
-        ctx.stroke();
-        ctx.setLineDash([]);
+        if (x < -2 || x > w + 2) return;
+        ctx.beginPath(); ctx.moveTo(x + 0.5, RULER_H); ctx.lineTo(x + 0.5, h); ctx.stroke();
       });
-      // playhead — swap to card color while it's crossing the inverted
-      // selection band, or it disappears against the ink fill there.
+      ctx.setLineDash([]);
+      // sample numbers, bottom-left of each visible region
+      ctx.font = 'bold 11px Silkscreen, monospace'; ctx.textBaseline = 'middle';
+      segs.forEach(function(sg, i){
+        var x0 = timeToX(sg.start), x1 = timeToX(sg.end);
+        if (x1 < 0 || x0 > w || x1 - x0 < 30) return;
+        var label = (i + 1 < 10 ? '0' : '') + (i + 1), lx = Math.max(x0, 0) + 5, ly = h - 11;
+        var inSel = (i === state.selected);
+        ctx.fillStyle = inSel ? '#f0efe8' : '#0c0c0a';
+        ctx.fillRect(lx - 3, ly - 8, 25, 16);
+        ctx.fillStyle = inSel ? '#0c0c0a' : '#f0efe8';
+        ctx.fillText(label, lx, ly + 1);
+      });
+      // playhead — card colour while crossing the inverted selection
       var cx = timeToX(state.cursorTime);
-      var overSelection = selX0 != null && cx >= selX0 && cx <= selX1;
-      var playheadColor = overSelection ? '#f0efe8' : '#0c0c0a';
-      ctx.strokeStyle = playheadColor;
-      ctx.fillStyle = playheadColor;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(cx+0.5, 0); ctx.lineTo(cx+0.5, h);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx-4, 0); ctx.lineTo(cx+4,0); ctx.lineTo(cx,6); ctx.closePath();
-      ctx.fill();
+      if (cx >= -6 && cx <= w + 6){
+        var over = selX0 != null && cx >= selX0 && cx <= selX1;
+        ctx.strokeStyle = ctx.fillStyle = over ? '#f0efe8' : '#0c0c0a';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(cx + 0.5, RULER_H); ctx.lineTo(cx + 0.5, h); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx - 5, RULER_H); ctx.lineTo(cx + 5, RULER_H); ctx.lineTo(cx, RULER_H + 7); ctx.closePath(); ctx.fill();
+      }
+      drawOverview();
     }
 
     function rebuildHandles(){
       Array.prototype.slice.call(els.waveStage.querySelectorAll('.marker-handle')).forEach(function(h){ h.remove(); });
+      // thinner tabs when markers are packed close together, so they stay separately grabbable
+      var ts = state.markers.map(function(m){ return m.time; }).sort(function(a, b){ return a - b; }), gap = 1e9;
+      for (var gi = 1; gi < ts.length; gi++) gap = Math.min(gap, (ts[gi] - ts[gi - 1]) * view.pps);
+      var hw = Math.max(5, Math.min(22, Math.floor(gap - 2)));
       state.markers.forEach(function(m){
+        if (timeToX(m.time) < -20 || timeToX(m.time) > containerWidth() + 20) return;
         var h = document.createElement('div');
         h.className = 'marker-handle';
+        h.style.width = hw + 'px'; h.style.marginLeft = (-hw / 2) + 'px';
         h.style.left = timeToX(m.time) + 'px';
         h.dataset.id = m.id;
         h.addEventListener('pointerdown', onHandlePointerDown);
@@ -1542,10 +1732,30 @@
       var next = idx<sorted.length-1 ? sorted[idx+1].time : state.audioBuffer.duration;
       return { prev: prev, next: next };
     }
+    // Dragging a marker near the left/right edge scrolls the view, so a marker
+    // can be carried further than what is currently on screen.
+    var dragX = 0, dragPanTimer = null;
+    function startDragPan(){
+      if (dragPanTimer) return;
+      dragPanTimer = setInterval(function(){
+        if (state.draggingId == null) return;
+        var x = dragX - els.waveStage.getBoundingClientRect().left, w = containerWidth(), edge = 36;
+        var dir = x < edge ? -(edge - x) / edge : x > w - edge ? (x - (w - edge)) / edge : 0;
+        if (!dir) return;
+        panBy(Math.max(-1, Math.min(1, dir)) * 18);
+        moveDraggedMarker();
+      }, 30);
+    }
+    function stopDragPan(){ if (dragPanTimer){ clearInterval(dragPanTimer); dragPanTimer = null; } }
     function onHandlePointerMove(e){
       if (state.draggingId == null) return;
+      dragX = e.clientX;
+      startDragPan();
+      moveDraggedMarker();
+    }
+    function moveDraggedMarker(){
       var rect = els.waveStage.getBoundingClientRect();
-      var x = e.clientX - rect.left;
+      var x = dragX - rect.left;
       var t = xToTime(x);
       var nb = neighborsOf(state.draggingId);
       t = Math.max(nb.prev + MIN_GAP, Math.min(nb.next - MIN_GAP, t));
@@ -1558,6 +1768,7 @@
       }
     }
     function onHandlePointerUp(){
+      stopDragPan();
       if (state.draggingId != null && state.snap) snapMarker(state.draggingId);
       var wasDragging = state.draggingId;
       state.draggingId = null;
@@ -1625,20 +1836,6 @@
       layoutStage(); drawOverlay(); renderSamples();
     }
 
-    els.waveStage.addEventListener('click', function(e){
-      if (state.draggingId != null) return;
-      if (!state.audioBuffer) return;
-      var rect = els.waveStage.getBoundingClientRect();
-      var t = xToTime(e.clientX - rect.left);
-      if (state.markMode) {
-        addMarkerAt(t);
-      } else {
-        state.cursorTime = t;
-        if (state.playing) restartPlaybackFrom(t);
-        drawOverlay();
-      }
-    });
-
     /* ---- add-marker mode (click waveform to drop a marker) ----
        Manual mode turns this on automatically, since requiring a second,
        separately-discovered toggle on top of picking "Manual" was the
@@ -1651,8 +1848,8 @@
       els.waveFrame.classList.toggle('add-mode', on);
       els.waveStage.classList.toggle('add-mode', on);
       els.chopHint.innerHTML = on
-        ? '<b>' + tr('Click the waveform to add a marker') + '</b> &middot; ' + tr('drag a tab to move it') + ' &middot; ' + tr('double-click a tab to delete it')
-        : tr('Click waveform to seek') + ' &middot; ' + tr('drag a marker tab to move it') + ' &middot; ' + tr('double-click a marker to delete it');
+        ? '<b>' + tr('Click the waveform to add a marker') + '</b> &middot; ' + tr('drag it to scroll') + ' &middot; ' + tr('drag a tab to move it') + ' &middot; ' + tr('double-click a tab to delete it')
+        : tr('Click waveform to seek') + ' &middot; ' + tr('drag it to scroll') + ' &middot; ' + tr('drag a marker tab to move it') + ' &middot; ' + tr('double-click a marker to delete it');
     }
 
     /* ---- mode row ---- */
@@ -1663,7 +1860,11 @@
         els.panelTransient.hidden = state.mode !== 'transient';
         els.panelEqual.hidden = state.mode !== 'equal';
         els.panelManual.hidden = state.mode !== 'manual';
+        els.panelBeats.hidden = state.mode !== 'beats';
         setMarkMode(state.mode === 'manual');
+        state.grid.show = state.mode === 'beats' && state.grid.bpm > 0;
+        if (state.mode === 'beats' && !state.grid.detected && state.audioBuffer) runDetect();
+        else if (state.audioBuffer) drawOverlay();
       });
     });
     var sensRechopTimer = null;
@@ -1684,7 +1885,7 @@
         Array.prototype.forEach.call(els.partsRow.children, function(c2){ c2.classList.toggle('active', c2===chip); });
       });
     });
-    [els.clearMarkersBtn1, els.clearMarkersBtn2, els.clearMarkersBtn3].forEach(function(btn){
+    [els.clearMarkersBtn1, els.clearMarkersBtn2, els.clearMarkersBtn3, els.clearMarkersBtn4].forEach(function(btn){
       btn.addEventListener('click', clearMarkers);
     });
 
@@ -1847,6 +2048,7 @@
         var sampSeg = segments()[state.selected];
         if (sampSeg) state.cursorTime = Math.min(sampSeg.end, sampSeg.start + elapsed);
       }
+      followPlayhead();
       drawOverlay();
       rafId = requestAnimationFrame(tick);
     }
@@ -1933,34 +2135,268 @@
       if (state.playKind === 'loop') { stopAll(); } else { startLoop(); }
     });
 
-    /* ---- toolbar ---- */
-    // Zooming keeps whatever was under the anchor point (the mouse, or the
-    // wrap's center for the +/- buttons) under that same point afterward,
-    // instead of always re-anchoring to the left edge — otherwise every zoom
-    // step shoves the view somewhere else and it feels broken/disorienting.
-    function setZoom(newIdx, anchorClientX){
+    /* ---- gestures: click = seek / add marker, drag = scroll, wheel = zoom/scroll ---- */
+    var gesture = null;
+    els.waveStage.addEventListener('pointerdown', function(e){
       if (!state.audioBuffer) return;
-      newIdx = Math.max(0, Math.min(ZOOM_STEPS.length-1, newIdx));
-      if (newIdx === state.zoomIdx) return;
-      var wrap = els.waveWrap;
-      var rect = wrap.getBoundingClientRect();
-      var anchorX = (anchorClientX != null) ? (anchorClientX - rect.left) : (wrap.clientWidth/2);
-      var t = xToTime(wrap.scrollLeft + anchorX);
-      state.zoomIdx = newIdx;
-      layoutStage(); drawOverlay();
-      wrap.scrollLeft = Math.max(0, timeToX(t) - anchorX);
+      if (e.target.classList && e.target.classList.contains('marker-handle')) return;
+      e.preventDefault();
+      gesture = { x0: e.clientX, start0: view.start, moved: false };
+      els.waveStage.setPointerCapture(e.pointerId);
+    });
+    els.waveStage.addEventListener('pointermove', function(e){
+      if (!gesture) return;
+      var dx = e.clientX - gesture.x0;
+      if (!gesture.moved && Math.abs(dx) > 4){ gesture.moved = true; els.waveStage.classList.add('panning'); }
+      if (gesture.moved) setView(gesture.start0 - dx / view.pps, null);
+    });
+    function endGesture(e, cancelled){
+      if (!gesture) return;
+      var g = gesture; gesture = null;
+      els.waveStage.classList.remove('panning');
+      if (g.moved || cancelled || state.draggingId != null || !state.audioBuffer) return;
+      var rect = els.waveStage.getBoundingClientRect();
+      var t = xToTime(e.clientX - rect.left);
+      if (state.markMode) {
+        addMarkerAt(t);
+      } else {
+        state.cursorTime = t;
+        if (state.playing) restartPlaybackFrom(t);
+        drawOverlay();
+      }
     }
-    els.zoomInBtn.addEventListener('click', function(){ setZoom(state.zoomIdx + 1); });
-    els.zoomOutBtn.addEventListener('click', function(){ setZoom(state.zoomIdx - 1); });
-    // Scroll/trackpad-wheel zoom over the waveform (the most-missed way to zoom
-    // per user feedback) — vertical wheel motion zooms, anchored at the cursor;
-    // horizontal wheel/trackpad motion is left alone so panning still works.
+    els.waveStage.addEventListener('pointerup', function(e){ endGesture(e, false); });
+    els.waveStage.addEventListener('pointercancel', function(e){ endGesture(e, true); });
+
     els.waveWrap.addEventListener('wheel', function(e){
       if (!state.audioBuffer) return;
-      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
       e.preventDefault();
-      setZoom(state.zoomIdx + (e.deltaY < 0 ? 1 : -1), e.clientX);
+      var ax = e.clientX - els.waveWrap.getBoundingClientRect().left;
+      if (e.ctrlKey || (Math.abs(e.deltaY) > Math.abs(e.deltaX) && !e.shiftKey)){
+        zoomAround(Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0025)), ax); // ctrl = trackpad pinch
+      } else {
+        panBy(e.shiftKey ? e.deltaY : e.deltaX);
+      }
     }, { passive: false });
+
+    /* ---- knobs ---- */
+    var KNOB_SVG = '<svg viewBox="0 0 56 56" aria-hidden="true"><circle class="body" cx="28" cy="28" r="23" fill="#f0efe8" stroke="#0c0c0a" stroke-width="3"/>' +
+      '<g class="needle"><line x1="28" y1="28" x2="28" y2="9" stroke="#0c0c0a" stroke-width="4" stroke-linecap="square"/></g>' +
+      '<circle cx="28" cy="28" r="4" fill="#0c0c0a"/></svg>';
+    // bounded knob: value in 0..1 (270deg sweep). endless knob: reports turn deltas.
+    function makeKnob(host, o){
+      host.className = 'knob'; host.tabIndex = 0;
+      host.setAttribute('role', 'slider'); host.setAttribute('aria-label', tr(o.label));
+      host.innerHTML = KNOB_SVG + '<div class="k-val"></div><div class="k-name"></div>';
+      var needle = host.querySelector('.needle'), valEl = host.querySelector('.k-val'), nameEl = host.querySelector('.k-name');
+      var angle = o.endless ? 0 : -135, drag = null;
+      function relabel(){ nameEl.textContent = tr(o.label); host.title = tr(o.hint); }
+      relabel();
+      function paint(){ needle.setAttribute('transform', 'rotate(' + angle + ' 28 28)'); }
+      function nudge(d){ // d in "knob units" (1 = full sweep for bounded)
+        if (o.endless){ angle += d * 360; paint(); o.onTurn(d); }
+        else { var n = Math.max(0, Math.min(1, o.get() + d)); o.set(n); }
+      }
+      host.addEventListener('pointerdown', function(e){
+        e.preventDefault(); host.focus();
+        drag = { x: e.clientX, y: e.clientY };
+        host.setPointerCapture(e.pointerId);
+      });
+      host.addEventListener('pointermove', function(e){
+        if (!drag) return;
+        var d = ((e.clientX - drag.x) - (e.clientY - drag.y)) / (o.endless ? 220 : 170);
+        drag.x = e.clientX; drag.y = e.clientY;
+        nudge(d);
+      });
+      ['pointerup', 'pointercancel'].forEach(function(evt){ host.addEventListener(evt, function(){ drag = null; }); });
+      host.addEventListener('wheel', function(e){ e.preventDefault(); e.stopPropagation(); nudge(-e.deltaY / 1200); }, { passive: false });
+      host.addEventListener('dblclick', function(){ if (o.reset) o.reset(); });
+      host.addEventListener('keydown', function(e){
+        var k = e.key;
+        if (k === 'ArrowUp' || k === 'ArrowRight'){ e.preventDefault(); e.stopPropagation(); nudge(0.03); }
+        else if (k === 'ArrowDown' || k === 'ArrowLeft'){ e.preventDefault(); e.stopPropagation(); nudge(-0.03); }
+      });
+      return {
+        show: function(norm, text){
+          if (!o.endless){ angle = -135 + 270 * norm; paint(); host.setAttribute('aria-valuenow', Math.round(norm * 100)); }
+          valEl.textContent = text;
+        },
+        relabel: relabel, paint: paint
+      };
+    }
+    var knobs = {
+      zoom: makeKnob(document.getElementById('knobZoom'), {
+        label: 'Zoom', hint: 'Zoom — drag, scroll over it, or use arrow keys. Double-click to fit the whole track.',
+        get: function(){ var f = fitPps(); return Math.log(view.pps / f) / Math.log(maxPps() / f); },
+        set: function(n){ var f = fitPps(); zoomAround(f * Math.exp(n * Math.log(maxPps() / f)) / view.pps, zoomAnchor()); },
+        reset: function(){ fitView(); }
+      }),
+      scrub: makeKnob(document.getElementById('knobScrub'), {
+        label: 'Scrub', hint: 'Scrub — turn to move along the track. Faster turn, bigger jump.', endless: true,
+        onTurn: function(d){ setView(view.start + d * viewSpan() * 0.9, null); }
+      }),
+      gain: makeKnob(document.getElementById('knobGain'), {
+        label: 'Height', hint: 'Waveform gain — make quiet audio taller (display only). Double-click to reset.',
+        get: function(){ return Math.log(viewCfg.gain) / Math.log(12); },
+        set: function(n){ viewCfg.gain = Math.exp(n * Math.log(12)); redrawAll(); },
+        reset: function(){ viewCfg.gain = 1; redrawAll(); }
+      })
+    };
+    knobs.scrub.paint();
+    function updateKnobs(){
+      var f = fitPps(), z = Math.log(view.pps / f) / Math.log(maxPps() / f);
+      knobs.zoom.show(isFinite(z) ? Math.max(0, Math.min(1, z)) : 0, (view.pps / f >= 100 ? Math.round(view.pps / f) : (view.pps / f).toFixed(1)) + 'x');
+      knobs.gain.show(Math.log(viewCfg.gain) / Math.log(12), viewCfg.gain.toFixed(1) + 'x');
+      knobs.scrub.show(0, fmtTime(view.start));
+      els.zoomLabel.textContent = (view.pps / f >= 100 ? Math.round(view.pps / f) : (view.pps / f).toFixed(1)) + 'x';
+    }
+
+    els.zoomInBtn.addEventListener('click', function(){ zoomAround(1.6, zoomAnchor()); });
+    els.zoomOutBtn.addEventListener('click', function(){ zoomAround(1 / 1.6, zoomAnchor()); });
+    document.getElementById('fitBtn').addEventListener('click', fitView);
+    document.getElementById('selBtn').addEventListener('click', zoomToSelection);
+    document.getElementById('followBtn').addEventListener('click', function(){
+      viewCfg.follow = !viewCfg.follow;
+      this.classList.toggle('on', viewCfg.follow);
+    });
+    document.getElementById('heightBtn').addEventListener('click', function(){
+      viewCfg.height = HEIGHTS[(HEIGHTS.indexOf(viewCfg.height) + 1) % HEIGHTS.length];
+      layoutStage();
+    });
+    function followPlayhead(){
+      if (!viewCfg.follow || !state.playKind || viewSpan() >= trackDur()) return;
+      var x = timeToX(state.cursorTime), w = containerWidth();
+      if (x > w * 0.92 || x < 0) setView(state.cursorTime - viewSpan() * 0.08, null);
+    }
+
+    /* ---- keyboard ---- */
+    document.addEventListener('keydown', function(e){
+      if (!state.audioBuffer || !document.getElementById('screenChop').classList.contains('active')) return;
+      var tg = e.target, tag = tg && tg.tagName;
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || (tg && tg.isContentEditable)) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      var k = e.key, handled = true;
+      if (k === ' ') els.playBtn.click();
+      else if (k === 'm' || k === 'M') addMarkerAt(state.cursorTime);
+      else if (k === 'Delete' || k === 'Backspace'){
+        var near = null, best = 1e9;
+        state.markers.forEach(function(m){ var dd = Math.abs(m.time - state.cursorTime); if (dd < best){ best = dd; near = m; } });
+        if (near) removeMarker(near.id);
+      }
+      else if (k === 'ArrowLeft') panBy(-containerWidth() * (e.shiftKey ? 0.5 : 0.1));
+      else if (k === 'ArrowRight') panBy(containerWidth() * (e.shiftKey ? 0.5 : 0.1));
+      else if (k === '+' || k === '=') zoomAround(1.6, zoomAnchor());
+      else if (k === '-' || k === '_') zoomAround(1 / 1.6, zoomAnchor());
+      else if (k === '0') fitView();
+      else if (k === 's' || k === 'S') zoomToSelection();
+      else if (k === ',' || k === '.'){
+        var n = segments().length, ni = Math.max(0, Math.min(n - 1, state.selected + (k === '.' ? 1 : -1)));
+        if (ni !== state.selected){ state.selected = ni; renderSamples(); var sg = segments()[ni]; state.cursorTime = sg.start;
+          var sx = timeToX(sg.start); if (sx < 0 || sx > containerWidth() * 0.9) setView(sg.start - viewSpan() * 0.1, null); }
+      }
+      else if (k === 'Enter') els.playSampleBtn.click();
+      else if (k === 'l' || k === 'L') els.loopBtn.click();
+      else handled = false;
+      if (handled) e.preventDefault();
+    });
+
+    /* ---- tempo / beat grid ---- */
+    function detectTempo(){
+      var buf = state.audioBuffer, sr = buf.sampleRate;
+      var ch0 = buf.getChannelData(0), ch1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : null;
+      var frame = 1024, hop = 512, n = Math.max(0, Math.floor((ch0.length - frame) / hop));
+      if (n < 64) return null;
+      var env = new Float32Array(n);
+      for (var i = 0; i < n; i++){
+        var st = i * hop, sum = 0;
+        for (var j = 0; j < frame; j += 2){ var v = ch1 ? (ch0[st + j] + ch1[st + j]) * 0.5 : ch0[st + j]; sum += v * v; }
+        env[i] = Math.log(1 + 100 * Math.sqrt(sum / (frame / 2)));
+      }
+      var flux = new Float32Array(n), mean = 0;
+      for (i = 1; i < n; i++){ flux[i] = Math.max(0, env[i] - env[i - 1]); mean += flux[i]; }
+      mean /= n;
+      for (i = 0; i < n; i++) flux[i] = Math.max(0, flux[i] - mean * 0.5);
+      var hopSec = hop / sr, lagMin = Math.floor(60 / (200 * hopSec)), lagMax = Math.ceil(60 / (60 * hopSec));
+      var maxN = Math.min(n, Math.round(90 / hopSec)); // analyse the first 90 s
+      var ac = new Float32Array(lagMax + 2);
+      for (var lag = lagMin - 1; lag <= lagMax + 1; lag++){
+        var s2 = 0; for (var t = 0; t + lag < maxN; t++) s2 += flux[t] * flux[t + lag];
+        ac[lag] = s2 / Math.max(1, maxN - lag);
+      }
+      var bestLag = -1, bestScore = 0;
+      for (lag = lagMin; lag <= lagMax; lag++){
+        var bpm = 60 / (lag * hopSec);
+        var prior = Math.exp(-0.5 * Math.pow(Math.log(bpm / 120) / Math.LN2 / 0.9, 2));
+        // reward a lag whose double also correlates (stable pulse)
+        var sc = (ac[lag] + 0.5 * (ac[lag * 2] || 0)) * prior;
+        if (ac[lag] >= ac[lag - 1] && ac[lag] >= ac[lag + 1] && sc > bestScore){ bestScore = sc; bestLag = lag; }
+      }
+      if (bestLag < 0) return null;
+      var a = ac[bestLag - 1], b = ac[bestLag], c = ac[bestLag + 1], den = a - 2 * b + c;
+      var lagF = bestLag + (den !== 0 ? 0.5 * (a - c) / den : 0);
+      var bpmOut = 60 / (lagF * hopSec);
+      // beat phase: where does a comb of that period collect the most onset energy?
+      var bestPh = 0, bestPs = -1;
+      for (var ph = 0; ph < lagF; ph += 0.25){
+        var ps = 0;
+        for (var p = ph; p < maxN - 1; p += lagF){ var i0 = Math.floor(p), fr = p - i0; ps += flux[i0] * (1 - fr) + flux[i0 + 1] * fr; }
+        if (ps > bestPs){ bestPs = ps; bestPh = ph; }
+      }
+      return { bpm: bpmOut, offset: bestPh * hopSec };
+    }
+    function setBpm(v, keepOffset){
+      v = Math.max(30, Math.min(300, v));
+      state.grid.bpm = v;
+      els.bpmInput.value = (Math.round(v * 10) / 10).toString();
+      if (!keepOffset) state.grid.offset = state.grid.offset % (60 / v);
+      state.grid.show = state.mode === 'beats';
+      drawOverlay();
+      updateBeatStatus();
+    }
+    function updateBeatStatus(){
+      var gr = state.grid;
+      els.beatStatus.textContent = gr.bpm > 0
+        ? tr('Grid: {b} BPM · loop = {s} s · {n} loops', { b: (Math.round(gr.bpm * 10) / 10), s: (gr.div * 60 / gr.bpm).toFixed(2), n: Math.max(1, Math.ceil(state.audioBuffer.duration / (gr.div * 60 / gr.bpm))) })
+        : '';
+    }
+    function runDetect(){
+      els.beatStatus.textContent = tr('Detecting tempo…');
+      setTimeout(function(){
+        var r = state.audioBuffer ? detectTempo() : null;
+        if (!r){ els.beatStatus.textContent = tr('Could not find a steady tempo — type the BPM, then press Beat 1 = playhead on a downbeat.'); return; }
+        state.grid.detected = true; state.grid.offset = r.offset;
+        setBpm(r.bpm, true);
+      }, 20);
+    }
+    function makeBeatLoops(){
+      var gr = state.grid; if (!state.audioBuffer || !(gr.bpm > 0)) return;
+      var L = gr.div * 60 / gr.bpm, d = state.audioBuffer.duration;
+      var k0 = Math.ceil((MIN_GAP - gr.offset) / L), times = [];
+      for (var t = gr.offset + k0 * L; t < d - MIN_GAP; t += L) if (t > MIN_GAP) times.push(t);
+      if (times.length > 500){ els.beatStatus.textContent = tr('That would make over 500 loops — pick a longer loop length.'); return; }
+      state.markers = [];
+      times.forEach(function(t){ state.markers.push({ id: state.nextMarkerId++, time: state.snap ? findZeroCrossing(t) : t }); });
+      state.selected = 0;
+      layoutStage(); renderSamples();
+      updateBeatStatus();
+    }
+    els.bpmInput.addEventListener('change', function(){ var v = parseFloat(els.bpmInput.value); if (v > 0) setBpm(v, true); });
+    document.getElementById('bpmHalfBtn').addEventListener('click', function(){ if (state.grid.bpm > 0) setBpm(state.grid.bpm / 2, true); });
+    document.getElementById('bpmDoubleBtn').addEventListener('click', function(){ if (state.grid.bpm > 0) setBpm(state.grid.bpm * 2, true); });
+    document.getElementById('bpmDetectBtn').addEventListener('click', runDetect);
+    document.getElementById('beatOneBtn').addEventListener('click', function(){
+      if (!(state.grid.bpm > 0)) setBpm(parseFloat(els.bpmInput.value) || 120, true);
+      state.grid.offset = state.cursorTime; state.grid.show = true; drawOverlay();
+    });
+    document.getElementById('beatMakeBtn').addEventListener('click', makeBeatLoops);
+    Array.prototype.forEach.call(document.getElementById('beatDivRow').children, function(chip){
+      chip.addEventListener('click', function(){
+        state.grid.div = Number(chip.dataset.div);
+        Array.prototype.forEach.call(chip.parentNode.children, function(c){ c.classList.toggle('active', c === chip); });
+        updateBeatStatus();
+      });
+    });
+
     els.markBtn.addEventListener('click', function(){
       setMarkMode(!state.markMode);
     });
@@ -2029,6 +2465,8 @@
     });
 
     I18N.onChange(function(){
+      Object.keys(knobs).forEach(function(k){ knobs[k].relabel(); });
+      if (state.audioBuffer){ updateKnobs(); if (state.grid.bpm > 0) updateBeatStatus(); }
       setMarkMode(state.markMode);
       updatePlaybackUI();
       if (state.audioBuffer) renderSamples(); else els.sub.textContent = tr('No track loaded');
