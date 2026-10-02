@@ -97,6 +97,14 @@ and from data you add yourself. If nothing is known it says
     recordings indexed before this existed need to be re-indexed.
   - Still missed: samples time-stretched *without* a pitch change, chopped
     shorter than a second or two, or buried deep under other sounds.
+- **Recognised by audio (AudD, optional)** — the closest thing to a WhoSampled-style
+  lookup that does not need your own reference tracks. It cuts the track into
+  ~12-second clips and asks [AudD](https://audd.io) (a Shazam-like recognition
+  service) which released recording is playing in each, then lists recordings
+  other than the track itself with where they were heard. It **uploads audio**
+  (only after you press the button and confirm) and needs your own paid AudD
+  token. Services like this are built for whole songs, so chopped, pitched or
+  buried samples are often not recognised; an empty result is not proof.
 - **Genius (optional)** — paste your own Genius API token to also pull
   community-entered samples/interpolations from Genius. Off until a token is
   set; Genius's API terms have not been reviewed for this project and are your

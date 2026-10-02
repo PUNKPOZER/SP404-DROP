@@ -598,6 +598,7 @@
       <input type="file" id="chopFileInput" accept="audio/*,.wav,.mp3,.aif,.aiff,.flac,.ogg,.m4a">
 
       <div id="chopWorkspace" hidden>
+        <button class="pill" id="chopAgainBtn" style="width:100%;margin-bottom:10px;">Load another track</button>
         <div class="chop-toolbar">
           <button class="icon-btn" id="playBtn" aria-label="Play/Pause" title="Play / pause the whole track">&#9654;</button>
           <div class="zoom-group" title="Zoom the waveform — you can also scroll/pinch over it">
@@ -703,6 +704,7 @@
 
       <div id="smpWorkspace" hidden>
         <div class="smp-file" id="smpFile"></div>
+        <button class="pill" id="smpAgainBtn" style="width:100%;margin-bottom:10px;">Load another track</button>
         <div class="smp-query">
           <input type="text" id="smpQArtist" placeholder="Artist" maxlength="200">
           <input type="text" id="smpQTitle" placeholder="Track title" maxlength="200">
@@ -712,6 +714,9 @@
         <div id="smpResults"></div>
         <div class="smp-head"><h3>Found inside this track</h3></div>
         <div id="smpScan"></div>
+        <div class="smp-head"><h3>Recognised by audio (online)</h3></div>
+        <button class="pill" id="smpAuddBtn" style="width:100%;" disabled>Identify clips of this track with AudD</button>
+        <div id="smpAudd" style="margin-top:8px;"></div>
       </div>
 
       <div class="smp-head"><h3>Providers</h3></div>
@@ -720,6 +725,10 @@
         <input type="password" id="smpGeniusToken" placeholder="Genius API token (optional)" autocomplete="off" spellcheck="false" style="font-family:var(--font-ui);font-size:11px;border:2px solid var(--ink);border-radius:6px;padding:7px 8px;background:var(--card);color:var(--ink);width:100%;">
       </div>
       <div class="chop-hint" style="text-align:left;margin:4px 0 0;">Genius has far more community-entered sample credits than MusicBrainz. It needs your own free API token, and you are responsible for following Genius's API terms. Off until you paste one.</div>
+      <div class="smp-query" style="grid-template-columns:1fr;margin-top:8px;">
+        <input type="password" id="smpAuddToken" placeholder="AudD API token (optional)" autocomplete="off" spellcheck="false" style="font-family:var(--font-ui);font-size:11px;border:2px solid var(--ink);border-radius:6px;padding:7px 8px;background:var(--card);color:var(--ink);width:100%;">
+      </div>
+      <div class="chop-hint" style="text-align:left;margin:4px 0 0;">AudD recognises music from short audio clips, like Shazam. Unlike everything else here it uploads audio: about 12-second clips of the track, only when you press the button and confirm. Needs your own AudD token (a paid service); you are responsible for its terms.</div>
       <label class="smp-online"><input type="checkbox" id="smpOnline" checked><span>Online lookup (MusicBrainz) &mdash; sends only the artist and title text, never audio.</span></label>
 
       <div class="smp-head"><h3>Local database</h3></div>
@@ -850,6 +859,22 @@
     'Clear All Markers': 'Убрать все маркеры',
     '{n} Sample|{n} Samples': '{n} сэмпл|{n} сэмпла|{n} сэмплов',
     '0 Samples': '0 сэмплов',
+    'Load another track': 'Загрузить другой трек',
+    'Recognised by audio (online)': 'Распознано по звуку (онлайн)',
+    'Identify clips of this track with AudD': 'Распознать отрывки этого трека через AudD',
+    'AudD API token (optional)': 'Токен AudD API (необязательно)',
+    'AudD recognises music from short audio clips, like Shazam. Unlike everything else here it uploads audio: about 12-second clips of the track, only when you press the button and confirm. Needs your own AudD token (a paid service); you are responsible for its terms.': 'AudD узнаёт музыку по коротким аудиоотрывкам, как Shazam. В отличие от всего остального здесь он загружает аудио: отрывки трека примерно по 12 секунд, только когда ты нажмёшь кнопку и подтвердишь. Нужен твой собственный токен AudD (платный сервис); за его условия отвечаешь ты.',
+    'Paste your AudD API token above first': 'Сначала вставь токен AudD API выше',
+    'AUDD ERROR': 'ОШИБКА AUDD',
+    'NO OTHER RECORDING RECOGNISED': 'ДРУГИХ ЗАПИСЕЙ НЕ УЗНАНО',
+    'Checked {n} clip(s). Services like this are built for whole songs: short, chopped, pitched or buried samples are usually not recognised. A result of nothing is not proof that nothing is sampled.': 'Проверено отрывков: {n}. Такие сервисы рассчитаны на целые песни: короткие, нарезанные, изменённые по тону или спрятанные сэмплы обычно не узнаются. Пустой результат не доказывает, что сэмплов нет.',
+    'found by audio': 'найдено по звуку',
+    '{n} clip|{n} clips': '{n} отрывок|{n} отрывка|{n} отрывков',
+    'Heard in this track at {a}–{b}': 'Звучит в этом треке на {a}–{b}',
+    'At ~{t} in the original': 'В оригинале около {t}',
+    'AudD also recognised this track itself ({w}) — not counted as a sample.': 'AudD также узнал сам этот трек ({w}) — как сэмпл не учитывается.',
+    'Upload {n} short audio clips (about {s} seconds each) of this track to AudD for recognition? This is the one feature that sends audio off this device.': 'Загрузить {n} коротких аудиоотрывков (примерно по {s} секунд) этого трека в AudD для распознавания? Это единственная функция, которая отправляет аудио с этого устройства.',
+    'Asking AudD… clip {i} of {n}': 'Спрашиваю AudD… отрывок {i} из {n}',
     'Also look for sped-up, slowed-down or pitched samples (slower: a few seconds per minute of music).': 'Искать также ускоренные, замедленные и изменённые по тону сэмплы (медленнее: несколько секунд на минуту музыки).',
     'some recordings lack pitched-search data — re-index them': 'у некоторых записей нет данных для поиска по тону — проиндексируй их заново',
     'Scanned against {n} recording(s) at the original speed and from 0.8× to 1.25× (about ±4 semitones). Samples chopped very short, time-stretched without changing pitch, or buried under other sounds can still be missed.': 'Проверено по записям ({n}) на исходной скорости и от 0,8× до 1,25× (около ±4 полутонов). Сэмплы, нарезанные очень коротко, растянутые без смены тона или скрытые под другими звуками, всё равно могут быть пропущены.',
@@ -2230,6 +2255,7 @@
 
     /* ---- drop / browse ---- */
     els.drop.addEventListener('click', function(){ els.fileInput.click(); });
+    document.getElementById('chopAgainBtn').addEventListener('click', function(){ stopAll(); els.fileInput.click(); });
     els.fileInput.addEventListener('change', function(){
       if (els.fileInput.files[0]) loadFile(els.fileInput.files[0]);
       els.fileInput.value = '';
@@ -3103,6 +3129,85 @@
       })['catch'](function(){ var fn = fromFilename(file.name); fn.from = 'filename'; return fn; });
     }
 
+    /* ---------- AudD audio recognition ----------
+       Optional, needs the user's own AudD token, and (unlike everything else)
+       UPLOADS audio: ~12 s clips, only when the user presses the button and
+       confirms. It recognises which released recording is playing in a clip.
+       AudD's terms are not reviewed for this project (see
+       THIRD_PARTY_NOTICES.md). The Mac app does the upload from its main
+       process; a browser posts directly (AudD allows CORS). */
+    var AudD = (function(){
+      var token = '';
+      try { token = localStorage.getItem('sp404drop.auddToken') || ''; } catch(e){}
+      function wavBytes(channels, rate, from, to){
+        var x = downmix(channels, rate, from, to, 16000), n = x.length;
+        var b = new ArrayBuffer(44 + n * 2), dv = new DataView(b);
+        function w(o, str){ for (var i = 0; i < str.length; i++) dv.setUint8(o + i, str.charCodeAt(i)); }
+        w(0, 'RIFF'); dv.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); dv.setUint32(16, 16, true);
+        dv.setUint16(20, 1, true); dv.setUint16(22, 1, true); dv.setUint32(24, 16000, true); dv.setUint32(28, 32000, true);
+        dv.setUint16(32, 2, true); dv.setUint16(34, 16, true); w(36, 'data'); dv.setUint32(40, n * 2, true);
+        for (var i = 0; i < n; i++) dv.setInt16(44 + i * 2, Math.max(-1, Math.min(1, x[i])) * 32767, true);
+        return b;
+      }
+      function post(bytes){
+        var fields = { api_token: token, 'return': 'apple_music,spotify' };
+        if (window.sp404 && window.sp404.postAudio) return window.sp404.postAudio('https://api.audd.io/', fields, bytes, 'clip.wav');
+        var fd = new FormData();
+        Object.keys(fields).forEach(function(k){ fd.append(k, fields[k]); });
+        fd.append('file', new Blob([bytes], { type: 'audio/wav' }), 'clip.wav');
+        return fetch('https://api.audd.io/', { method: 'POST', body: fd }).then(function(r){ return r.json(); });
+      }
+      // -> { fatal, error } | { match: null } | { match: {artist,title,album,year,timecode,link} }
+      function parse(resp){
+        if (!resp || typeof resp !== 'object') return { error: 'unreadable response' };
+        if (resp.status === 'error'){
+          var e = resp.error || {};
+          return { error: (e.error_message || 'error') + (e.error_code ? ' (' + e.error_code + ')' : ''),
+                   fatal: [900, 901, 902, 904, 19].indexOf(e.error_code) >= 0 };
+        }
+        var r = resp.result;
+        if (!r) return { match: null };
+        return { match: { artist: str(r.artist), title: str(r.title), album: str(r.album), year: str(r.release_date, 4),
+                          timecode: str(r.timecode, 12), link: str(r.song_link, 500) } };
+      }
+      function norm(v){ return String(v || '').toLowerCase().replace(/\(.*?\)|\[.*?\]/g, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); }
+      function same(a, b){ a = norm(a); b = norm(b); return !!a && !!b && (a.indexOf(b) >= 0 || b.indexOf(a) >= 0); }
+      var CLIP = 12, STRIDE = 15, MAX_CLIPS = 16;
+      function plan(durationSec){
+        var starts = [];
+        if (durationSec <= CLIP + 1) return [0];
+        var n = Math.min(MAX_CLIPS, Math.floor((durationSec - CLIP) / STRIDE) + 1);
+        for (var i = 0; i < n; i++) starts.push(n === 1 ? 0 : i * (durationSec - CLIP) / (n - 1));
+        return starts;
+      }
+      // Sequential, stops on auth/quota errors. -> { matches:[{artist,title,..., startSec,endSec, hits, self}], error }
+      function scan(audio, meta, onProgress, isCancelled){
+        var starts = plan((audio.to - audio.from) / audio.rate), found = {}, error = '', i = 0;
+        function next(){
+          if (i >= starts.length || error || (isCancelled && isCancelled())) return Promise.resolve();
+          var st = starts[i++];
+          var f = audio.from + Math.floor(st * audio.rate), t = Math.min(audio.to, f + Math.floor(CLIP * audio.rate));
+          if (onProgress) onProgress(i, starts.length);
+          return post(wavBytes(audio.channels, audio.rate, f, t)).then(parse, function(err){ return { error: err && err.message ? err.message : 'network error', fatal: true }; }).then(function(p){
+            if (p.error){ if (p.fatal) error = p.error; return; }
+            if (!p.match) return;
+            var k = norm(p.match.artist) + '|' + norm(p.match.title), m = found[k];
+            if (!m){
+              m = found[k] = Object.assign({}, p.match, { startSec: st, endSec: st + CLIP, hits: 0,
+                self: !!(meta && ((meta.title && same(p.match.title, meta.title)) && (!meta.artist || same(p.match.artist, meta.artist)))) });
+            }
+            m.hits++; m.startSec = Math.min(m.startSec, st); m.endSec = Math.max(m.endSec, st + CLIP);
+          }).then(next);
+        }
+        return next().then(function(){ return { matches: Object.keys(found).map(function(k){ return found[k]; }), error: error, clips: starts.length }; });
+      }
+      return {
+        hasToken: function(){ return !!token; }, getToken: function(){ return token; },
+        setToken: function(v){ token = (v || '').trim(); try { localStorage.setItem('sp404drop.auddToken', token); } catch(e){} },
+        scan: scan, plan: plan, parse: parse, wavBytes: wavBytes, post: post, CLIP: CLIP
+      };
+    })();
+
     /* ---------- orchestration ---------- */
     function providerStatuses(){
       return Promise.all(registry.map(function(p){
@@ -3179,7 +3284,7 @@
       results: $('smpResults'), providers: $('smpProviders'), dbInfo: $('smpDbInfo'), sub: $('smpSub'),
       addRec: $('smpAddRecBtn'), addRel: $('smpAddRelBtn'), recForm: $('smpRecForm'), relForm: $('smpRelForm'),
       qArtist: $('smpQArtist'), qTitle: $('smpQTitle'), search: $('smpSearchBtn'), online: $('smpOnline'),
-      vari: $('smpVari'), scan: $('smpScan'), token: $('smpGeniusToken'), indexBtn: $('smpIndexBtn'), indexInput: $('smpIndexInput'), indexInfo: $('smpIndexInfo')
+      vari: $('smpVari'), scan: $('smpScan'), audd: $('smpAudd'), auddBtn: $('smpAuddBtn'), auddToken: $('smpAuddToken'), again: $('smpAgainBtn'), token: $('smpGeniusToken'), indexBtn: $('smpIndexBtn'), indexInput: $('smpIndexInput'), indexInfo: $('smpIndexInfo')
     };
     var cur = { fp: null, name: '', recordingId: null, meta: null, found: null, info: null };
     var actx = null;
@@ -3317,6 +3422,7 @@
     }
 
     function loadTrack(file){
+      ui.audd.innerHTML = ''; auddCancel = true;
       cur = { fp: null, name: file.name, recordingId: null, meta: null, found: null, info: { text: tr('Reading {f}…', { f: file.name }) } };
       ui.recForm.hidden = true; ui.relForm.hidden = true;
       ui.drop.hidden = true; ui.ws.hidden = false;
@@ -3332,7 +3438,7 @@
         }).then(function(fp){ return { fp: fp, ab: ab, audio: { channels: chans, rate: ab.sampleRate, from: 0, to: ab.length } }; });
       }).then(function(r){
         cur.fp = r.fp;
-        cur.audio = r.audio;
+        cur.audio = r.audio; ui.audd.innerHTML = ''; updateAuddBtn();
         return tagsP.then(function(tg){
           ui.qArtist.value = tg.artist; ui.qTitle.value = tg.title;
           cur.info = { duration: r.ab.duration, hashes: r.fp.hashes.length, from: tg.from }; renderInfo();
@@ -3369,6 +3475,55 @@
       MB.setEnabled(ui.online.checked);
       refreshProviders();
       if (cur.fp || cur.meta) runLookup();
+    });
+
+    ui.again.addEventListener('click', function(){ ui.file.click(); });
+
+    /* ---- AudD ---- */
+    ui.auddToken.value = AudD.getToken();
+    var auddRunning = false, auddCancel = false, auddFor = null;
+    function updateAuddBtn(){
+      ui.auddBtn.disabled = auddRunning ? false : (!AudD.hasToken() || !cur.audio);
+      ui.auddBtn.textContent = auddRunning ? tr('Stop') : tr('Identify clips of this track with AudD');
+      if (!AudD.hasToken() && !auddRunning) ui.auddBtn.title = tr('Paste your AudD API token above first');
+      else ui.auddBtn.title = '';
+    }
+    ui.auddToken.addEventListener('change', function(){ AudD.setToken(ui.auddToken.value); updateAuddBtn(); });
+    function renderAudd(r){
+      ui.audd.innerHTML = '';
+      if (r.error) ui.audd.appendChild(noneBox(tr('AUDD ERROR'), r.error));
+      var others = r.matches.filter(function(m){ return !m.self; }).sort(function(a, b){ return b.hits - a.hits; });
+      var self = r.matches.filter(function(m){ return m.self; })[0];
+      if (!others.length && !r.error){
+        ui.audd.appendChild(noneBox(tr('NO OTHER RECORDING RECOGNISED'),
+          tr('Checked {n} clip(s). Services like this are built for whole songs: short, chopped, pitched or buried samples are usually not recognised. A result of nothing is not proof that nothing is sampled.', { n: r.clips })));
+      }
+      others.forEach(function(m){
+        var c = el('div', 'smp-card');
+        c.appendChild(el('div', 'ct', who(m)));
+        var tg = el('div'); tg.appendChild(el('span', 'tag', tr('found by audio'))); tg.appendChild(el('span', 'tag', tr('{n} clip|{n} clips', { n: m.hits }))); c.appendChild(tg);
+        c.appendChild(el('div', null, tr('Heard in this track at {a}–{b}', { a: fmtTime(m.startSec), b: fmtTime(m.endSec) })));
+        if (m.timecode) c.appendChild(el('div', null, tr('At ~{t} in the original', { t: m.timecode })));
+        if (m.link){ var rf = el('div', null, tr('Reference:') + ' '); rf.appendChild(safeLink(m.link)); c.appendChild(rf); }
+        c.appendChild(el('div', 'cm', 'AudD \u00b7 ' + tr('experimental')));
+        ui.audd.appendChild(c);
+      });
+      if (self) ui.audd.appendChild(el('div', 'smp-status', tr('AudD also recognised this track itself ({w}) — not counted as a sample.', { w: who(self) })));
+    }
+    ui.auddBtn.addEventListener('click', function(){
+      if (auddRunning){ auddCancel = true; return; }
+      if (!cur.audio || !AudD.hasToken()) return;
+      var n = AudD.plan((cur.audio.to - cur.audio.from) / cur.audio.rate).length;
+      if (!confirm(tr('Upload {n} short audio clips (about {s} seconds each) of this track to AudD for recognition? This is the one feature that sends audio off this device.', { n: n, s: AudD.CLIP }))) return;
+      auddRunning = true; auddCancel = false; auddFor = cur;
+      ui.audd.innerHTML = ''; var status = el('div', 'smp-status', ''); ui.audd.appendChild(status);
+      updateAuddBtn();
+      AudD.scan(cur.audio, { artist: ui.qArtist.value.trim(), title: ui.qTitle.value.trim() }, function(i, total){
+        status.textContent = tr('Asking AudD… clip {i} of {n}', { i: i, n: total });
+      }, function(){ return auddCancel; }).then(function(r){
+        if (auddFor === cur) renderAudd(r);
+      })['catch'](function(err){ ui.audd.innerHTML = ''; ui.audd.appendChild(noneBox(tr('AUDD ERROR'), err && err.message ? err.message : '')); })
+        .then(function(){ auddRunning = false; updateAuddBtn(); });
     });
 
     /* ---- Genius token ---- */
@@ -3518,6 +3673,7 @@
 
     // Re-render dynamic content when the language is switched.
     I18N.onChange(function(){
+      updateAuddBtn();
       renderInfo();
       if (cur.found) renderLookup(cur.found);
       if (cur.scanned) renderScan(cur.scanned);
@@ -3525,6 +3681,7 @@
       fsPanel.hidden = true;
     });
 
+    updateAuddBtn();
     refreshProviders();
     return { registerProvider: registerProvider, computeFingerprint: computeFingerprint, matchFingerprint: matchFingerprint, buildIndex: buildIndex };
   })();

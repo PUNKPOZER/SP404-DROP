@@ -26,6 +26,8 @@ fingerprints and no recordings.
 
 | Genius API (`api.genius.com`), used by `GeniusProvider` | Community-entered; Genius's own terms apply | **Not approved.** Their API terms could not be reviewed for this project. Shipped *off*: it does nothing until a user pastes their **own** API token, and that user is responsible for following Genius's terms. Official API only, no scraping. Review (especially commercial use and caching) before any commercial distribution. | Optional, user's own risk. |
 
+| AudD recognition API (`api.audd.io`), used by the "Recognised by audio" button | Service, not a dataset | **Not approved.** Terms not reviewed for this project (commercial use is not addressed in their public docs; paid service). Shipped *off*: needs the user's own token, and **uploads ~12-second audio clips** to AudD, only after the user presses the button and confirms. The Mac app only allows audio uploads to this one host. | Optional, user's own risk. |
+
 Only the CC0 core relationship data (`samples material` recording relations)
 is read. MusicBrainz's supplementary data (CC BY-NC-SA) is not used.
 
