@@ -88,6 +88,15 @@ and from data you add yourself. If nothing is known it says
   track it sits and where in the source it comes from. Fingerprints only are
   stored, never audio. Keep the library to a few hundred tracks (memory) — it is
   for suspects, not your whole collection.
+  - **Sped-up / slowed-down / pitched samples** (turntable, tape or pitch-knob
+    style, where pitch and tempo move together) are found too: the track is
+    re-analysed at speeds from 0.8x to 1.25x (about ±4 semitones, 0.2% steps) and
+    the result says how much it was sped up and the pitch change. It takes a few
+    seconds per minute of music; the checkbox under the library turns it off.
+    It uses a second, low-frequency fingerprint stored with each recording, so
+    recordings indexed before this existed need to be re-indexed.
+  - Still missed: samples time-stretched *without* a pitch change, chopped
+    shorter than a second or two, or buried deep under other sounds.
 - **Genius (optional)** — paste your own Genius API token to also pull
   community-entered samples/interpolations from Genius. Off until a token is
   set; Genius's API terms have not been reviewed for this project and are your
