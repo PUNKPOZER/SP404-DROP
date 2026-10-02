@@ -1,32 +1,6 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, net, shell } = require('electron');
+const { app, BrowserWindow, shell } = require('electron');
 const path = require('path');
-
-// The only hosts the page may reach through the main process. The renderer
-// cannot ask for anything else.
-const ALLOWED_HOSTS = new Set(['musicbrainz.org', 'api.genius.com']);
-// Audio uploads (user-confirmed in the page) may only go here.
-const AUDIO_HOSTS = new Set(['api.audd.io']);
-
-ipcMain.handle('fetch-json', async (_event, url, headers) => {
-  const u = new URL(url);
-  if (u.protocol !== 'https:' || !ALLOWED_HOSTS.has(u.hostname)) throw new Error('host not allowed: ' + u.hostname);
-  const h = { 'User-Agent': 'SP404DROP/' + app.getVersion(), Accept: 'application/json' };
-  if (headers && typeof headers.Authorization === 'string') h.Authorization = headers.Authorization;
-  const res = await net.fetch(url, { headers: h });
-  if (!res.ok) throw new Error(u.hostname + ' HTTP ' + res.status);
-  return res.json();
-});
-
-ipcMain.handle('post-audio', async (_event, url, fields, bytes, filename) => {
-  const u = new URL(url);
-  if (u.protocol !== 'https:' || !AUDIO_HOSTS.has(u.hostname)) throw new Error('host not allowed: ' + u.hostname);
-  const form = new FormData();
-  Object.keys(fields || {}).forEach((k) => form.append(k, String(fields[k])));
-  form.append('file', new Blob([bytes], { type: 'audio/wav' }), String(filename || 'clip.wav'));
-  const res = await net.fetch(url, { method: 'POST', body: form, headers: { 'User-Agent': 'SP404DROP/' + app.getVersion() } });
-  return res.json();
-});
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -37,7 +11,6 @@ function createWindow() {
     backgroundColor: '#131311',
     title: 'SP404 DROP',
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true

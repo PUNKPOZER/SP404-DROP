@@ -3,16 +3,13 @@
 # SP404 DROP
 
 A small tool that sits between your music library and a Roland SP-404 (SX / MKII / A).
-It does three things, and stays out of your way otherwise:
+It does two things, and stays out of your way otherwise:
 
 - **CONVERT** — batch-fix any folder of samples to the 16-bit / 48kHz PCM WAV the
   SP-404 actually wants, so nothing fails to load or plays back garbled.
 - **CHOP / LOOP** — load one track, see a big waveform, auto-detect transients or
   split it into equal parts, drag markers by hand, find a loop, and export numbered
   samples (`sample_01.wav`, `sample_02.wav`, …) ready to drag onto the sampler.
-
-- **SAMPLES** — look up known samples in a track and find the possible source of a
-  chopped region, using only licensed or user-supplied data (nothing is guessed).
 
 It is not a DAW and isn't trying to become one — just a fast utility for the one
 chore that comes up over and over when prepping sample packs for this machine.
@@ -36,7 +33,6 @@ where the Chop/Loop workflow lives — drop in a track, chop it, export, done.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE). Third-party and dataset licence checks are recorded in
-[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+MIT — see [`LICENSE`](LICENSE). Third-party notices: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 Unofficial project, not affiliated with or endorsed by Roland.

@@ -2,10 +2,9 @@
 
 A single self-contained HTML page — no install, no build, no server. Everything
 runs client-side (decoding, resampling, re-encoding, waveform analysis, zipping).
-Audio is never uploaded; the only network use is fonts and the optional
-artist/title lookup on the SAMPLES screen.
+Nothing is ever uploaded; the only network use is loading the fonts.
 
-Open the app and you get three choices: **CONVERT**, **CHOP / LOOP** or **SAMPLES**.
+Open the app and you get two choices: **CONVERT** or **CHOP / LOOP**.
 
 ## CONVERT
 
@@ -61,85 +60,10 @@ Load one track at a time and slice it into numbered samples:
   one is about to do. Exports are rendered fresh from the source audio at
   16-bit/48kHz — no normalization or other processing.
 
-## SAMPLES / FIND SOURCE
-
-A sample-discovery module inspired by the workflow of sites like WhoSampled. It
-does **not** scrape or use any such site's data. Results come only from
-licence-checked sources (see [`../THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md))
-and from data you add yourself. If nothing is known it says
-`NO SAMPLE INFORMATION FOUND` — nothing is ever guessed.
-
-- **Known samples (SAMPLES screen)** — drop a track. The artist and title are
-  read from its tags (MP3 ID3, FLAC, M4A) or guessed from the filename
-  (`Artist - Title.mp3`); both boxes are editable, then press **Search**. The
-  lookup asks [MusicBrainz](https://musicbrainz.org) (open CC0 data) for that
-  recording and lists what it samples and what samples it, with a link to each
-  entry. Your local database is searched too, by audio fingerprint.
-  - Identification is by **text, not audio**, so it is only as right as the tags
-    or names; the match score is shown. An empty result means *not listed in
-    MusicBrainz*, not *not sampled* — coverage depends on what the community has
-    entered.
-  - The **Online lookup** checkbox turns this off. When on, only the artist and
-    title text is sent to MusicBrainz — never audio.
-- **Found inside this track** — the part that works for obscure tracks. Use
-  **Index a folder of reference tracks** to fingerprint records you suspect were
-  sampled (e.g. the source artist's albums). Every track you drop on SAMPLES is
-  then scanned against that library *by sound*, and a hit says where in your
-  track it sits and where in the source it comes from. Fingerprints only are
-  stored, never audio. Keep the library to a few hundred tracks (memory) — it is
-  for suspects, not your whole collection.
-  - **Sped-up / slowed-down / pitched samples** (turntable, tape or pitch-knob
-    style, where pitch and tempo move together) are found too: the track is
-    re-analysed at speeds from 0.8x to 1.25x (about ±4 semitones, 0.2% steps) and
-    the result says how much it was sped up and the pitch change. It takes a few
-    seconds per minute of music; the checkbox under the library turns it off.
-    It uses a second, low-frequency fingerprint stored with each recording, so
-    recordings indexed before this existed need to be re-indexed.
-  - Still missed: samples time-stretched *without* a pitch change, chopped
-    shorter than a second or two, or buried deep under other sounds.
-- **Recognised by audio (AudD, optional)** — the closest thing to a WhoSampled-style
-  lookup that does not need your own reference tracks. It cuts the track into
-  ~12-second clips and asks [AudD](https://audd.io) (a Shazam-like recognition
-  service) which released recording is playing in each, then lists recordings
-  other than the track itself with where they were heard. It **uploads audio**
-  (only after you press the button and confirm) and needs your own paid AudD
-  token. Services like this are built for whole songs, so chopped, pitched or
-  buried samples are often not recognised; an empty result is not proof.
-- **Genius (optional)** — paste your own Genius API token to also pull
-  community-entered samples/interpolations from Genius. Off until a token is
-  set; Genius's API terms have not been reviewed for this project and are your
-  responsibility. In a plain browser Genius may be blocked by CORS; the Mac app
-  ([`../mac/`](../mac/)) handles it.
-- **Find Source (Chop screen)** — select a sample and press **Find Source** to
-  compare that region against the recordings in the local database by audio
-  fingerprint. It needs about 2 seconds or more, only reports a match with
-  enough evidence, and shows a LOW / MEDIUM / HIGH label plus the raw evidence.
-  Experimental: it finds near-verbatim reuse; pitched, stretched or heavily
-  processed samples usually will not match. Because it compares against *your*
-  database, add some recordings first.
-- **Local database** — stores fingerprints (hashes + times) and metadata only,
-  never audio, in your browser (IndexedDB). **+ Add this track** (you confirm
-  you have the right to fingerprint it), **+ Add known sample** to record what
-  it samples, and Import / Export JSON (format `sp404drop-sampledb` v1) to move
-  data between browsers.
-
-### Language
+## Language
 
 The **EN / RU** switch in the top-right corner translates the whole app. It
 defaults to your browser language and remembers your choice.
-
-### Architecture
-
-```
-audio / tags -> SampleProvider(s) -> results
-```
-
-Everything lives in the `SampleFinder` module in `index.html`: fingerprint
-engine, the `SampleProvider` interface (documented in the code), providers, and
-UI. Providers: `LocalSampleDatabaseProvider` (audio fingerprints) and
-`MusicBrainzProvider` and `GeniusProvider` (online, opt-in). To add a data source, write a provider
-object and call `SampleFinder.registerProvider(...)`; the rest of the app is
-untouched. Review its licence and add it to `THIRD_PARTY_NOTICES.md` first.
 
 ## Using it
 

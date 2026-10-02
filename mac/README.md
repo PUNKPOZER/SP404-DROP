@@ -4,12 +4,7 @@ A native `.app` for Apple Silicon (or Intel / universal) — an Electron shell
 around [`../web/index.html`](../web/index.html), so it is the exact same app,
 just not in a browser. Besides the window it adds:
 
-- **Network through the app, not the page.** MusicBrainz and Genius requests go
-  through the app's main process, which sets a proper `User-Agent` for
-  MusicBrainz and avoids browser CORS limits (needed for Genius). Only
-  `musicbrainz.org` and `api.genius.com` are reachable this way.
-- Its own saved data: the local fingerprint database and your settings persist
-  between launches.
+- Its own window and dock icon, and its own saved settings.
 
 ## Build and run
 
