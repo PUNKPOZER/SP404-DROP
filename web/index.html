@@ -570,7 +570,7 @@
           </div>
           <div class="view-btns">
             <button class="pill" id="fitBtn" title="Show the whole track">Fit</button>
-            <button class="pill" id="selBtn" title="Zoom to the selected sample">Zoom to sample</button>
+            <button class="pill on" id="selBtn" title="Always zoom to the sample you pick">Zoom to sample</button>
             <button class="pill on" id="followBtn" title="Keep the playhead in view while playing">Follow</button>
             <button class="pill" id="heightBtn" title="Make the waveform taller or shorter">&#8597; Height</button>
           </div>
@@ -647,7 +647,7 @@
         </div>
         <div class="samples-row" id="samplesRow"></div>
 
-        <div class="chop-hint">Tap a numbered sample above to select it, then preview or loop just that piece:</div>
+        <div class="chop-hint">Tap a sample to hear it &middot; tap it again to stop. Loop repeats the selected one:</div>
         <div class="sample-actions">
           <button class="pill" id="playSampleBtn" disabled>&#9654; Play Sample</button>
           <button class="pill" id="loopBtn" disabled>&#8635; Loop</button>
@@ -687,7 +687,7 @@
     "Follow": "Следить",
     "↕ Height": "↕ Высота",
     "Show the whole track": "Показать всю дорожку",
-    "Zoom to the selected sample": "Приблизить выбранный сэмпл",
+    "Always zoom to the sample you pick": "Всегда приближать выбранный сэмпл",
     "Keep the playhead in view while playing": "Держать курсор в кадре при воспроизведении",
     "Make the waveform taller or shorter": "Сделать волну выше или ниже",
     "BPM": "BPM",
@@ -780,7 +780,7 @@
     "{n} Sample|{n} Samples": "{n} сэмпл|{n} сэмпла|{n} сэмплов",
     "0 Samples": "0 сэмплов",
     "Load another track": "Загрузить другой трек",
-    "Tap a numbered sample above to select it, then preview or loop just that piece:": "Выбери номер сэмпла выше, затем прослушай или зацикли только этот кусок:",
+    "Tap a sample to hear it · tap it again to stop. Loop repeats the selected one:": "Нажми на сэмпл — он сразу заиграет · нажми ещё раз — остановится. «Луп» повторяет выбранный:",
     "▶ Play Sample": "▶ Играть сэмпл",
     "Play Sample": "Играть сэмпл",
     "Stop": "Стоп",
@@ -1387,7 +1387,7 @@
        these two numbers and redraws.
        ========================================================= */
     var view = { start: 0, pps: 100 };
-    var viewCfg = { height: 220, gain: 1, follow: true };
+    var viewCfg = { height: 220, gain: 1, follow: true, zoomSel: true };
     var HEIGHTS = [220, 320, 440];
     var RULER_H = 28;
     var MAX_PPS = 24000;
@@ -1969,6 +1969,24 @@
     els.splitBtn.addEventListener('click', function(){ if (state.audioBuffer) autoChopEqual(); });
 
     /* ---- sample list ---- */
+    // Picking a sample selects it, brings it into view (zooming to it while
+    // "Zoom to sample" is on) and auditions it; tapping the one that is
+    // already playing stops it.
+    function selectSample(i, audition){
+      var segs = segments(), seg = segs[i];
+      if (!seg) return;
+      if (audition && i === state.selected && state.playKind === 'sample'){ stopAll(); return; }
+      if (state.playKind) stopAll();
+      state.selected = i;
+      renderSamples();
+      if (viewCfg.zoomSel) zoomToSelection();
+      else {
+        var x0 = timeToX(seg.start), x1 = timeToX(seg.end), w = containerWidth();
+        if (x0 < 0 || x1 > w) setView(seg.start - viewSpan() * 0.1, null);
+      }
+      if (audition) playSegment(seg);
+      else { state.cursorTime = seg.start; drawOverlay(); }
+    }
     function renderSamples(){
       var segs = segments();
       els.samplesCount.textContent = tr('{n} Sample|{n} Samples', { n: segs.length });
@@ -1979,12 +1997,7 @@
         chip.className = 'sample-chip' + (i===state.selected?' active':'');
         var num = (i+1) < 10 ? '0'+(i+1) : String(i+1);
         chip.innerHTML = '<div class="sc-num">'+num+'</div><div class="sc-len">'+(seg.end-seg.start).toFixed(2)+'s</div>';
-        chip.addEventListener('click', function(){
-          if (state.playKind === 'sample' || state.playKind === 'loop') stopAll();
-          state.selected = i;
-          renderSamples();
-          drawOverlay();
-        });
+        chip.addEventListener('click', function(){ selectSample(i, true); });
         els.samplesRow.appendChild(chip);
       });
       var hasSel = segs.length > 0;
@@ -2254,7 +2267,11 @@
     els.zoomInBtn.addEventListener('click', function(){ zoomAround(1.6, zoomAnchor()); });
     els.zoomOutBtn.addEventListener('click', function(){ zoomAround(1 / 1.6, zoomAnchor()); });
     document.getElementById('fitBtn').addEventListener('click', fitView);
-    document.getElementById('selBtn').addEventListener('click', zoomToSelection);
+    document.getElementById('selBtn').addEventListener('click', function(){
+      viewCfg.zoomSel = !viewCfg.zoomSel;
+      this.classList.toggle('on', viewCfg.zoomSel);
+      if (viewCfg.zoomSel) zoomToSelection();
+    });
     document.getElementById('followBtn').addEventListener('click', function(){
       viewCfg.follow = !viewCfg.follow;
       this.classList.toggle('on', viewCfg.follow);
@@ -2291,8 +2308,7 @@
       else if (k === 's' || k === 'S') zoomToSelection();
       else if (k === ',' || k === '.'){
         var n = segments().length, ni = Math.max(0, Math.min(n - 1, state.selected + (k === '.' ? 1 : -1)));
-        if (ni !== state.selected){ state.selected = ni; renderSamples(); var sg = segments()[ni]; state.cursorTime = sg.start;
-          var sx = timeToX(sg.start); if (sx < 0 || sx > containerWidth() * 0.9) setView(sg.start - viewSpan() * 0.1, null); }
+        if (ni !== state.selected) selectSample(ni, true);
       }
       else if (k === 'Enter') els.playSampleBtn.click();
       else if (k === 'l' || k === 'L') els.loopBtn.click();

@@ -45,7 +45,7 @@ Load one track at a time and slice it into numbered samples:
   - dragging a marker near the edge scrolls the view so it can be carried far.
 - **Keys** — Space play, M marker at the playhead, Del remove the nearest
   marker, ← → scroll, + − zoom, 0 fit, S zoom to sample, `,` `.` previous/next
-  sample, Enter play sample, L loop.
+  sample (plays it), Enter play sample, L loop.
 - **Auto Chop** — four modes, picked with the Transient / Equal / Manual / Beats tiles:
   - **Transient** — detects attacks/onsets in the signal and drops a marker at
     each one. The **Sensitivity** slider controls how many cut points you get —
@@ -69,8 +69,12 @@ Load one track at a time and slice it into numbered samples:
 - **Snap to zero crossing** (the `0⋮` toggle, on by default) nudges a marker to
   the nearest zero crossing so cuts don't click or pop.
 - **Load another track** replaces the loaded one at any time.
-- Each region between two markers is a numbered sample (`01`, `02`, …). Tap one
-  to select it — the buttons below act on whichever sample is selected:
+- Each region between two markers is a numbered sample (`01`, `02`, …). **Tap
+  one and it plays straight away; tap it again to stop.** Tapping another while
+  one is playing switches to it. The waveform follows: with **Zoom to sample**
+  on (the default — it is a toggle), every sample you pick is zoomed to fill the
+  view; turn it off to keep your own zoom (the sample is still scrolled into
+  view). The buttons below act on whichever sample is selected:
   - **Play Sample** previews just that region; it turns into **Stop** while
     playing so you can cut it off, rather than only being able to restart it.
   - **Loop** loops the selected region; drag its start/end markers while it's
