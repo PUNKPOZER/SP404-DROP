@@ -675,7 +675,7 @@
           <button class="pill" id="findSourceBtn" disabled>&#9906; Find Source</button>
         </div>
         <div class="mode-panel" id="findSourcePanel" hidden></div>
-        <div class="chop-hint" style="margin-bottom:10px;">FIND SOURCE is experimental: it fingerprints the selected sample and compares it with recordings in your local database. Needs about 2 seconds or more.</div>
+        <div class="chop-hint" style="margin-bottom:10px;">FIND SOURCE is experimental: it fingerprints the selected sample and compares it with recordings in your local database, also at other playback speeds. Needs about 2 seconds or more.</div>
 
         <div class="export-actions">
           <button class="pill" id="exportSelectedBtn" disabled>Export Selected</button>
@@ -735,6 +735,7 @@
           <button class="pill solid" id="smpIndexBtn">Index a folder of reference tracks</button>
         </div>
         <div class="smp-status" id="smpIndexInfo" style="margin:8px 0 0;"></div>
+        <label class="smp-online"><input type="checkbox" id="smpVari" checked><span>Also look for sped-up, slowed-down or pitched samples (slower: a few seconds per minute of music).</span></label>
         <input type="file" id="smpIndexInput" webkitdirectory directory multiple hidden>
         <button class="clear-link" id="smpClearDbBtn" style="margin-top:10px;">Clear local database</button>
         <input type="file" id="smpImportInput" accept=".json,application/json" hidden>
@@ -849,6 +850,16 @@
     'Clear All Markers': 'Убрать все маркеры',
     '{n} Sample|{n} Samples': '{n} сэмпл|{n} сэмпла|{n} сэмплов',
     '0 Samples': '0 сэмплов',
+    'Also look for sped-up, slowed-down or pitched samples (slower: a few seconds per minute of music).': 'Искать также ускоренные, замедленные и изменённые по тону сэмплы (медленнее: несколько секунд на минуту музыки).',
+    'some recordings lack pitched-search data — re-index them': 'у некоторых записей нет данных для поиска по тону — проиндексируй их заново',
+    'Scanned against {n} recording(s) at the original speed and from 0.8× to 1.25× (about ±4 semitones). Samples chopped very short, time-stretched without changing pitch, or buried under other sounds can still be missed.': 'Проверено по записям ({n}) на исходной скорости и от 0,8× до 1,25× (около ±4 полутонов). Сэмплы, нарезанные очень коротко, растянутые без смены тона или скрытые под другими звуками, всё равно могут быть пропущены.',
+    'Scanned against {n} recording(s) at the original speed only. Turn on the sped-up/pitched search to also check other speeds.': 'Проверено по записям ({n}) только на исходной скорости. Включи поиск ускоренных/изменённых по тону сэмплов, чтобы проверить и другие скорости.',
+    'Sped up by about {p}% (pitch +{s} semitones)': 'Ускорено примерно на {p}% (тон +{s} полутона)',
+    'Slowed down by about {p}% (pitch −{s} semitones)': 'Замедлено примерно на {p}% (тон −{s} полутона)',
+    'Scanning your library…': 'Сканирую твою библиотеку…',
+    'Scanning for sped-up / pitched versions…': 'Ищу ускоренные / изменённые по тону версии…',
+    'Analysing selection, including other speeds…': 'Анализирую выделение, в том числе на других скоростях…',
+    'Checked at the original speed and from 0.8× to 1.25×. Samples time-stretched without changing pitch, or buried under other sounds, can still be missed.': 'Проверено на исходной скорости и от 0,8× до 1,25×. Сэмплы, растянутые без смены тона или скрытые под другими звуками, всё равно могут быть пропущены.',
     'Genius API token (optional)': 'Токен Genius API (необязательно)',
     "Genius has far more community-entered sample credits than MusicBrainz. It needs your own free API token, and you are responsible for following Genius's API terms. Off until you paste one.": 'В Genius намного больше данных о сэмплах, внесённых сообществом, чем в MusicBrainz. Нужен твой собственный бесплатный токен API, и за соблюдение условий API Genius отвечаешь ты. Выключено, пока не вставишь токен.',
     'Found inside this track': 'Найдено внутри этого трека',
@@ -873,7 +884,7 @@
     '▶ Play Sample': '▶ Играть сэмпл', 'Play Sample': 'Играть сэмпл', 'Stop': 'Стоп',
     '↻ Loop': '↻ Луп',
     '⚲ Find Source': '⚲ Найти источник',
-    'FIND SOURCE is experimental: it fingerprints the selected sample and compares it with recordings in your local database. Needs about 2 seconds or more.': 'НАЙТИ ИСТОЧНИК — экспериментальная функция: она делает отпечаток выбранного сэмпла и сравнивает его с записями в твоей локальной базе. Нужно около 2 секунд и больше.',
+    'FIND SOURCE is experimental: it fingerprints the selected sample and compares it with recordings in your local database, also at other playback speeds. Needs about 2 seconds or more.': 'НАЙТИ ИСТОЧНИК — экспериментальная функция: она делает отпечаток выбранного сэмпла и сравнивает его с записями в твоей локальной базе, в том числе на других скоростях воспроизведения. Нужно около 2 секунд и больше.',
     'Export Selected': 'Экспорт выбранного', 'Export Sample': 'Экспорт сэмпла', 'Export All': 'Экспорт всех',
     'Export Selected saves just the sample picked above as one WAV. Export All saves every sample as a ZIP (sample_01.wav, sample_02.wav, …). Both render fresh from the source — 16-bit / 48kHz, no normalization.': 'Экспорт выбранного сохраняет один сэмпл как WAV. Экспорт всех — все сэмплы в ZIP (sample_01.wav, sample_02.wav, …). Оба рендерятся заново из исходника — 16 бит / 48 кГц, без нормализации.',
     // samples screen
@@ -2319,14 +2330,22 @@
        downmix -> 8kHz -> STFT -> sparse spectral peaks -> hash of peak pairs
        (freq1, freq2, time delta). Only hashes + times are kept, so the audio
        can't be reconstructed from a stored fingerprint. */
-    var FP = { SR: 8000, N: 1024, HOP: 256, BINS: 512, PEAKS_PER_FRAME: 4, FAN: 4, MAX_DT: 63, VERSION: 1 };
-    var FRAME_SEC = FP.HOP / FP.SR;
-    var TIME_MOD = 1048576; // index entries are recIdx * TIME_MOD + frame
+    /* Two fingerprints per recording:
+         full — 0-4 kHz, exact-speed matching (reuse at the original speed/pitch)
+         low  — 0-1 kHz at the same bin width, used for the varispeed search:
+                the query is re-analysed at a grid of playback-speed factors
+                and each is matched; the low band tolerates a speed error of
+                ~0.4% (vs ~0.2% for full), and its FFTs are ~4x cheaper. */
+    var FULL = { SR: 8000, N: 1024, HOP: 256, BINS: 512, KMIN: 3, PEAKS: 4, FAN: 4, MAX_DT: 63 };
+    var LOW  = { SR: 2000, N: 256,  HOP: 64,  BINS: 128, KMIN: 5, PEAKS: 3, FAN: 4, MAX_DT: 63 };
+    var FP = { VERSION: 1 };
+    var FRAME_SEC = 0.032;
+    var TIME_MOD = 1048576;
 
     function yieldUi(){ return new Promise(function(r){ setTimeout(r, 0); }); }
 
-    function downmix8k(channels, rate, from, to){
-      var ratio = rate / FP.SR;
+    function downmix(channels, rate, from, to, SR){
+      var ratio = rate / SR;
       var n = Math.floor((to - from) / ratio);
       var out = new Float32Array(n);
       var nc = channels.length;
@@ -2343,10 +2362,10 @@
       return out;
     }
 
-    var fftFn = null, hann = null;
-    function initFFT(){
-      if (fftFn) return;
-      var n = FP.N, cosT = new Float64Array(n / 2), sinT = new Float64Array(n / 2), rev = new Uint16Array(n);
+    var fftCache = {};
+    function getFFT(n){
+      if (fftCache[n]) return fftCache[n];
+      var cosT = new Float64Array(n / 2), sinT = new Float64Array(n / 2), rev = new Uint16Array(n);
       var bits = Math.round(Math.log(n) / Math.LN2);
       for (var i = 0; i < n / 2; i++){ cosT[i] = Math.cos(2 * Math.PI * i / n); sinT[i] = Math.sin(2 * Math.PI * i / n); }
       for (i = 0; i < n; i++){
@@ -2354,9 +2373,9 @@
         for (var b = 0; b < bits; b++) r |= ((i >> b) & 1) << (bits - 1 - b);
         rev[i] = r;
       }
-      hann = new Float32Array(n);
+      var hann = new Float32Array(n);
       for (i = 0; i < n; i++) hann[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (n - 1));
-      fftFn = function(re, im){
+      var fft = function(re, im){
         var t;
         for (var i = 0; i < n; i++){
           var j = rev[i];
@@ -2375,16 +2394,18 @@
           }
         }
       };
+      return (fftCache[n] = { fft: fft, hann: hann });
     }
 
-    /* channels: Float32Array[] · from/to in source samples. Resolves to
-       { v, hashes:Uint32Array, times:Uint32Array, frames, duration, peaks }. */
-    function computeFingerprint(channels, rate, from, to, onProgress){
-      initFFT();
-      var x = downmix8k(channels, rate, from, to);
-      var N = FP.N, HOP = FP.HOP, B = FP.BINS;
+    /* One band configuration -> { hashes, times, frames, duration, peaks }.
+       `rate` is the source rate; pass rate / speed to undo a playback-speed
+       change (frame times then come out in the *source's* time). */
+    function fingerprintBand(cfg, channels, rate, from, to, onProgress){
+      var F = getFFT(cfg.N), fft = F.fft, hann = F.hann;
+      var x = downmix(channels, rate, from, to, cfg.SR);
+      var N = cfg.N, HOP = cfg.HOP, B = cfg.BINS;
       var frames = Math.floor((x.length - N) / HOP) + 1;
-      if (frames < 8) return Promise.resolve({ v: FP.VERSION, hashes: new Uint32Array(0), times: new Uint32Array(0), frames: Math.max(frames, 0), duration: x.length / FP.SR, peaks: 0 });
+      if (frames < 8) return Promise.resolve({ hashes: new Uint32Array(0), times: new Uint32Array(0), frames: Math.max(frames, 0), duration: x.length / cfg.SR, peaks: 0 });
       var spec = new Float32Array(frames * B);
       var re = new Float64Array(N), im = new Float64Array(N);
       var maxDb = -1e9, t = 0;
@@ -2394,7 +2415,7 @@
         for (; t < end; t++){
           var off = t * HOP;
           for (var i = 0; i < N; i++){ re[i] = x[off + i] * hann[i]; im[i] = 0; }
-          fftFn(re, im);
+          fft(re, im);
           for (var k = 0; k < B; k++){
             var db = 10 * Math.log(re[k] * re[k] + im[k] * im[k] + 1e-12) / Math.LN10;
             spec[t * B + k] = db;
@@ -2402,20 +2423,20 @@
           }
         }
         if (onProgress) onProgress(0.7 * t / frames);
-        return t < frames ? yieldUi().then(spectrogramChunk) : null;
+        return (t < frames && onProgress) ? yieldUi().then(spectrogramChunk) : (t < frames ? spectrogramChunk() : null);
       }
 
       return Promise.resolve().then(spectrogramChunk).then(function(){
         var floor = maxDb - 55; // ignore anything >55dB below the loudest bin
-        var FR = 10, TR = 7;
+        var FR = 10, TR = 7, K0 = cfg.KMIN;
         var pt = [], pk = [];
         for (var f = 0; f < frames; f++){
           var base = f * B, mean = 0, sq = 0;
-          for (var k = 3; k < B; k++){ var v = spec[base + k]; mean += v; sq += v * v; }
-          mean /= (B - 3);
-          var thr = Math.max(floor, mean + Math.sqrt(Math.max(0, sq / (B - 3) - mean * mean)));
+          for (var k = K0; k < B; k++){ var v = spec[base + k]; mean += v; sq += v * v; }
+          mean /= (B - K0);
+          var thr = Math.max(floor, mean + Math.sqrt(Math.max(0, sq / (B - K0) - mean * mean)));
           var cands = [];
-          for (k = 3; k < B; k++){
+          for (k = K0; k < B; k++){
             v = spec[base + k];
             if (v < thr) continue;
             var ok = true, lo = Math.max(0, k - FR), hi = Math.min(B - 1, k + FR);
@@ -2430,14 +2451,14 @@
             if (ok) cands.push([v, k]);
           }
           cands.sort(function(a, b){ return b[0] - a[0]; });
-          for (var c = 0; c < cands.length && c < FP.PEAKS_PER_FRAME; c++){ pt.push(f); pk.push(cands[c][1]); }
+          for (var c = 0; c < cands.length && c < cfg.PEAKS; c++){ pt.push(f); pk.push(cands[c][1]); }
         }
         var hs = [], ts = [];
         for (var i = 0; i < pt.length; i++){
           var fan = 0;
-          for (var j = i + 1; j < pt.length && fan < FP.FAN; j++){
+          for (var j = i + 1; j < pt.length && fan < cfg.FAN; j++){
             var dt = pt[j] - pt[i];
-            if (dt > FP.MAX_DT) break;
+            if (dt > cfg.MAX_DT) break;
             if (dt < 1) continue;
             hs.push(pk[i] * 32768 + pk[j] * 64 + dt); // 9 + 9 + 6 bits
             ts.push(pt[i]);
@@ -2445,7 +2466,20 @@
           }
         }
         if (onProgress) onProgress(1);
-        return { v: FP.VERSION, hashes: Uint32Array.from(hs), times: Uint32Array.from(ts), frames: frames, duration: x.length / FP.SR, peaks: pt.length };
+        return { hashes: Uint32Array.from(hs), times: Uint32Array.from(ts), frames: frames, duration: x.length / cfg.SR, peaks: pt.length };
+      });
+    }
+
+    /* channels: Float32Array[] · from/to in source samples. Resolves to
+       { v, hashes, times, frames, duration, peaks, lo:{hashes,times} }. */
+    function computeFingerprint(channels, rate, from, to, onProgress){
+      return fingerprintBand(FULL, channels, rate, from, to, onProgress ? function(p){ onProgress(p * 0.8); } : null).then(function(full){
+        return fingerprintBand(LOW, channels, rate, from, to, null).then(function(lo){
+          full.v = FP.VERSION;
+          full.lo = { hashes: lo.hashes, times: lo.times };
+          if (onProgress) onProgress(1);
+          return full;
+        });
       });
     }
 
@@ -2466,7 +2500,9 @@
       }
       keys = keys.subarray(0, n);
       keys.sort();
-      return { keys: keys, n: n, recs: recs, lo: 0, hi: 0 };
+      var maxT = 0;
+      for (i = 0; i < n; i++){ var tt = keys[i] % 65536; if (tt > maxT) maxT = tt; }
+      return { keys: keys, n: n, recs: recs, lo: 0, hi: 0, maxT: maxT };
     }
     function lookupHash(index, h){ // sets index.lo/hi to the matching entry range
       var keys = index.keys, base = h * PACK, end = base + PACK, lo = 0, hi = index.n, mid;
@@ -2485,7 +2521,10 @@
     function matchFingerprint(q, index, opts){
       opts = opts || {};
       var minRatio = opts.minRatio || 0, minAligned = opts.minAligned || MIN_ALIGNED;
-      var per = new Map(), i, e;
+      var qFrames = 1, i, e;
+      for (i = 0; i < q.times.length; i++) if (q.times[i] >= qFrames) qFrames = q.times[i] + 1;
+      var SPAN = index.maxT + qFrames + 2;            // offset axis per recording
+      var cells = new Map(), votes = new Float64Array(index.recs.length);
       for (i = 0; i < q.hashes.length; i++){
         lookupHash(index, q.hashes[i]);
         if (index.hi - index.lo > 400) continue;
@@ -2493,24 +2532,27 @@
         for (e = index.lo; e < index.hi; e++){
           var packed = index.keys[e] - q.hashes[i] * PACK;
           var ti = Math.floor(packed / 65536), off = (packed - ti * 65536) - tq;
-          var rec = per.get(ti);
-          if (!rec) per.set(ti, rec = { offs: new Map(), votes: 0 });
-          rec.offs.set(off, (rec.offs.get(off) || 0) + 1);
-          rec.votes++;
+          var key = ti * SPAN + off + qFrames;
+          cells.set(key, (cells.get(key) || 0) + 1);
+          votes[ti]++;
         }
       }
+      // best 3-cell window per recording
+      var bestScore = new Map(), bestKey = new Map(), cellCount = new Map();
+      cells.forEach(function(c, key){
+        var ti = Math.floor(key / SPAN);
+        cellCount.set(ti, (cellCount.get(ti) || 0) + 1);
+        var sc = c + (cells.get(key - 1) || 0) + (cells.get(key + 1) || 0);
+        if (sc > (bestScore.get(ti) || 0)){ bestScore.set(ti, sc); bestKey.set(ti, key); }
+      });
       var out = [];
-      per.forEach(function(rec, ti){
-        var best = 0, bestOff = 0;
-        rec.offs.forEach(function(_, o){
-          var sc = (rec.offs.get(o - 1) || 0) + rec.offs.get(o) + (rec.offs.get(o + 1) || 0);
-          if (sc > best){ best = sc; bestOff = o; }
-        });
-        var baseline = Math.max(1, (rec.votes - best) / Math.max(1, rec.offs.size - 3)); // average votes per stray offset
+      bestScore.forEach(function(best, ti){
+        var baseline = Math.max(1, (votes[ti] - best) / Math.max(1, cellCount.get(ti) - 3)); // average votes per stray offset
         var ratio = q.hashes.length ? best / q.hashes.length : 0;
         if (best >= minAligned && best >= 12 * baseline && ratio >= minRatio){
+          var bestOff = bestKey.get(ti) - ti * SPAN - qFrames;
           out.push({ rec: index.recs[ti], ti: ti, aligned: best, ratio: ratio, offsetSec: bestOff * FRAME_SEC, bestOff: bestOff,
-                     qStartSec: 0, qEndSec: 0,
+                     qStartSec: 0, qEndSec: 0, srcStartSec: 0,
                      confidence: (best >= 80 || (best >= 40 && ratio >= 0.15)) ? 'HIGH' : (best >= 25 ? 'MEDIUM' : 'LOW') });
         }
       });
@@ -2529,10 +2571,49 @@
             }
           }
         }
-        out.forEach(function(m){ m.qStartSec = m.qMin * FRAME_SEC; m.qEndSec = (m.qMax + FP.MAX_DT) * FRAME_SEC; });
+        out.forEach(function(m){
+          m.qStartSec = m.qMin * FRAME_SEC; m.qEndSec = (m.qMax + FULL.MAX_DT) * FRAME_SEC;
+          m.srcStartSec = m.qStartSec + m.offsetSec;
+        });
       }
       out.sort(function(a, b){ return b.aligned - a.aligned; });
       return out;
+    }
+
+    /* Varispeed search. A sample played faster by s (tape/turntable/pitch
+       knob: pitch and tempo move together) is undone by analysing the query as
+       if its sample rate were rate / s. We try s on a 0.8% grid from 0.80 to
+       1.25 (about -4 to +4 semitones) against the low-band index and keep each
+       recording's best factor. Reported times are converted back to the
+       query's own clock. */
+    var SPEEDS = (function(){
+      var a = [];
+      for (var k = -112; k <= 112; k++) a.push(Math.pow(1.002, k));
+      return a;
+    })();
+    function scanVarispeed(channels, rate, from, to, index, onProgress){
+      var best = new Map(), n = 0;
+      function step(){
+        if (n >= SPEEDS.length) return Promise.resolve();
+        var s = SPEEDS[n++];
+        return fingerprintBand(LOW, channels, rate / s, from, to, null).then(function(fp){
+          matchFingerprint(fp, index, { minAligned: 20 }).forEach(function(m){
+            var cur = best.get(m.rec.id);
+            if (!cur || m.aligned > cur.aligned){
+              m.speed = s; m.qStartSec /= s; m.qEndSec /= s;
+              best.set(m.rec.id, m);
+            }
+          });
+          if (onProgress) onProgress(n / SPEEDS.length);
+          return yieldUi().then(step);
+        });
+      }
+      return step().then(function(){
+        var out = [];
+        best.forEach(function(m){ out.push(m); });
+        out.sort(function(a, b){ return b.aligned - a.aligned; });
+        return out;
+      });
     }
 
     /* ---------- 2. provider interface ----------
@@ -2618,8 +2699,17 @@
           tx.objectStore('recordings').clear(); tx.objectStore('relations').clear();
         } catch(e){}
       }
-      function reindex(){ index = null; } // rebuilt lazily on the next lookup
+      function reindex(){ index = null; indexLo = null; } // rebuilt lazily on the next lookup
+      var indexLo = null;
       function idx(){ if (!index) index = buildIndex(recs); return index; }
+      function idxLo(){
+        if (!indexLo){
+          indexLo = buildIndex(recs.filter(function(r){ return r.fp.lo; }).map(function(r){
+            return { id: r.id, title: r.title, artist: r.artist, year: r.year, fp: r.fp.lo };
+          }));
+        }
+        return indexLo;
+      }
       function b64(u32){
         var bytes = new Uint8Array(u32.buffer, u32.byteOffset, u32.byteLength), s = '';
         for (var i = 0; i < bytes.length; i += 8192) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
@@ -2642,7 +2732,7 @@
         license: 'User-supplied data; no data bundled with SP404 DROP.',
         getStatus: function(){
           return ready.then(function(){
-            return { ready: recs.length > 0, detail: tr('{n} recording|{n} recordings', { n: recs.length }) + ', ' + tr('{n} relationship|{n} relationships', { n: rels.length }) + (persistent ? '' : ' (' + tr('memory only — not saved') + ')') };
+            return { ready: recs.length > 0, detail: tr('{n} recording|{n} recordings', { n: recs.length }) + ', ' + tr('{n} relationship|{n} relationships', { n: rels.length }) + (persistent ? '' : ' (' + tr('memory only — not saved') + ')') + (recs.some(function(r){ return !r.fp.lo; }) ? ' · ' + tr('some recordings lack pitched-search data — re-index them') : '') };
           });
         },
         identifyRecording: function(fp){
@@ -2669,11 +2759,23 @@
             });
           });
         },
+        // Same, but also finds the library recording played faster/slower
+        // (pitch and tempo moving together). Slower: ~225 analyses of the query.
+        scanTrackVarispeed: function(channels, rate, from, to, onProgress){
+          return ready.then(function(){
+            return scanVarispeed(channels, rate, from, to, idxLo(), onProgress).then(function(list){
+              return list.filter(function(m){ return m.ratio < 0.5 || Math.abs(m.speed - 1) > 0.01; }).map(function(m){
+                return { title: m.rec.title, artist: m.rec.artist, year: m.rec.year, aligned: m.aligned, ratio: m.ratio, confidence: m.confidence,
+                         offsetSec: m.offsetSec, srcStartSec: m.srcStartSec, qStartSec: m.qStartSec, qEndSec: m.qEndSec, speed: m.speed, source: 'Local Sample Database' };
+              });
+            });
+          });
+        },
         findSourceCandidates: function(fp){
           return ready.then(function(){
             return matchFingerprint(fp, idx(), { minRatio: 0.05 }).map(function(m){
               return { title: m.rec.title, artist: m.rec.artist, year: m.rec.year, aligned: m.aligned, ratio: m.ratio,
-                       confidence: m.confidence, offsetSec: m.offsetSec, source: 'Local Sample Database' };
+                       confidence: m.confidence, offsetSec: m.offsetSec, srcStartSec: m.srcStartSec, source: 'Local Sample Database' };
             });
           });
         }
@@ -2681,11 +2783,11 @@
 
       return {
         provider: provider, ready: ready,
-        stats: function(){ return { recordings: recs.length, relations: rels.length, persistent: persistent }; },
+        stats: function(){ return { recordings: recs.length, relations: rels.length, persistent: persistent, withoutLo: recs.filter(function(r){ return !r.fp.lo; }).length }; },
         hasFileKey: function(k){ return recs.some(function(r){ return r.fileKey === k; }); },
         addRecording: function(meta, fp, fileKey){
           var r = { id: newId('r_'), fileKey: str(fileKey, 300), title: str(meta.title), artist: str(meta.artist), year: str(meta.year, 4),
-                    createdAt: new Date().toISOString(), fp: { v: fp.v, hashes: fp.hashes, times: fp.times, frames: fp.frames, duration: fp.duration } };
+                    createdAt: new Date().toISOString(), fp: { v: fp.v, hashes: fp.hashes, times: fp.times, frames: fp.frames, duration: fp.duration, lo: fp.lo || null } };
           recs.push(r); put('recordings', r); reindex();
           return r.id;
         },
@@ -2699,7 +2801,8 @@
             format: 'sp404drop-sampledb', version: 1,
             recordings: recs.map(function(r){
               return { id: r.id, fileKey: r.fileKey || '', title: r.title, artist: r.artist, year: r.year, createdAt: r.createdAt,
-                       fp: { v: r.fp.v, frames: r.fp.frames, duration: r.fp.duration, hashes: b64(r.fp.hashes), times: b64(r.fp.times) } };
+                       fp: { v: r.fp.v, frames: r.fp.frames, duration: r.fp.duration, hashes: b64(r.fp.hashes), times: b64(r.fp.times),
+                       lo: r.fp.lo ? { hashes: b64(r.fp.lo.hashes), times: b64(r.fp.lo.times) } : null } };
             }),
             relations: rels
           });
@@ -2714,7 +2817,11 @@
             var h = unb64(r.fp.hashes), t = unb64(r.fp.times);
             if (h.length !== t.length || r.fp.v !== FP.VERSION) return;
             var rec = { id: str(r.id, 60), fileKey: str(r.fileKey, 300), title: str(r.title), artist: str(r.artist), year: str(r.year, 4), createdAt: str(r.createdAt, 40),
-                        fp: { v: FP.VERSION, hashes: h, times: t, frames: +r.fp.frames || 0, duration: +r.fp.duration || 0 } };
+                        fp: { v: FP.VERSION, hashes: h, times: t, frames: +r.fp.frames || 0, duration: +r.fp.duration || 0, lo: null } };
+            if (r.fp.lo && typeof r.fp.lo.hashes === 'string' && typeof r.fp.lo.times === 'string'){
+              var lh = unb64(r.fp.lo.hashes), lt = unb64(r.fp.lo.times);
+              if (lh.length === lt.length) rec.fp.lo = { hashes: lh, times: lt };
+            }
             recs.push(rec); put('recordings', rec); haveR[rec.id] = 1; addedR++;
           });
           o.relations.forEach(function(r){
@@ -3013,17 +3120,31 @@
       })).then(function(lists){ return [].concat.apply([], lists); });
     }
     // Mode 3: whole track -> reference-library recordings contained in it.
-    function scanForSources(fp){
+    // audio ({channels, rate, from, to}) + onProgress enable the varispeed search.
+    function scanForSources(fp, audio, onProgress){
       return Promise.all(registry.map(function(p){
-        return p.scanTrack ? p.scanTrack(fp).catch(function(){ return []; }) : Promise.resolve([]);
+        var exact = p.scanTrack ? p.scanTrack(fp).catch(function(){ return []; }) : Promise.resolve([]);
+        var vari = (audio && p.scanTrackVarispeed) ? p.scanTrackVarispeed(audio.channels, audio.rate, audio.from, audio.to, onProgress).catch(function(){ return []; }) : Promise.resolve([]);
+        return Promise.all([exact, vari]).then(function(r){ return mergeBest(r[0], r[1]); });
       })).then(function(lists){
         return [].concat.apply([], lists).sort(function(a, b){ return b.aligned - a.aligned; });
       });
     }
+    // One entry per recording: whichever search gave the stronger alignment.
+    function mergeBest(a, b){
+      var by = {};
+      a.concat(b).forEach(function(m){
+        var k = m.artist + '|' + m.title + '|' + m.year;
+        if (!by[k] || m.aligned > by[k].aligned) by[k] = m;
+      });
+      return Object.keys(by).map(function(k){ return by[k]; });
+    }
     // Mode 2: region fingerprint -> candidate recordings.
-    function findSource(fp){
+    function findSource(fp, audio){
       return Promise.all(registry.map(function(p){
-        return p.findSourceCandidates(fp).catch(function(){ return []; });
+        var exact = p.findSourceCandidates(fp).catch(function(){ return []; });
+        var vari = (audio && p.scanTrackVarispeed) ? p.scanTrackVarispeed(audio.channels, audio.rate, audio.from, audio.to).catch(function(){ return []; }) : Promise.resolve([]);
+        return Promise.all([exact, vari]).then(function(r){ return mergeBest(r[0], r[1]); });
       })).then(function(lists){
         return [].concat.apply([], lists).sort(function(a, b){ return b.aligned - a.aligned; });
       });
@@ -3058,7 +3179,7 @@
       results: $('smpResults'), providers: $('smpProviders'), dbInfo: $('smpDbInfo'), sub: $('smpSub'),
       addRec: $('smpAddRecBtn'), addRel: $('smpAddRelBtn'), recForm: $('smpRecForm'), relForm: $('smpRelForm'),
       qArtist: $('smpQArtist'), qTitle: $('smpQTitle'), search: $('smpSearchBtn'), online: $('smpOnline'),
-      scan: $('smpScan'), token: $('smpGeniusToken'), indexBtn: $('smpIndexBtn'), indexInput: $('smpIndexInput'), indexInfo: $('smpIndexInfo')
+      vari: $('smpVari'), scan: $('smpScan'), token: $('smpGeniusToken'), indexBtn: $('smpIndexBtn'), indexInput: $('smpIndexInput'), indexInfo: $('smpIndexInfo')
     };
     var cur = { fp: null, name: '', recordingId: null, meta: null, found: null, info: null };
     var actx = null;
@@ -3148,7 +3269,9 @@
         return;
       }
       if (!cands.length){
-        ui.scan.appendChild(noneBox(tr('NOTHING FROM YOUR LIBRARY FOUND'), tr('Scanned against {n} recording(s). Only near-verbatim reuse is detected: samples that were pitched, time-stretched or buried under other sounds usually will not match.', { n: n })));
+        ui.scan.appendChild(noneBox(tr('NOTHING FROM YOUR LIBRARY FOUND'), ui.vari.checked
+          ? tr('Scanned against {n} recording(s) at the original speed and from 0.8× to 1.25× (about ±4 semitones). Samples chopped very short, time-stretched without changing pitch, or buried under other sounds can still be missed.', { n: n })
+          : tr('Scanned against {n} recording(s) at the original speed only. Turn on the sped-up/pitched search to also check other speeds.', { n: n })));
         return;
       }
       cands.slice(0, 8).forEach(function(m){
@@ -3156,14 +3279,29 @@
         c.appendChild(el('div', 'ct', who(m)));
         var tg = el('div'); tg.appendChild(el('span', 'tag', tr(m.confidence) + ' ' + tr('confidence'))); c.appendChild(tg);
         c.appendChild(el('div', null, tr('In this track at {a}–{b}, matching the source at ~{t}', { a: fmtTime(m.qStartSec), b: fmtTime(m.qEndSec), t: fmtTime(Math.max(0, m.srcStartSec)) })));
+        if (m.speed && Math.abs(m.speed - 1) > 0.004){
+          var st = 12 * Math.log(m.speed) / Math.LN2, pct = Math.abs(Math.round((m.speed - 1) * 1000) / 10);
+          c.appendChild(el('div', null, tr(m.speed > 1 ? 'Sped up by about {p}% (pitch +{s} semitones)' : 'Slowed down by about {p}% (pitch −{s} semitones)', { p: pct, s: Math.abs(st).toFixed(1) })));
+        }
         c.appendChild(el('div', 'cm', evidence(m) + ' \u00b7 ' + m.source + ' \u00b7 ' + tr('experimental')));
         ui.scan.appendChild(c);
       });
     }
+    var scanToken = 0;
     function runScan(){
       cur.scanned = null;
+      var mine = ++scanToken;
       if (!cur.fp) { ui.scan.innerHTML = ''; return Promise.resolve(); }
-      return Local.ready.then(function(){ return scanForSources(cur.fp); }).then(function(c){ cur.scanned = c; renderScan(c); });
+      return Local.ready.then(function(){
+        if (!Local.stats().recordings){ renderScan([]); return null; }
+        ui.scan.innerHTML = '';
+        var status = el('div', 'smp-status', tr('Scanning your library…'));
+        ui.scan.appendChild(status);
+        var audio = ui.vari.checked ? cur.audio : null;
+        return scanForSources(cur.fp, audio, function(p){
+          if (mine === scanToken) status.textContent = tr('Scanning for sped-up / pitched versions…') + ' ' + Math.round(p * 100) + '%';
+        }).then(function(c){ if (mine === scanToken){ cur.scanned = c; renderScan(c); } });
+      });
     }
 
     function runLookup(){
@@ -3173,7 +3311,7 @@
       ui.results.appendChild(el('div', 'smp-status', tr('Searching…')));
       ui.search.disabled = true;
       return Local.ready.then(function(){ return lookupKnownSamples(cur.fp || EMPTY_FP, meta); })
-        .then(renderLookup).then(runScan).then(refreshProviders)
+        .then(renderLookup).then(refreshProviders)
         ['catch'](function(err){ ui.results.innerHTML = ''; ui.results.appendChild(noneBox(tr('COULD NOT ANALYSE'), err && err.message ? err.message : '')); })
         .then(function(){ ui.search.disabled = false; });
     }
@@ -3191,13 +3329,15 @@
         for (var c = 0; c < ab.numberOfChannels; c++) chans.push(ab.getChannelData(c));
         return computeFingerprint(chans, ab.sampleRate, 0, ab.length, function(p){
           cur.info = { text: tr('Fingerprinting {f}…', { f: file.name }) + ' ' + Math.round(p * 100) + '%' }; renderInfo();
-        }).then(function(fp){ return { fp: fp, ab: ab }; });
+        }).then(function(fp){ return { fp: fp, ab: ab, audio: { channels: chans, rate: ab.sampleRate, from: 0, to: ab.length } }; });
       }).then(function(r){
         cur.fp = r.fp;
+        cur.audio = r.audio;
         return tagsP.then(function(tg){
           ui.qArtist.value = tg.artist; ui.qTitle.value = tg.title;
           cur.info = { duration: r.ab.duration, hashes: r.fp.hashes.length, from: tg.from }; renderInfo();
-          return runLookup();
+          runLookup();            // online lookups run alongside the library scan
+          return runScan();
         });
       })['catch'](function(err){
         cur.info = { text: tr('Could not read {f}:', { f: file.name }) + ' ' + (err && err.message ? err.message : tr('unreadable file')) };
@@ -3222,6 +3362,7 @@
       if (f && ui.drop.hidden) loadTrack(f);
     });
     ui.search.addEventListener('click', runLookup);
+    ui.vari.addEventListener('change', function(){ if (cur.fp) runScan(); });
     [ui.qArtist, ui.qTitle].forEach(function(i){ i.addEventListener('keydown', function(e){ if (e.key === 'Enter') runLookup(); }); });
     ui.online.checked = MB.isEnabled();
     ui.online.addEventListener('change', function(){
@@ -3327,7 +3468,7 @@
     $('smpClearDbBtn').addEventListener('click', function(){
       if (!confirm(tr('Delete every recording and relationship in the local database? This cannot be undone.'))) return;
       Local.clear();
-      if (cur.fp) runLookup(); else refreshProviders();
+      if (cur.fp) { runLookup(); runScan(); } else refreshProviders();
     });
 
     /* ---- Chop: FIND SOURCE ---- */
@@ -3342,26 +3483,30 @@
         return;
       }
       fsBtn.disabled = true;
-      fsPanel.appendChild(el('div', 'smp-status', tr('Fingerprinting selection…')));
+      fsPanel.appendChild(el('div', 'smp-status', tr('Analysing selection, including other speeds…')));
       var from = Math.floor(reg.start * reg.sampleRate), to = Math.floor(reg.end * reg.sampleRate);
       Local.ready.then(function(){
         return computeFingerprint(reg.channels, reg.sampleRate, from, to);
       }).then(function(fp){
-        return findSource(fp).then(function(cands){ return { fp: fp, cands: cands }; });
+        return findSource(fp, { channels: reg.channels, rate: reg.sampleRate, from: from, to: to }).then(function(cands){ return { fp: fp, cands: cands }; });
       }).then(function(r){
         fsPanel.innerHTML = '';
         if (!r.cands.length){
           var n = Local.stats().recordings;
           fsPanel.appendChild(noneBox(tr('NO CONFIDENT MATCH'),
             (n ? tr('Compared against {n} recording(s) in the local database; none showed enough evidence.', { n: n }) + ' ' : tr('The local database is empty — add recordings on the SAMPLES screen first.') + ' ') +
-            tr('This only finds near-verbatim reuse; pitched, stretched or heavily processed samples will usually not match.')));
+            tr('Checked at the original speed and from 0.8× to 1.25×. Samples time-stretched without changing pitch, or buried under other sounds, can still be missed.')));
           return;
         }
         r.cands.slice(0, 5).forEach(function(m){
           var c = el('div', 'smp-card');
           c.appendChild(el('div', 'ct', who(m)));
           var tg = el('div'); tg.appendChild(el('span', 'tag', tr(m.confidence) + ' ' + tr('confidence'))); c.appendChild(tg);
-          c.appendChild(el('div', null, tr('Best alignment with the source at ~{t}', { t: fmtTime(Math.max(0, m.offsetSec)) })));
+          c.appendChild(el('div', null, tr('Best alignment with the source at ~{t}', { t: fmtTime(Math.max(0, m.srcStartSec != null ? m.srcStartSec : m.offsetSec)) })));
+          if (m.speed && Math.abs(m.speed - 1) > 0.004){
+            var st = 12 * Math.log(m.speed) / Math.LN2, pct = Math.abs(Math.round((m.speed - 1) * 1000) / 10);
+            c.appendChild(el('div', null, tr(m.speed > 1 ? 'Sped up by about {p}% (pitch +{s} semitones)' : 'Slowed down by about {p}% (pitch −{s} semitones)', { p: pct, s: Math.abs(st).toFixed(1) })));
+          }
           c.appendChild(el('div', 'cm', evidence(m) + ' \u00b7 ' + m.source + ' \u00b7 ' + tr('experimental')));
           fsPanel.appendChild(c);
         });
