@@ -12,6 +12,8 @@ SOURCE) without an entry here first.**
 | Fingerprint engine (`SampleFinder` in `web/index.html`) | Own code | MIT (this repo) | Approved. Written from scratch; no third-party code. |
 | Radix-2 FFT, Hann window | Own code | MIT (this repo) | Approved. Textbook algorithm, own implementation. |
 | IndexedDB, Web Audio API | Browser built-ins | n/a | Approved. |
+| Electron (Mac app shell, `mac/`) | MIT | Approved. Not bundled in the repo; installed by `npm install` when building. The built app also contains Chromium and its third-party licences (shipped inside the app as `LICENSES.chromium.html`). | Approved. |
+| @electron/packager (build tool, `mac/`) | BSD-2-Clause | Approved. Build-time only. | Approved. |
 
 **Datasets approved: none.** SP404 DROP bundles no sample database, no
 fingerprints and no recordings.
@@ -21,6 +23,8 @@ fingerprints and no recordings.
 | API | Data licence | Terms / caveats | Status |
 |---|---|---|---|
 | MusicBrainz web service (`musicbrainz.org/ws/2`), used by `MusicBrainzProvider` | Core data is **CC0** (public domain) | Opt-in toggle (default on, can be turned off). Sends only artist + title text, never audio. Public API is limited to ~1 request/second (enforced in code). Browsers cannot set a custom User-Agent, which MusicBrainz asks API clients to send. Heavy or commercial use of the hosted API may need a MetaBrainz commercial plan — review before commercial distribution. | Approved for the current free/MIT distribution. |
+
+| Genius API (`api.genius.com`), used by `GeniusProvider` | Community-entered; Genius's own terms apply | **Not approved.** Their API terms could not be reviewed for this project. Shipped *off*: it does nothing until a user pastes their **own** API token, and that user is responsible for following Genius's terms. Official API only, no scraping. Review (especially commercial use and caching) before any commercial distribution. | Optional, user's own risk. |
 
 Only the CC0 core relationship data (`samples material` recording relations)
 is read. MusicBrainz's supplementary data (CC BY-NC-SA) is not used.

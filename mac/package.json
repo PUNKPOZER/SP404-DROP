@@ -1,0 +1,14 @@
+{
+  "name": "sp404-drop-mac",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SP404 DROP as a native macOS app (Electron shell around ../web/index.html)",
+  "license": "MIT",
+  "scripts": {
+    "build": "./build.sh"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^44.5.1"
+  }
+}

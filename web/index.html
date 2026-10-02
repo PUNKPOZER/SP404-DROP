@@ -710,10 +710,16 @@
         </div>
         <div class="smp-head"><h3>Known samples</h3></div>
         <div id="smpResults"></div>
+        <div class="smp-head"><h3>Found inside this track</h3></div>
+        <div id="smpScan"></div>
       </div>
 
       <div class="smp-head"><h3>Providers</h3></div>
       <div id="smpProviders"></div>
+      <div class="smp-query" style="grid-template-columns:1fr;margin-top:8px;">
+        <input type="password" id="smpGeniusToken" placeholder="Genius API token (optional)" autocomplete="off" spellcheck="false" style="font-family:var(--font-ui);font-size:11px;border:2px solid var(--ink);border-radius:6px;padding:7px 8px;background:var(--card);color:var(--ink);width:100%;">
+      </div>
+      <div class="chop-hint" style="text-align:left;margin:4px 0 0;">Genius has far more community-entered sample credits than MusicBrainz. It needs your own free API token, and you are responsible for following Genius's API terms. Off until you paste one.</div>
       <label class="smp-online"><input type="checkbox" id="smpOnline" checked><span>Online lookup (MusicBrainz) &mdash; sends only the artist and title text, never audio.</span></label>
 
       <div class="smp-head"><h3>Local database</h3></div>
@@ -725,6 +731,11 @@
           <button class="pill" id="smpImportBtn">Import JSON</button>
           <button class="pill" id="smpExportBtn">Export JSON</button>
         </div>
+        <div class="smp-btns" style="grid-template-columns:1fr;">
+          <button class="pill solid" id="smpIndexBtn">Index a folder of reference tracks</button>
+        </div>
+        <div class="smp-status" id="smpIndexInfo" style="margin:8px 0 0;"></div>
+        <input type="file" id="smpIndexInput" webkitdirectory directory multiple hidden>
         <button class="clear-link" id="smpClearDbBtn" style="margin-top:10px;">Clear local database</button>
         <input type="file" id="smpImportInput" accept=".json,application/json" hidden>
 
@@ -838,6 +849,24 @@
     'Clear All Markers': 'Убрать все маркеры',
     '{n} Sample|{n} Samples': '{n} сэмпл|{n} сэмпла|{n} сэмплов',
     '0 Samples': '0 сэмплов',
+    'Genius API token (optional)': 'Токен Genius API (необязательно)',
+    "Genius has far more community-entered sample credits than MusicBrainz. It needs your own free API token, and you are responsible for following Genius's API terms. Off until you paste one.": 'В Genius намного больше данных о сэмплах, внесённых сообществом, чем в MusicBrainz. Нужен твой собственный бесплатный токен API, и за соблюдение условий API Genius отвечаешь ты. Выключено, пока не вставишь токен.',
+    'Found inside this track': 'Найдено внутри этого трека',
+    'Index a folder of reference tracks': 'Проиндексировать папку с опорными треками',
+    'Stop indexing': 'Остановить индексацию',
+    'no token — paste your Genius API token above to turn on': 'нет токена — вставь токен Genius API выше, чтобы включить',
+    'Genius API terms not reviewed for this project; your own token.': 'Условия API Genius для этого проекта не проверялись; твой собственный токен.',
+    'matched by artist/title text on Genius, not by audio': 'найдено по тексту исполнитель/название на Genius, а не по аудио',
+    'No online source lists this artist and title — try correcting the spelling above. Obscure or very new tracks are often missing; the "Found inside this track" scan below does not depend on them.': 'Ни один онлайн-источник не знает такого исполнителя и названия — попробуй поправить написание выше. Малоизвестных и совсем новых треков там часто нет; сканирование «Найдено внутри этого трека» ниже от них не зависит.',
+    'REFERENCE LIBRARY IS EMPTY': 'БИБЛИОТЕКА ОПОРНЫХ ТРЕКОВ ПУСТА',
+    'Use "Index a folder of reference tracks" below with the records you suspect were sampled (for example the artist\'s albums). This track is then scanned against them by sound.': 'Нажми ниже «Проиндексировать папку с опорными треками» и выбери записи, которые, по твоим подозрениям, семплировали (например, альбомы исполнителя). Этот трек будет сканироваться по ним по звуку.',
+    'NOTHING FROM YOUR LIBRARY FOUND': 'НИЧЕГО ИЗ ТВОЕЙ БИБЛИОТЕКИ НЕ НАЙДЕНО',
+    'Scanned against {n} recording(s). Only near-verbatim reuse is detected: samples that were pitched, time-stretched or buried under other sounds usually will not match.': 'Проверено по записям: {n}. Находится только почти дословное использование: сэмплы со сменой тона, растянутые или скрытые под другими звуками обычно не совпадают.',
+    'In this track at {a}–{b}, matching the source at ~{t}': 'В этом треке на {a}–{b}, совпадает с источником около {t}',
+    'No audio files found in that folder.': 'В этой папке нет аудиофайлов.',
+    'Fingerprint {n} audio file(s)? Only fingerprints and names are stored — never the audio. Confirm you are allowed to analyse these files.': 'Сделать отпечатки {n} аудиофайлов? Хранятся только отпечатки и названия — никогда не аудио. Подтверди, что тебе разрешено анализировать эти файлы.',
+    'Indexed {a}, skipped {b} already known, {c} could not be read.': 'Проиндексировано: {a}, пропущено уже известных: {b}, не удалось прочитать: {c}.',
+    'Indexing {i}/{n} — {f}': 'Индексирую {i}/{n} — {f}',
     'User-supplied data; no data bundled with SP404 DROP.': 'Данные пользователя; вместе с SP404 DROP данные не поставляются.',
     'MusicBrainz core data is CC0 (public domain). Rate-limited public API.': 'Основные данные MusicBrainz — CC0 (общественное достояние). Публичный API с ограничением частоты.',
     'Tap a numbered sample above to select it, then preview or loop just that piece:': 'Выбери номер сэмпла выше, затем прослушай или зацикли только этот кусок:',
@@ -2420,32 +2449,50 @@
       });
     }
 
+    /* Index: every (hash, recording, frame) triple packed into one sorted
+       Float64Array: hash * 2^28 + recIdx * 2^16 + frame. 8 bytes per entry and
+       a binary search per lookup, so a few hundred reference tracks stay
+       workable. Limits: 4096 recordings, first 65536 frames (~35 min) each. */
+    var PACK = 268435456;
     function buildIndex(recs){
-      var map = new Map();
-      recs.forEach(function(r, idx){
-        var h = r.fp.hashes, tm = r.fp.times;
-        for (var i = 0; i < h.length; i++){
-          var l = map.get(h[i]);
-          if (!l) map.set(h[i], l = []);
-          l.push(idx * TIME_MOD + tm[i]);
+      var total = 0, i, r;
+      for (i = 0; i < recs.length; i++) total += recs[i].fp.hashes.length;
+      var keys = new Float64Array(total), n = 0;
+      for (i = 0; i < Math.min(recs.length, 4096); i++){
+        var h = recs[i].fp.hashes, tm = recs[i].fp.times;
+        for (var j = 0; j < h.length; j++){
+          if (tm[j] < 65536) keys[n++] = h[j] * PACK + i * 65536 + tm[j];
         }
-      });
-      return { map: map, recs: recs };
+      }
+      keys = keys.subarray(0, n);
+      keys.sort();
+      return { keys: keys, n: n, recs: recs, lo: 0, hi: 0 };
+    }
+    function lookupHash(index, h){ // sets index.lo/hi to the matching entry range
+      var keys = index.keys, base = h * PACK, end = base + PACK, lo = 0, hi = index.n, mid;
+      while (lo < hi){ mid = (lo + hi) >> 1; if (keys[mid] < base) lo = mid + 1; else hi = mid; }
+      index.lo = lo; hi = index.n;
+      while (lo < hi){ mid = (lo + hi) >> 1; if (keys[mid] < end) lo = mid + 1; else hi = mid; }
+      index.hi = lo;
     }
 
     /* Offset-histogram voting: a true match makes many hashes agree on one
        time offset; a false one scatters across offsets. A result only counts
-       if it clears an absolute floor, beats the scatter baseline, and covers
-       a minimum fraction of the query. */
+       if it clears an absolute floor, beats the scatter baseline, and (for
+       whole-recording identification) covers a minimum share of the query.
+       opts: { minRatio, minAligned } */
     var MIN_ALIGNED = 12;
-    function matchFingerprint(q, index, minRatio){
-      var per = new Map();
-      for (var i = 0; i < q.hashes.length; i++){
-        var lst = index.map.get(q.hashes[i]);
-        if (!lst || lst.length > 400) continue;
+    function matchFingerprint(q, index, opts){
+      opts = opts || {};
+      var minRatio = opts.minRatio || 0, minAligned = opts.minAligned || MIN_ALIGNED;
+      var per = new Map(), i, e;
+      for (i = 0; i < q.hashes.length; i++){
+        lookupHash(index, q.hashes[i]);
+        if (index.hi - index.lo > 400) continue;
         var tq = q.times[i];
-        for (var e = 0; e < lst.length; e++){
-          var ti = Math.floor(lst[e] / TIME_MOD), off = (lst[e] - ti * TIME_MOD) - tq;
+        for (e = index.lo; e < index.hi; e++){
+          var packed = index.keys[e] - q.hashes[i] * PACK;
+          var ti = Math.floor(packed / 65536), off = (packed - ti * 65536) - tq;
           var rec = per.get(ti);
           if (!rec) per.set(ti, rec = { offs: new Map(), votes: 0 });
           rec.offs.set(off, (rec.offs.get(off) || 0) + 1);
@@ -2461,11 +2508,29 @@
         });
         var baseline = Math.max(1, (rec.votes - best) / Math.max(1, rec.offs.size - 3)); // average votes per stray offset
         var ratio = q.hashes.length ? best / q.hashes.length : 0;
-        if (best >= MIN_ALIGNED && best >= 12 * baseline && ratio >= minRatio){
-          out.push({ rec: index.recs[ti], aligned: best, ratio: ratio, offsetSec: bestOff * FRAME_SEC,
-                     confidence: (best >= 40 && ratio >= 0.15) ? 'HIGH' : (best >= 20 ? 'MEDIUM' : 'LOW') });
+        if (best >= minAligned && best >= 12 * baseline && ratio >= minRatio){
+          out.push({ rec: index.recs[ti], ti: ti, aligned: best, ratio: ratio, offsetSec: bestOff * FRAME_SEC, bestOff: bestOff,
+                     qStartSec: 0, qEndSec: 0,
+                     confidence: (best >= 80 || (best >= 40 && ratio >= 0.15)) ? 'HIGH' : (best >= 25 ? 'MEDIUM' : 'LOW') });
         }
       });
+      if (out.length){
+        // where in the query did the aligned hashes sit?
+        var byTi = {};
+        out.forEach(function(m){ byTi[m.ti] = m; m.qMin = 1e9; m.qMax = -1; });
+        for (i = 0; i < q.hashes.length; i++){
+          lookupHash(index, q.hashes[i]);
+          if (index.hi - index.lo > 400) continue;
+          for (e = index.lo; e < index.hi; e++){
+            var pk = index.keys[e] - q.hashes[i] * PACK, t2 = Math.floor(pk / 65536), m = byTi[t2];
+            if (m && Math.abs((pk - t2 * 65536) - q.times[i] - m.bestOff) <= 1){
+              if (q.times[i] < m.qMin) m.qMin = q.times[i];
+              if (q.times[i] > m.qMax) m.qMax = q.times[i];
+            }
+          }
+        }
+        out.forEach(function(m){ m.qStartSec = m.qMin * FRAME_SEC; m.qEndSec = (m.qMax + FP.MAX_DT) * FRAME_SEC; });
+      }
       out.sort(function(a, b){ return b.aligned - a.aligned; });
       return out;
     }
@@ -2553,7 +2618,8 @@
           tx.objectStore('recordings').clear(); tx.objectStore('relations').clear();
         } catch(e){}
       }
-      function reindex(){ index = buildIndex(recs); }
+      function reindex(){ index = null; } // rebuilt lazily on the next lookup
+      function idx(){ if (!index) index = buildIndex(recs); return index; }
       function b64(u32){
         var bytes = new Uint8Array(u32.buffer, u32.byteOffset, u32.byteLength), s = '';
         for (var i = 0; i < bytes.length; i += 8192) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
@@ -2581,7 +2647,7 @@
         },
         identifyRecording: function(fp){
           return ready.then(function(){
-            return matchFingerprint(fp, index, 0.15).map(function(m){
+            return matchFingerprint(fp, idx(), { minRatio: 0.15 }).map(function(m){
               return { recordingRef: m.rec.id, title: m.rec.title, artist: m.rec.artist, year: m.rec.year,
                        aligned: m.aligned, ratio: m.ratio, confidence: m.confidence, source: 'Local Sample Database' };
             });
@@ -2593,9 +2659,19 @@
                        .map(function(r){ return normalizeRelation(r, 'Local Sample Database (user-entered)'); });
           });
         },
+        // Whole track vs the reference library: which library recordings are
+        // contained in this track, and where. Skips the track's own recording.
+        scanTrack: function(fp){
+          return ready.then(function(){
+            return matchFingerprint(fp, idx(), { minRatio: 0, minAligned: 14 }).filter(function(m){ return m.ratio < 0.5; }).map(function(m){
+              return { title: m.rec.title, artist: m.rec.artist, year: m.rec.year, aligned: m.aligned, ratio: m.ratio, confidence: m.confidence,
+                       offsetSec: m.offsetSec, srcStartSec: m.qStartSec + m.offsetSec, qStartSec: m.qStartSec, qEndSec: m.qEndSec, source: 'Local Sample Database' };
+            });
+          });
+        },
         findSourceCandidates: function(fp){
           return ready.then(function(){
-            return matchFingerprint(fp, index, 0.05).map(function(m){
+            return matchFingerprint(fp, idx(), { minRatio: 0.05 }).map(function(m){
               return { title: m.rec.title, artist: m.rec.artist, year: m.rec.year, aligned: m.aligned, ratio: m.ratio,
                        confidence: m.confidence, offsetSec: m.offsetSec, source: 'Local Sample Database' };
             });
@@ -2606,8 +2682,9 @@
       return {
         provider: provider, ready: ready,
         stats: function(){ return { recordings: recs.length, relations: rels.length, persistent: persistent }; },
-        addRecording: function(meta, fp){
-          var r = { id: newId('r_'), title: str(meta.title), artist: str(meta.artist), year: str(meta.year, 4),
+        hasFileKey: function(k){ return recs.some(function(r){ return r.fileKey === k; }); },
+        addRecording: function(meta, fp, fileKey){
+          var r = { id: newId('r_'), fileKey: str(fileKey, 300), title: str(meta.title), artist: str(meta.artist), year: str(meta.year, 4),
                     createdAt: new Date().toISOString(), fp: { v: fp.v, hashes: fp.hashes, times: fp.times, frames: fp.frames, duration: fp.duration } };
           recs.push(r); put('recordings', r); reindex();
           return r.id;
@@ -2621,7 +2698,7 @@
           return JSON.stringify({
             format: 'sp404drop-sampledb', version: 1,
             recordings: recs.map(function(r){
-              return { id: r.id, title: r.title, artist: r.artist, year: r.year, createdAt: r.createdAt,
+              return { id: r.id, fileKey: r.fileKey || '', title: r.title, artist: r.artist, year: r.year, createdAt: r.createdAt,
                        fp: { v: r.fp.v, frames: r.fp.frames, duration: r.fp.duration, hashes: b64(r.fp.hashes), times: b64(r.fp.times) } };
             }),
             relations: rels
@@ -2636,7 +2713,7 @@
             if (!r || typeof r.id !== 'string' || !r.fp || typeof r.fp.hashes !== 'string' || typeof r.fp.times !== 'string' || haveR[r.id]) return;
             var h = unb64(r.fp.hashes), t = unb64(r.fp.times);
             if (h.length !== t.length || r.fp.v !== FP.VERSION) return;
-            var rec = { id: str(r.id, 60), title: str(r.title), artist: str(r.artist), year: str(r.year, 4), createdAt: str(r.createdAt, 40),
+            var rec = { id: str(r.id, 60), fileKey: str(r.fileKey, 300), title: str(r.title), artist: str(r.artist), year: str(r.year, 4), createdAt: str(r.createdAt, 40),
                         fp: { v: FP.VERSION, hashes: h, times: t, frames: +r.fp.frames || 0, duration: +r.fp.duration || 0 } };
             recs.push(rec); put('recordings', rec); haveR[rec.id] = 1; addedR++;
           });
@@ -2669,20 +2746,17 @@
       function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
       function get(path){
         if (cache.has(path)) return cache.get(path);
-        var p = chain.then(function attempt(){
-          var wait = Math.max(0, lastReq + 1100 - Date.now());
-          return sleep(wait).then(function(){
-            lastReq = Date.now();
-            return fetch(BASE + path, { headers: { Accept: 'application/json' } });
+        function raw(){
+          lastReq = Date.now();
+          if (window.sp404 && window.sp404.fetchJson) return window.sp404.fetchJson(BASE + path); // Mac app: main process, sets User-Agent
+          return fetch(BASE + path, { headers: { Accept: 'application/json' } }).then(function(res){
+            if (!res.ok) throw new Error('MusicBrainz HTTP ' + res.status);
+            return res.json();
           });
-        }).then(function(res){
-          if (res.status === 503 || res.status === 429){
-            return sleep(2500).then(function(){ lastReq = Date.now(); return fetch(BASE + path, { headers: { Accept: 'application/json' } }); });
-          }
-          return res;
-        }).then(function(res){
-          if (!res.ok) throw new Error('MusicBrainz HTTP ' + res.status);
-          return res.json();
+        }
+        var p = chain.then(function(){ return sleep(Math.max(0, lastReq + 1100 - Date.now())); }).then(raw).catch(function(err){
+          if (/\b(503|429)\b/.test(err && err.message)) return sleep(2500).then(raw);
+          throw err;
         });
         chain = p.then(function(){}, function(){});
         cache.set(path, p);
@@ -2753,6 +2827,84 @@
       };
     })();
     registerProvider(MB.provider);
+
+    /* ---------- 3b'. GeniusProvider ----------
+       Optional and OFF until the user pastes their own Genius API token.
+       Genius holds community-entered sample/interpolation credits (the API
+       exposes them as song_relationships). Its API terms have NOT been
+       reviewed for this project (see THIRD_PARTY_NOTICES.md): the user supplies
+       their own token and answers for their own use. Uses the official API
+       only — no scraping. In a browser the request may be blocked by CORS; the
+       Mac app routes it through its main process instead. */
+    var Genius = (function(){
+      var token = '', songs = new Map(), lastError = '';
+      try { token = localStorage.getItem('sp404drop.geniusToken') || ''; } catch(e){}
+      function call(path){
+        var url = 'https://api.genius.com' + path, headers = { Authorization: 'Bearer ' + token };
+        if (window.sp404 && window.sp404.fetchJson) return window.sp404.fetchJson(url, headers);
+        return fetch(url, { headers: headers }).then(function(r){
+          if (!r.ok) throw new Error('Genius HTTP ' + r.status);
+          return r.json();
+        }, function(){ throw new Error('request blocked by the browser (CORS) — use the Mac app'); });
+      }
+      function norm(v){
+        return String(v || '').toLowerCase().replace(/\(.*?\)|\[.*?\]/g, ' ').replace(/\b(feat|ft)\.?\b.*$/, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+      }
+      function overlaps(a, b){ a = norm(a); b = norm(b); return !!a && !!b && (a.indexOf(b) >= 0 || b.indexOf(a) >= 0); }
+      var typeMap = { samples: ['samples', ''], sampled_in: ['sampledBy', ''], interpolates: ['samples', 'interpolation'], interpolated_by: ['sampledBy', 'interpolation'] };
+      var provider = {
+        id: 'genius', name: 'Genius', kind: 'api',
+        license: 'Genius API terms not reviewed for this project; your own token.',
+        getStatus: function(){
+          if (!token) return Promise.resolve({ ready: false, detail: tr('no token — paste your Genius API token above to turn on') });
+          return Promise.resolve({ ready: true, detail: lastError ? tr('last request failed:') + ' ' + lastError : tr('online · artist + title text only') });
+        },
+        identifyRecording: function(fp, meta){
+          if (!token || !MB.isEnabled() || !meta || !meta.title) return Promise.resolve([]);
+          lastError = '';
+          return call('/search?q=' + encodeURIComponent((meta.artist ? meta.artist + ' ' : '') + meta.title)).then(function(d){
+            var hits = ((d.response || {}).hits || []).map(function(h){ return h.result; }).filter(Boolean);
+            var hit = hits.filter(function(h){
+              return overlaps(h.title, meta.title) && (!meta.artist || overlaps((h.primary_artist || {}).name, meta.artist));
+            })[0];
+            if (!hit) return [];
+            var key = 'genius:' + hit.id;
+            songs.set(key, hit);
+            return [{ recordingRef: key, title: hit.title, artist: (hit.primary_artist || {}).name || '',
+                      year: ((hit.release_date_components || {}).year || '') + '', confidence: 'MEDIUM',
+                      evidenceKey: 'matched by artist/title text on Genius, not by audio', evidenceVars: {}, source: 'Genius' }];
+          })['catch'](function(err){ lastError = err && err.message ? err.message : 'network error'; return []; });
+        },
+        getSampleRelations: function(ref){
+          var hit = songs.get(ref);
+          if (!hit) return Promise.resolve([]);
+          return call('/songs/' + hit.id + '?text_format=plain').then(function(d){
+            var out = [];
+            (((d.response || {}).song || {}).song_relationships || []).forEach(function(g){
+              var m = typeMap[g.relationship_type || g.type];
+              if (!m) return;
+              (g.songs || []).forEach(function(sg){
+                out.push(normalizeRelation({
+                  direction: m[0], sampleType: m[1], sourceArtist: (sg.primary_artist || {}).name, sourceTrack: sg.title,
+                  sourceYear: ((sg.release_date_components || {}).year || '') + '', externalRef: sg.url,
+                  provenance: 'Genius (community-entered)'
+                }, 'Genius'));
+              });
+            });
+            out.sort(function(a, b){ return a.direction === b.direction ? 0 : (a.direction === 'samples' ? -1 : 1); });
+            return out;
+          })['catch'](function(err){ lastError = err && err.message ? err.message : 'network error'; return []; });
+        }
+      };
+      return {
+        provider: provider,
+        hasToken: function(){ return !!token; },
+        getToken: function(){ return token; },
+        setToken: function(v){ token = (v || '').trim(); try { localStorage.setItem('sp404drop.geniusToken', token); } catch(e){} },
+        lastError: function(){ return lastError; }
+      };
+    })();
+    registerProvider(Genius.provider);
 
     /* ---------- tag reader ----------
        Pulls artist/title out of ID3v2/ID3v1 (MP3), FLAC Vorbis comments and
@@ -2860,6 +3012,14 @@
         }).catch(function(){ return []; });
       })).then(function(lists){ return [].concat.apply([], lists); });
     }
+    // Mode 3: whole track -> reference-library recordings contained in it.
+    function scanForSources(fp){
+      return Promise.all(registry.map(function(p){
+        return p.scanTrack ? p.scanTrack(fp).catch(function(){ return []; }) : Promise.resolve([]);
+      })).then(function(lists){
+        return [].concat.apply([], lists).sort(function(a, b){ return b.aligned - a.aligned; });
+      });
+    }
     // Mode 2: region fingerprint -> candidate recordings.
     function findSource(fp){
       return Promise.all(registry.map(function(p){
@@ -2897,7 +3057,8 @@
       drop: $('smpDrop'), file: $('smpFileInput'), ws: $('smpWorkspace'), info: $('smpFile'),
       results: $('smpResults'), providers: $('smpProviders'), dbInfo: $('smpDbInfo'), sub: $('smpSub'),
       addRec: $('smpAddRecBtn'), addRel: $('smpAddRelBtn'), recForm: $('smpRecForm'), relForm: $('smpRelForm'),
-      qArtist: $('smpQArtist'), qTitle: $('smpQTitle'), search: $('smpSearchBtn'), online: $('smpOnline')
+      qArtist: $('smpQArtist'), qTitle: $('smpQTitle'), search: $('smpSearchBtn'), online: $('smpOnline'),
+      scan: $('smpScan'), token: $('smpGeniusToken'), indexBtn: $('smpIndexBtn'), indexInput: $('smpIndexInput'), indexInfo: $('smpIndexInfo')
     };
     var cur = { fp: null, name: '', recordingId: null, meta: null, found: null, info: null };
     var actx = null;
@@ -2943,9 +3104,9 @@
       if (!found.length){
         var why = tr('No configured provider recognised this recording.') + ' ';
         if (!MB.isEnabled()) why += tr('Online lookup is turned off.') + ' ';
-        else if (MB.lastError()) why += tr('The online lookup failed:') + ' ' + MB.lastError() + '. ';
+        else if (MB.lastError() || Genius.lastError()) why += tr('The online lookup failed:') + ' ' + (MB.lastError() || Genius.lastError()) + '. ';
         else if (!ui.qArtist.value.trim() || !ui.qTitle.value.trim()) why += tr('Type the artist and title above and press Search.') + ' ';
-        else why += tr('MusicBrainz has no confident match for that artist and title — try correcting the spelling above.') + ' ';
+        else why += tr('No online source lists this artist and title — try correcting the spelling above. Obscure or very new tracks are often missing; the "Found inside this track" scan below does not depend on them.') + ' ';
         ui.results.appendChild(noneBox(tr('NO SAMPLE INFORMATION FOUND'), why + tr('Nothing is guessed.')));
         return;
       }
@@ -2978,6 +3139,33 @@
       if (!anyRel) ui.results.appendChild(noneBox(tr('NO SAMPLE INFORMATION FOUND'), tr('The recording was identified, but no provider holds sample relationships for it. That means "not listed", not "not sampled".')));
     }
 
+    function renderScan(cands){
+      ui.scan.innerHTML = '';
+      var n = Local.stats().recordings;
+      if (!cur.fp || cur.fp.hashes.length < 50){ return; }
+      if (!n){
+        ui.scan.appendChild(noneBox(tr('REFERENCE LIBRARY IS EMPTY'), tr('Use "Index a folder of reference tracks" below with the records you suspect were sampled (for example the artist\'s albums). This track is then scanned against them by sound.')));
+        return;
+      }
+      if (!cands.length){
+        ui.scan.appendChild(noneBox(tr('NOTHING FROM YOUR LIBRARY FOUND'), tr('Scanned against {n} recording(s). Only near-verbatim reuse is detected: samples that were pitched, time-stretched or buried under other sounds usually will not match.', { n: n })));
+        return;
+      }
+      cands.slice(0, 8).forEach(function(m){
+        var c = el('div', 'smp-card');
+        c.appendChild(el('div', 'ct', who(m)));
+        var tg = el('div'); tg.appendChild(el('span', 'tag', tr(m.confidence) + ' ' + tr('confidence'))); c.appendChild(tg);
+        c.appendChild(el('div', null, tr('In this track at {a}–{b}, matching the source at ~{t}', { a: fmtTime(m.qStartSec), b: fmtTime(m.qEndSec), t: fmtTime(Math.max(0, m.srcStartSec)) })));
+        c.appendChild(el('div', 'cm', evidence(m) + ' \u00b7 ' + m.source + ' \u00b7 ' + tr('experimental')));
+        ui.scan.appendChild(c);
+      });
+    }
+    function runScan(){
+      cur.scanned = null;
+      if (!cur.fp) { ui.scan.innerHTML = ''; return Promise.resolve(); }
+      return Local.ready.then(function(){ return scanForSources(cur.fp); }).then(function(c){ cur.scanned = c; renderScan(c); });
+    }
+
     function runLookup(){
       var meta = { artist: ui.qArtist.value.trim(), title: ui.qTitle.value.trim() };
       cur.meta = meta;
@@ -2985,7 +3173,7 @@
       ui.results.appendChild(el('div', 'smp-status', tr('Searching…')));
       ui.search.disabled = true;
       return Local.ready.then(function(){ return lookupKnownSamples(cur.fp || EMPTY_FP, meta); })
-        .then(renderLookup).then(refreshProviders)
+        .then(renderLookup).then(runScan).then(refreshProviders)
         ['catch'](function(err){ ui.results.innerHTML = ''; ui.results.appendChild(noneBox(tr('COULD NOT ANALYSE'), err && err.message ? err.message : '')); })
         .then(function(){ ui.search.disabled = false; });
     }
@@ -3040,6 +3228,52 @@
       MB.setEnabled(ui.online.checked);
       refreshProviders();
       if (cur.fp || cur.meta) runLookup();
+    });
+
+    /* ---- Genius token ---- */
+    ui.token.value = Genius.getToken();
+    ui.token.addEventListener('change', function(){
+      Genius.setToken(ui.token.value);
+      refreshProviders();
+      if (cur.fp || cur.meta) runLookup();
+    });
+
+    /* ---- reference library: index a folder ---- */
+    var indexing = false, cancelIndex = false;
+    ui.indexBtn.addEventListener('click', function(){
+      if (indexing){ cancelIndex = true; return; }
+      ui.indexInput.click();
+    });
+    ui.indexInput.addEventListener('change', function(){
+      var files = Array.prototype.filter.call(ui.indexInput.files || [], function(f){ return EXT_RE.test(f.name); });
+      ui.indexInput.value = '';
+      if (!files.length){ ui.indexInfo.textContent = tr('No audio files found in that folder.'); return; }
+      if (!confirm(tr('Fingerprint {n} audio file(s)? Only fingerprints and names are stored — never the audio. Confirm you are allowed to analyse these files.', { n: files.length }))) return;
+      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      indexing = true; cancelIndex = false;
+      ui.indexBtn.textContent = tr('Stop indexing');
+      var done = 0, added = 0, skipped = 0, failed = 0;
+      function finish(){
+        indexing = false;
+        ui.indexBtn.textContent = tr('Index a folder of reference tracks');
+        ui.indexInfo.textContent = tr('Indexed {a}, skipped {b} already known, {c} could not be read.', { a: added, b: skipped, c: failed });
+        refreshProviders().then(function(){ if (cur.fp) runScan(); });
+      }
+      (function next(i){
+        if (cancelIndex || i >= files.length) return finish();
+        var f = files[i];
+        ui.indexInfo.textContent = tr('Indexing {i}/{n} — {f}', { i: i + 1, n: files.length, f: f.name });
+        var key = f.name + '|' + f.size + '|' + f.lastModified;
+        if (Local.hasFileKey(key)){ skipped++; return setTimeout(function(){ next(i + 1); }, 0); }
+        var tagsP = readTags(f);
+        f.arrayBuffer().then(function(buf){ return actx.decodeAudioData(buf); }).then(function(ab){
+          var chans = [];
+          for (var c = 0; c < ab.numberOfChannels; c++) chans.push(ab.getChannelData(c));
+          return computeFingerprint(chans, ab.sampleRate, 0, ab.length);
+        }).then(function(fp){
+          return tagsP.then(function(tg){ Local.addRecording({ title: tg.title, artist: tg.artist, year: '' }, fp, key); added++; });
+        })['catch'](function(){ failed++; }).then(function(){ next(i + 1); });
+      })(0);
     });
 
     /* ---- local DB actions ---- */
@@ -3141,6 +3375,7 @@
     I18N.onChange(function(){
       renderInfo();
       if (cur.found) renderLookup(cur.found);
+      if (cur.scanned) renderScan(cur.scanned);
       refreshProviders();
       fsPanel.hidden = true;
     });

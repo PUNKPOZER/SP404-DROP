@@ -1,3 +1,9 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Mac app build output
+mac/node_modules/
+mac/dist/
+mac/app/index.html
+mac/app/icon.svg

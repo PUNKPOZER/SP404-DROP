@@ -81,6 +81,18 @@ and from data you add yourself. If nothing is known it says
     entered.
   - The **Online lookup** checkbox turns this off. When on, only the artist and
     title text is sent to MusicBrainz — never audio.
+- **Found inside this track** — the part that works for obscure tracks. Use
+  **Index a folder of reference tracks** to fingerprint records you suspect were
+  sampled (e.g. the source artist's albums). Every track you drop on SAMPLES is
+  then scanned against that library *by sound*, and a hit says where in your
+  track it sits and where in the source it comes from. Fingerprints only are
+  stored, never audio. Keep the library to a few hundred tracks (memory) — it is
+  for suspects, not your whole collection.
+- **Genius (optional)** — paste your own Genius API token to also pull
+  community-entered samples/interpolations from Genius. Off until a token is
+  set; Genius's API terms have not been reviewed for this project and are your
+  responsibility. In a plain browser Genius may be blocked by CORS; the Mac app
+  ([`../mac/`](../mac/)) handles it.
 - **Find Source (Chop screen)** — select a sample and press **Find Source** to
   compare that region against the recordings in the local database by audio
   fingerprint. It needs about 2 seconds or more, only reports a match with
@@ -108,7 +120,7 @@ audio / tags -> SampleProvider(s) -> results
 Everything lives in the `SampleFinder` module in `index.html`: fingerprint
 engine, the `SampleProvider` interface (documented in the code), providers, and
 UI. Providers: `LocalSampleDatabaseProvider` (audio fingerprints) and
-`MusicBrainzProvider` (online, opt-in). To add a data source, write a provider
+`MusicBrainzProvider` and `GeniusProvider` (online, opt-in). To add a data source, write a provider
 object and call `SampleFinder.registerProvider(...)`; the rest of the app is
 untouched. Review its licence and add it to `THIRD_PARTY_NOTICES.md` first.
 
