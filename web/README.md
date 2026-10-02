@@ -4,7 +4,7 @@ A single self-contained HTML page — no install, no build, no server. Everythin
 runs client-side (decoding, resampling, re-encoding, waveform analysis, zipping)
 and nothing is ever uploaded anywhere.
 
-Open the app and you get two choices: **CONVERT** or **CHOP / LOOP**.
+Open the app and you get three choices: **CONVERT**, **CHOP / LOOP** or **SAMPLES**.
 
 ## CONVERT
 
@@ -59,6 +59,46 @@ Load one track at a time and slice it into numbered samples:
   `sample_02.wav`, … in order — the button labels spell out exactly what each
   one is about to do. Exports are rendered fresh from the source audio at
   16-bit/48kHz — no normalization or other processing.
+
+## SAMPLES / FIND SOURCE
+
+A sample-discovery module inspired by the workflow of sites like WhoSampled. It
+does **not** scrape or use any such site's data, and it ships with **no sample
+data at all**. Results come only from data providers that have been
+licence-checked (see [`../THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md))
+and from data you add yourself. If nothing is known it says
+`NO SAMPLE INFORMATION FOUND` — nothing is ever guessed.
+
+- **Known samples (SAMPLES screen)** — drop a track; it is fingerprinted on your
+  device, the fingerprint is offered to every provider, and any recording that
+  matches is shown with the sample relationships the provider holds for it
+  (source artist/track/year, sampled section, type, timestamp, confidence,
+  provenance, reference link). Matching uses the audio, never the filename.
+- **Find Source (Chop screen)** — select a sample and press **Find Source** to
+  compare that region against the recordings in the local database. It needs
+  about 2 seconds or more, only reports a match with enough evidence, and shows
+  a LOW / MEDIUM / HIGH label plus the raw evidence (aligned hits, share of the
+  region). It is experimental and finds near-verbatim reuse; pitched, stretched
+  or heavily processed samples usually will not match.
+- **Local database** — stores fingerprints (hashes + times) and metadata only,
+  never audio, in your browser (IndexedDB). Add a track you have the right to
+  fingerprint with **+ Add this track**, record what it samples with
+  **+ Add known sample**, and move data between browsers with Import / Export
+  JSON (format `sp404drop-sampledb` v1).
+
+### Architecture
+
+```
+audio -> fingerprint engine -> SampleProvider(s) -> results
+```
+
+Everything lives in the `SampleFinder` module in `index.html`, in four layers:
+fingerprint engine, the `SampleProvider` interface (documented in the code),
+providers, and UI. Providers: `LocalSampleDatabaseProvider` (working),
+`LicensedAPIProvider` (placeholder, unconfigured, no network access). To add a
+data source, write a provider object and call
+`SampleFinder.registerProvider(...)`; the rest of the app is untouched. Review
+its licence and add it to `THIRD_PARTY_NOTICES.md` first.
 
 ## Using it
 

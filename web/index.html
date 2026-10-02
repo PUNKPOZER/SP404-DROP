@@ -422,6 +422,51 @@
 
   .chop-hint{font-size:9.5px;color:var(--ink-faint);text-align:center;line-height:1.7;margin-top:4px;}
 
+  /* =========================================================
+     SAMPLES / FIND SOURCE
+     ========================================================= */
+  .nav-tile.wide{grid-column:1 / -1;min-height:0;flex-direction:row;align-items:center;gap:14px;padding:14px;}
+  .smp-file{font-size:10.5px;color:var(--ink-soft);line-height:1.7;margin-bottom:12px;word-break:break-word;}
+  .smp-file b{color:var(--ink);font-family:var(--font-lcd);}
+  .smp-status{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px;}
+  .smp-head{margin:16px 0 6px;display:flex;justify-content:space-between;align-items:baseline;}
+  .smp-head h3{margin:0;font-family:var(--font-lcd);font-size:13px;text-transform:uppercase;letter-spacing:.03em;}
+  .smp-none{
+    border:3px dashed var(--ink);border-radius:12px;background:var(--card-2);
+    padding:22px 14px;text-align:center;
+  }
+  .smp-none .nt{font-family:var(--font-lcd);font-weight:700;font-size:15px;text-transform:uppercase;}
+  .smp-none .ns{font-size:10px;color:var(--ink-soft);margin-top:8px;line-height:1.7;}
+  .smp-card{
+    border:2.5px solid var(--ink);border-radius:10px;background:var(--card);
+    padding:10px 12px;margin-bottom:8px;font-size:11px;line-height:1.7;
+  }
+  .smp-card.rec{background:var(--ink);color:var(--white);}
+  .smp-card .ct{font-family:var(--font-lcd);font-weight:700;font-size:13px;text-transform:uppercase;}
+  .smp-card .cm{font-size:9.5px;letter-spacing:.04em;color:var(--ink-soft);}
+  .smp-card.rec .cm{color:#cfcdc3;}
+  .smp-card .tag{
+    display:inline-block;border:2px solid currentColor;border-radius:6px;padding:0 6px;
+    font-size:9px;letter-spacing:.08em;text-transform:uppercase;margin-right:6px;
+  }
+  .smp-card a{color:inherit;}
+  .smp-prov{border:2px solid var(--ink);border-radius:8px;padding:6px 10px;margin-bottom:6px;font-size:10px;line-height:1.6;}
+  .smp-prov .pn{font-family:var(--font-lcd);font-weight:700;text-transform:uppercase;}
+  .smp-prov .ps{color:var(--ink-soft);}
+  .smp-form{display:grid;gap:6px;margin-top:10px;}
+  .smp-form[hidden]{display:none !important;}
+  .smp-form input[type=text], .smp-form select{
+    font-family:var(--font-ui);font-size:11px;border:2px solid var(--ink);border-radius:6px;
+    padding:7px 8px;background:var(--card);color:var(--ink);width:100%;
+  }
+  .smp-form .two{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .smp-form label.chk{font-size:9.5px;line-height:1.5;display:flex;gap:6px;align-items:flex-start;color:var(--ink-soft);}
+  .smp-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+  .smp-btns .pill{font-size:11px;padding:9px 8px;}
+  .findsrc-row{margin-bottom:10px;}
+  .findsrc-row .pill{width:100%;}
+  #findSourcePanel .smp-card{margin-bottom:6px;}
+
   @media (max-width:420px){
     .device{padding:14px 12px 16px;}
     .home-tiles{grid-template-columns:1fr;}
@@ -463,6 +508,16 @@
           <div>
             <div class="tile-title">Chop / Loop</div>
             <div class="tile-desc">Slice one track into samples, find a loop, export.</div>
+          </div>
+        </div>
+        <div class="nav-tile wide" id="tileSamples">
+          <svg class="tile-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="10" cy="10" r="6" stroke="#0c0c0a" stroke-width="2.4"/>
+            <path d="M15 15l6 6" stroke="#0c0c0a" stroke-width="2.4" stroke-linecap="square"/>
+          </svg>
+          <div>
+            <div class="tile-title">Samples</div>
+            <div class="tile-desc">Look up known samples in a track from your own local database.</div>
           </div>
         </div>
       </div>
@@ -605,12 +660,91 @@
           <button class="pill" id="loopBtn" disabled>&#8635; Loop</button>
         </div>
 
+        <div class="findsrc-row">
+          <button class="pill" id="findSourceBtn" disabled>&#9906; Find Source</button>
+        </div>
+        <div class="mode-panel" id="findSourcePanel" hidden></div>
+        <div class="chop-hint" style="margin-bottom:10px;">FIND SOURCE is experimental: it fingerprints the selected sample and compares it with recordings in your local database. Needs about 2 seconds or more.</div>
+
         <div class="export-actions">
           <button class="pill" id="exportSelectedBtn" disabled>Export Selected</button>
           <button class="pill solid" id="exportAllBtn" disabled>Export All</button>
         </div>
         <div class="chop-hint">Export Selected saves just the sample picked above as one WAV. Export All saves every sample as a ZIP (sample_01.wav, sample_02.wav, &hellip;). Both render fresh from the source &mdash; 16-bit / 48kHz, no normalization.</div>
       </div>
+    </section>
+
+    <!-- ============ SAMPLES ============ -->
+    <section class="screen" id="screenSamples">
+      <div class="topbar">
+        <button class="back-btn" data-nav="home" aria-label="Back">&#8592;</button>
+        <div>
+          <h2>Samples</h2>
+          <div class="sub" id="smpSub">Known samples &middot; local database</div>
+        </div>
+      </div>
+
+      <div class="chop-drop" id="smpDrop" style="min-height:130px;">
+        <div class="dt">&#9662; Drop a track</div>
+        <div class="ds">or click to browse &mdash; fingerprinted on this device, never uploaded</div>
+      </div>
+      <input type="file" id="smpFileInput" accept="audio/*,.wav,.mp3,.aif,.aiff,.flac,.ogg,.m4a">
+
+      <div id="smpWorkspace" hidden>
+        <div class="smp-file" id="smpFile"></div>
+        <div class="smp-head"><h3>Known samples</h3></div>
+        <div id="smpResults"></div>
+      </div>
+
+      <div class="smp-head"><h3>Providers</h3></div>
+      <div id="smpProviders"></div>
+
+      <div class="smp-head"><h3>Local database</h3></div>
+      <div class="mode-panel" id="smpDb">
+        <div id="smpDbInfo"></div>
+        <div class="smp-btns">
+          <button class="pill" id="smpAddRecBtn" disabled>+ Add this track</button>
+          <button class="pill" id="smpAddRelBtn" disabled>+ Add known sample</button>
+          <button class="pill" id="smpImportBtn">Import JSON</button>
+          <button class="pill" id="smpExportBtn">Export JSON</button>
+        </div>
+        <button class="clear-link" id="smpClearDbBtn" style="margin-top:10px;">Clear local database</button>
+        <input type="file" id="smpImportInput" accept=".json,application/json" hidden>
+
+        <div class="smp-form" id="smpRecForm" hidden>
+          <input type="text" id="smpRecArtist" placeholder="Artist" maxlength="200">
+          <div class="two">
+            <input type="text" id="smpRecTitle" placeholder="Track title" maxlength="200">
+            <input type="text" id="smpRecYear" placeholder="Year" maxlength="4" inputmode="numeric">
+          </div>
+          <label class="chk"><input type="checkbox" id="smpRecRights"><span>I have the right to fingerprint this recording. Only the fingerprint and the details above are stored &mdash; never the audio.</span></label>
+          <button class="pill solid" id="smpRecSave">Save to local database</button>
+        </div>
+
+        <div class="smp-form" id="smpRelForm" hidden>
+          <div class="ds" style="font-size:10px;color:var(--ink-soft);">This track samples&hellip;</div>
+          <div class="two">
+            <input type="text" id="smpRelArtist" placeholder="Source artist" maxlength="200">
+            <input type="text" id="smpRelTrack" placeholder="Source track" maxlength="200">
+          </div>
+          <div class="two">
+            <input type="text" id="smpRelYear" placeholder="Source year" maxlength="4" inputmode="numeric">
+            <select id="smpRelType">
+              <option value="">Sample type&hellip;</option>
+              <option>loop</option><option>drum break</option><option>vocal</option>
+              <option>melodic / chop</option><option>interpolation</option><option>other</option>
+            </select>
+          </div>
+          <div class="two">
+            <input type="text" id="smpRelSection" placeholder="Sampled section (e.g. intro)" maxlength="200">
+            <input type="text" id="smpRelTime" placeholder="Time in this track (e.g. 0:32)" maxlength="20">
+          </div>
+          <input type="text" id="smpRelRef" placeholder="Reference URL (optional)" maxlength="500">
+          <input type="text" id="smpRelProv" placeholder="Where did you learn this? (liner notes, clearance record&hellip;)" maxlength="300">
+          <button class="pill solid" id="smpRelSave">Save relationship</button>
+        </div>
+      </div>
+      <div class="chop-hint">SP404 DROP ships with no sample data. Results come only from providers you have configured and from data you add yourself &mdash; nothing is guessed. Matching is exact-recording fingerprinting; it does not work from the filename.</div>
     </section>
 
   </div>
@@ -626,7 +760,8 @@
   var screens = {
     home: document.getElementById('screenHome'),
     convert: document.getElementById('screenConvert'),
-    chop: document.getElementById('screenChop')
+    chop: document.getElementById('screenChop'),
+    samples: document.getElementById('screenSamples')
   };
   function showScreen(name){
     Object.keys(screens).forEach(function(k){
@@ -636,6 +771,7 @@
   }
   document.getElementById('tileConvert').addEventListener('click', function(){ showScreen('convert'); });
   document.getElementById('tileChop').addEventListener('click', function(){ showScreen('chop'); });
+  document.getElementById('tileSamples').addEventListener('click', function(){ showScreen('samples'); });
   Array.prototype.forEach.call(document.querySelectorAll('[data-nav="home"]'), function(btn){
     btn.addEventListener('click', function(){ showScreen('home'); });
   });
@@ -1037,7 +1173,9 @@
       playSampleBtn: document.getElementById('playSampleBtn'),
       loopBtn: document.getElementById('loopBtn'),
       exportSelectedBtn: document.getElementById('exportSelectedBtn'),
-      exportAllBtn: document.getElementById('exportAllBtn')
+      exportAllBtn: document.getElementById('exportAllBtn'),
+      findSourceBtn: document.getElementById('findSourceBtn'),
+      findSourcePanel: document.getElementById('findSourcePanel')
     };
 
     var PX_PER_SEC_MIN = 70; // floor so very short clips still get a workable click target
@@ -1634,6 +1772,8 @@
       els.loopBtn.disabled = !hasSel;
       els.exportSelectedBtn.disabled = !hasSel;
       els.exportAllBtn.disabled = !hasSel;
+      els.findSourceBtn.disabled = !hasSel;
+      els.findSourcePanel.hidden = true; // results belong to the previous selection
       // Spell out exactly what each export button will do instead of a generic
       // "Selected" / "All" label, so it's clear one saves a single file and the
       // other saves a ZIP of everything.
@@ -1870,7 +2010,662 @@
       });
     });
 
-    return { reset: reset, stopAll: stopAll };
+    // The selected sample as raw channel data, for FIND SOURCE.
+    function getSelectedRegion(){
+      var b = state.audioBuffer;
+      var seg = b && segments()[state.selected];
+      if (!seg) return null;
+      var chans = [];
+      for (var c = 0; c < b.numberOfChannels; c++) chans.push(b.getChannelData(c));
+      return { channels: chans, sampleRate: b.sampleRate, start: seg.start, end: seg.end,
+               index: state.selected, fileName: state.fileName };
+    }
+
+    return { reset: reset, stopAll: stopAll, getSelectedRegion: getSelectedRegion };
+  })();
+
+  /* =========================================================
+     SAMPLE FINDER
+     ---------------------------------------------------------
+     Everything below is split in four layers so a data source can be
+     swapped without touching the rest of the app:
+
+       1. Fingerprint engine  — audio -> compact hash list (own code, no deps)
+       2. Provider interface  — SampleProvider: anything that can answer
+                                "what recording is this?", "what does it
+                                sample?" and "where might this region come from?"
+       3. Providers           — LocalSampleDatabaseProvider (IndexedDB),
+                                LicensedAPIProvider (placeholder, unconfigured)
+       4. UI                  — SAMPLES screen and Chop's FIND SOURCE
+
+     Rule: nothing is ever inferred or guessed. If no provider has evidence,
+     the UI says so.
+     ========================================================= */
+  var SampleFinder = (function SampleFinderModule(){
+
+    /* ---------- 1. fingerprint engine ----------
+       Spectral-peak landmark hashing (the published "constellation" technique):
+       downmix -> 8kHz -> STFT -> sparse spectral peaks -> hash of peak pairs
+       (freq1, freq2, time delta). Only hashes + times are kept, so the audio
+       can't be reconstructed from a stored fingerprint. */
+    var FP = { SR: 8000, N: 1024, HOP: 256, BINS: 512, PEAKS_PER_FRAME: 4, FAN: 4, MAX_DT: 63, VERSION: 1 };
+    var FRAME_SEC = FP.HOP / FP.SR;
+    var TIME_MOD = 1048576; // index entries are recIdx * TIME_MOD + frame
+
+    function yieldUi(){ return new Promise(function(r){ setTimeout(r, 0); }); }
+
+    function downmix8k(channels, rate, from, to){
+      var ratio = rate / FP.SR;
+      var n = Math.floor((to - from) / ratio);
+      var out = new Float32Array(n);
+      var nc = channels.length;
+      for (var i = 0; i < n; i++){
+        var a = from + Math.floor(i * ratio), b = from + Math.floor((i + 1) * ratio);
+        if (b <= a) b = a + 1;
+        var sum = 0;
+        for (var c = 0; c < nc; c++){
+          var ch = channels[c];
+          for (var j = a; j < b; j++) sum += ch[j];
+        }
+        out[i] = sum / ((b - a) * nc);
+      }
+      return out;
+    }
+
+    var fftFn = null, hann = null;
+    function initFFT(){
+      if (fftFn) return;
+      var n = FP.N, cosT = new Float64Array(n / 2), sinT = new Float64Array(n / 2), rev = new Uint16Array(n);
+      var bits = Math.round(Math.log(n) / Math.LN2);
+      for (var i = 0; i < n / 2; i++){ cosT[i] = Math.cos(2 * Math.PI * i / n); sinT[i] = Math.sin(2 * Math.PI * i / n); }
+      for (i = 0; i < n; i++){
+        var r = 0;
+        for (var b = 0; b < bits; b++) r |= ((i >> b) & 1) << (bits - 1 - b);
+        rev[i] = r;
+      }
+      hann = new Float32Array(n);
+      for (i = 0; i < n; i++) hann[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (n - 1));
+      fftFn = function(re, im){
+        var t;
+        for (var i = 0; i < n; i++){
+          var j = rev[i];
+          if (j > i){ t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+        }
+        for (var size = 2; size <= n; size <<= 1){
+          var half = size >> 1, step = n / size;
+          for (var s = 0; s < n; s += size){
+            for (var j2 = s, k = 0; j2 < s + half; j2++, k += step){
+              var l = j2 + half;
+              var tre = re[l] * cosT[k] + im[l] * sinT[k];
+              var tim = im[l] * cosT[k] - re[l] * sinT[k];
+              re[l] = re[j2] - tre; im[l] = im[j2] - tim;
+              re[j2] += tre; im[j2] += tim;
+            }
+          }
+        }
+      };
+    }
+
+    /* channels: Float32Array[] · from/to in source samples. Resolves to
+       { v, hashes:Uint32Array, times:Uint32Array, frames, duration, peaks }. */
+    function computeFingerprint(channels, rate, from, to, onProgress){
+      initFFT();
+      var x = downmix8k(channels, rate, from, to);
+      var N = FP.N, HOP = FP.HOP, B = FP.BINS;
+      var frames = Math.floor((x.length - N) / HOP) + 1;
+      if (frames < 8) return Promise.resolve({ v: FP.VERSION, hashes: new Uint32Array(0), times: new Uint32Array(0), frames: Math.max(frames, 0), duration: x.length / FP.SR, peaks: 0 });
+      var spec = new Float32Array(frames * B);
+      var re = new Float64Array(N), im = new Float64Array(N);
+      var maxDb = -1e9, t = 0;
+
+      function spectrogramChunk(){
+        var end = Math.min(frames, t + 150);
+        for (; t < end; t++){
+          var off = t * HOP;
+          for (var i = 0; i < N; i++){ re[i] = x[off + i] * hann[i]; im[i] = 0; }
+          fftFn(re, im);
+          for (var k = 0; k < B; k++){
+            var db = 10 * Math.log(re[k] * re[k] + im[k] * im[k] + 1e-12) / Math.LN10;
+            spec[t * B + k] = db;
+            if (db > maxDb) maxDb = db;
+          }
+        }
+        if (onProgress) onProgress(0.7 * t / frames);
+        return t < frames ? yieldUi().then(spectrogramChunk) : null;
+      }
+
+      return Promise.resolve().then(spectrogramChunk).then(function(){
+        var floor = maxDb - 55; // ignore anything >55dB below the loudest bin
+        var FR = 10, TR = 7;
+        var pt = [], pk = [];
+        for (var f = 0; f < frames; f++){
+          var base = f * B, mean = 0, sq = 0;
+          for (var k = 3; k < B; k++){ var v = spec[base + k]; mean += v; sq += v * v; }
+          mean /= (B - 3);
+          var thr = Math.max(floor, mean + Math.sqrt(Math.max(0, sq / (B - 3) - mean * mean)));
+          var cands = [];
+          for (k = 3; k < B; k++){
+            v = spec[base + k];
+            if (v < thr) continue;
+            var ok = true, lo = Math.max(0, k - FR), hi = Math.min(B - 1, k + FR);
+            for (var q = lo; q <= hi && ok; q++) if (q !== k && spec[base + q] > v) ok = false;
+            if (!ok) continue;
+            var tlo = Math.max(0, f - TR), thi = Math.min(frames - 1, f + TR);
+            for (var tt = tlo; tt <= thi && ok; tt++){
+              for (q = Math.max(0, k - 2); q <= Math.min(B - 1, k + 2); q++){
+                if (spec[tt * B + q] > v) { ok = false; break; }
+              }
+            }
+            if (ok) cands.push([v, k]);
+          }
+          cands.sort(function(a, b){ return b[0] - a[0]; });
+          for (var c = 0; c < cands.length && c < FP.PEAKS_PER_FRAME; c++){ pt.push(f); pk.push(cands[c][1]); }
+        }
+        var hs = [], ts = [];
+        for (var i = 0; i < pt.length; i++){
+          var fan = 0;
+          for (var j = i + 1; j < pt.length && fan < FP.FAN; j++){
+            var dt = pt[j] - pt[i];
+            if (dt > FP.MAX_DT) break;
+            if (dt < 1) continue;
+            hs.push(pk[i] * 32768 + pk[j] * 64 + dt); // 9 + 9 + 6 bits
+            ts.push(pt[i]);
+            fan++;
+          }
+        }
+        if (onProgress) onProgress(1);
+        return { v: FP.VERSION, hashes: Uint32Array.from(hs), times: Uint32Array.from(ts), frames: frames, duration: x.length / FP.SR, peaks: pt.length };
+      });
+    }
+
+    function buildIndex(recs){
+      var map = new Map();
+      recs.forEach(function(r, idx){
+        var h = r.fp.hashes, tm = r.fp.times;
+        for (var i = 0; i < h.length; i++){
+          var l = map.get(h[i]);
+          if (!l) map.set(h[i], l = []);
+          l.push(idx * TIME_MOD + tm[i]);
+        }
+      });
+      return { map: map, recs: recs };
+    }
+
+    /* Offset-histogram voting: a true match makes many hashes agree on one
+       time offset; a false one scatters across offsets. A result only counts
+       if it clears an absolute floor, beats the scatter baseline, and covers
+       a minimum fraction of the query. */
+    var MIN_ALIGNED = 12;
+    function matchFingerprint(q, index, minRatio){
+      var per = new Map();
+      for (var i = 0; i < q.hashes.length; i++){
+        var lst = index.map.get(q.hashes[i]);
+        if (!lst || lst.length > 400) continue;
+        var tq = q.times[i];
+        for (var e = 0; e < lst.length; e++){
+          var ti = Math.floor(lst[e] / TIME_MOD), off = (lst[e] - ti * TIME_MOD) - tq;
+          var rec = per.get(ti);
+          if (!rec) per.set(ti, rec = { offs: new Map(), votes: 0 });
+          rec.offs.set(off, (rec.offs.get(off) || 0) + 1);
+          rec.votes++;
+        }
+      }
+      var out = [];
+      per.forEach(function(rec, ti){
+        var best = 0, bestOff = 0;
+        rec.offs.forEach(function(_, o){
+          var sc = (rec.offs.get(o - 1) || 0) + rec.offs.get(o) + (rec.offs.get(o + 1) || 0);
+          if (sc > best){ best = sc; bestOff = o; }
+        });
+        var baseline = Math.max(1, (rec.votes - best) / Math.max(1, rec.offs.size - 3)); // average votes per stray offset
+        var ratio = q.hashes.length ? best / q.hashes.length : 0;
+        if (best >= MIN_ALIGNED && best >= 12 * baseline && ratio >= minRatio){
+          out.push({ rec: index.recs[ti], aligned: best, ratio: ratio, offsetSec: bestOff * FRAME_SEC,
+                     confidence: (best >= 40 && ratio >= 0.15) ? 'HIGH' : (best >= 20 ? 'MEDIUM' : 'LOW') });
+        }
+      });
+      out.sort(function(a, b){ return b.aligned - a.aligned; });
+      return out;
+    }
+
+    /* ---------- 2. provider interface ----------
+       A SampleProvider is a plain object. Implement any subset; the rest
+       default to "no data". All methods return Promises and must never invent
+       results — return [] when there is no evidence.
+
+         id, name, kind                 identification
+         license                        text shown in the UI; must match THIRD_PARTY_NOTICES.md
+         getStatus() -> {ready, detail}
+         identifyRecording(fp, meta)    -> [{ recordingRef, title, artist, year, aligned, ratio, confidence, source }]
+         getSampleRelations(recordingRef) -> [SampleRelation]
+         findSourceCandidates(regionFp) -> [{ title, artist, year, aligned, ratio, confidence, offsetSec, source }]
+
+       SampleRelation:
+         { sourceArtist, sourceTrack, sourceYear, sampledSection, sampleType,
+           sampleTimestamp, confidence, source, externalRef }
+
+       To add a provider (including a future one), write an object like the
+       two below and call SampleFinder.registerProvider(). Nothing else changes. */
+    var registry = [];
+    function registerProvider(p){
+      registry.push(Object.assign({
+        kind: 'future', license: 'unspecified',
+        getStatus: function(){ return Promise.resolve({ ready: false, detail: 'not implemented' }); },
+        identifyRecording: function(){ return Promise.resolve([]); },
+        getSampleRelations: function(){ return Promise.resolve([]); },
+        findSourceCandidates: function(){ return Promise.resolve([]); }
+      }, p));
+    }
+
+    function str(v, max){ return v == null ? '' : String(v).slice(0, max || 300); }
+    function normalizeRelation(r, fallbackSource){
+      return {
+        sourceArtist: str(r.sourceArtist), sourceTrack: str(r.sourceTrack), sourceYear: str(r.sourceYear, 4),
+        sampledSection: str(r.sampledSection), sampleType: str(r.sampleType, 40),
+        sampleTimestamp: str(r.sampleTimestamp, 20), confidence: str(r.confidence, 40),
+        source: str(r.provenance || r.source || fallbackSource), externalRef: str(r.externalRef, 500)
+      };
+    }
+
+    /* ---------- 3a. LocalSampleDatabaseProvider ----------
+       Recordings = fingerprint + metadata only. Relations = user-entered or
+       imported facts about which recording samples which source. IndexedDB
+       with an in-memory fallback (private windows, file:// quirks). */
+    var Local = (function(){
+      var DB_NAME = 'sp404drop-samples';
+      var db = null, recs = [], rels = [], index = null, persistent = false;
+
+      function openDb(){
+        return new Promise(function(resolve){
+          try {
+            var req = indexedDB.open(DB_NAME, 1);
+            req.onupgradeneeded = function(){
+              req.result.createObjectStore('recordings', { keyPath: 'id' });
+              req.result.createObjectStore('relations', { keyPath: 'id' });
+            };
+            req.onsuccess = function(){ db = req.result; persistent = true; resolve(); };
+            req.onerror = function(){ resolve(); };
+          } catch(e){ resolve(); }
+        });
+      }
+      function all(store){
+        return new Promise(function(resolve){
+          try {
+            var r = db.transaction(store).objectStore(store).getAll();
+            r.onsuccess = function(){ resolve(r.result || []); };
+            r.onerror = function(){ resolve([]); };
+          } catch(e){ resolve([]); }
+        });
+      }
+      function put(store, obj){
+        if (!db) return;
+        try { db.transaction(store, 'readwrite').objectStore(store).put(obj); } catch(e){}
+      }
+      function clearStores(){
+        if (!db) return;
+        try {
+          var tx = db.transaction(['recordings', 'relations'], 'readwrite');
+          tx.objectStore('recordings').clear(); tx.objectStore('relations').clear();
+        } catch(e){}
+      }
+      function reindex(){ index = buildIndex(recs); }
+      function b64(u32){
+        var bytes = new Uint8Array(u32.buffer, u32.byteOffset, u32.byteLength), s = '';
+        for (var i = 0; i < bytes.length; i += 8192) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+        return btoa(s);
+      }
+      function unb64(s){
+        var bin = atob(s), bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return new Uint32Array(bytes.buffer);
+      }
+      function newId(p){ return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+      var ready = openDb().then(function(){
+        if (!db) return;
+        return Promise.all([all('recordings'), all('relations')]).then(function(r){ recs = r[0]; rels = r[1]; });
+      }).then(reindex);
+
+      var provider = {
+        id: 'local-db', name: 'Local Sample Database', kind: 'local',
+        license: 'User-supplied data; no data bundled with SP404 DROP.',
+        getStatus: function(){
+          return ready.then(function(){
+            return { ready: recs.length > 0, detail: recs.length + ' recording' + (recs.length === 1 ? '' : 's') + ', ' + rels.length + ' relationship' + (rels.length === 1 ? '' : 's') + (persistent ? '' : ' (memory only — not saved)') };
+          });
+        },
+        identifyRecording: function(fp){
+          return ready.then(function(){
+            return matchFingerprint(fp, index, 0.15).map(function(m){
+              return { recordingRef: m.rec.id, title: m.rec.title, artist: m.rec.artist, year: m.rec.year,
+                       aligned: m.aligned, ratio: m.ratio, confidence: m.confidence, source: 'Local Sample Database' };
+            });
+          });
+        },
+        getSampleRelations: function(ref){
+          return ready.then(function(){
+            return rels.filter(function(r){ return r.recordingId === ref; })
+                       .map(function(r){ return normalizeRelation(r, 'Local Sample Database (user-entered)'); });
+          });
+        },
+        findSourceCandidates: function(fp){
+          return ready.then(function(){
+            return matchFingerprint(fp, index, 0.05).map(function(m){
+              return { title: m.rec.title, artist: m.rec.artist, year: m.rec.year, aligned: m.aligned, ratio: m.ratio,
+                       confidence: m.confidence, offsetSec: m.offsetSec, source: 'Local Sample Database' };
+            });
+          });
+        }
+      };
+
+      return {
+        provider: provider, ready: ready,
+        stats: function(){ return { recordings: recs.length, relations: rels.length, persistent: persistent }; },
+        addRecording: function(meta, fp){
+          var r = { id: newId('r_'), title: str(meta.title), artist: str(meta.artist), year: str(meta.year, 4),
+                    createdAt: new Date().toISOString(), fp: { v: fp.v, hashes: fp.hashes, times: fp.times, frames: fp.frames, duration: fp.duration } };
+          recs.push(r); put('recordings', r); reindex();
+          return r.id;
+        },
+        addRelation: function(recordingId, rel){
+          var r = Object.assign({ id: newId('x_'), recordingId: recordingId }, normalizeRelation(rel, ''), { provenance: str(rel.provenance) || 'user-entered' });
+          rels.push(r); put('relations', r);
+        },
+        clear: function(){ recs = []; rels = []; clearStores(); reindex(); },
+        exportJson: function(){
+          return JSON.stringify({
+            format: 'sp404drop-sampledb', version: 1,
+            recordings: recs.map(function(r){
+              return { id: r.id, title: r.title, artist: r.artist, year: r.year, createdAt: r.createdAt,
+                       fp: { v: r.fp.v, frames: r.fp.frames, duration: r.fp.duration, hashes: b64(r.fp.hashes), times: b64(r.fp.times) } };
+            }),
+            relations: rels
+          });
+        },
+        importJson: function(text){
+          var o = JSON.parse(text);
+          if (!o || o.format !== 'sp404drop-sampledb' || o.version !== 1 || !Array.isArray(o.recordings) || !Array.isArray(o.relations)) throw new Error('not an SP404 DROP sample database (v1)');
+          var haveR = {}, haveX = {}, addedR = 0, addedX = 0;
+          recs.forEach(function(r){ haveR[r.id] = 1; }); rels.forEach(function(r){ haveX[r.id] = 1; });
+          o.recordings.forEach(function(r){
+            if (!r || typeof r.id !== 'string' || !r.fp || typeof r.fp.hashes !== 'string' || typeof r.fp.times !== 'string' || haveR[r.id]) return;
+            var h = unb64(r.fp.hashes), t = unb64(r.fp.times);
+            if (h.length !== t.length || r.fp.v !== FP.VERSION) return;
+            var rec = { id: str(r.id, 60), title: str(r.title), artist: str(r.artist), year: str(r.year, 4), createdAt: str(r.createdAt, 40),
+                        fp: { v: FP.VERSION, hashes: h, times: t, frames: +r.fp.frames || 0, duration: +r.fp.duration || 0 } };
+            recs.push(rec); put('recordings', rec); haveR[rec.id] = 1; addedR++;
+          });
+          o.relations.forEach(function(r){
+            if (!r || typeof r.id !== 'string' || typeof r.recordingId !== 'string' || haveX[r.id] || !haveR[r.recordingId]) return;
+            var rel = Object.assign({ id: str(r.id, 60), recordingId: str(r.recordingId, 60) }, normalizeRelation(r, ''), { provenance: str(r.provenance) || 'imported (provenance not stated)' });
+            rels.push(rel); put('relations', rel); haveX[rel.id] = 1; addedX++;
+          });
+          reindex();
+          return { recordings: addedR, relations: addedX };
+        }
+      };
+    })();
+    registerProvider(Local.provider);
+
+    /* ---------- 3b. LicensedAPIProvider ----------
+       Placeholder. No third-party sample-data API has passed the licensing
+       review in THIRD_PARTY_NOTICES.md, so this is deliberately unconfigured:
+       it makes no network requests and returns nothing. When one is approved,
+       implement identifyRecording / getSampleRelations here (or add a new
+       provider object) — the rest of the app does not change. */
+    registerProvider({
+      id: 'licensed-api', name: 'Licensed API', kind: 'api',
+      license: 'None approved yet — see THIRD_PARTY_NOTICES.md.',
+      getStatus: function(){ return Promise.resolve({ ready: false, detail: 'not configured — no licensed data provider approved' }); }
+    });
+
+    /* ---------- orchestration ---------- */
+    function providerStatuses(){
+      return Promise.all(registry.map(function(p){
+        return p.getStatus().then(function(s){ return { provider: p, status: s }; }, function(){ return { provider: p, status: { ready: false, detail: 'error' } }; });
+      }));
+    }
+    // Mode 1: fingerprint -> recording(s) -> known sample relationships.
+    function lookupKnownSamples(fp){
+      return Promise.all(registry.map(function(p){
+        return p.identifyRecording(fp, {}).then(function(matches){
+          return Promise.all(matches.slice(0, 3).map(function(m){
+            return p.getSampleRelations(m.recordingRef).then(function(rels){ return { match: m, relations: rels, provider: p }; });
+          }));
+        }).catch(function(){ return []; });
+      })).then(function(lists){ return [].concat.apply([], lists); });
+    }
+    // Mode 2: region fingerprint -> candidate recordings.
+    function findSource(fp){
+      return Promise.all(registry.map(function(p){
+        return p.findSourceCandidates(fp).catch(function(){ return []; });
+      })).then(function(lists){
+        return [].concat.apply([], lists).sort(function(a, b){ return b.aligned - a.aligned; });
+      });
+    }
+
+    /* ---------- 4. UI ---------- */
+    function el(tag, cls, text){
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;
+      return n;
+    }
+    function $(id){ return document.getElementById(id); }
+    function who(m){ return (m.artist || 'Unknown artist') + ' — ' + (m.title || 'Untitled') + (m.year ? ' (' + m.year + ')' : ''); }
+    function evidence(m){ return m.aligned + ' aligned fingerprint hits · ' + Math.round(m.ratio * 100) + '% of the audio checked'; }
+    function noneBox(title, sub){
+      var b = el('div', 'smp-none');
+      b.appendChild(el('div', 'nt', title));
+      if (sub) b.appendChild(el('div', 'ns', sub));
+      return b;
+    }
+    function safeLink(url){
+      if (!/^https?:\/\//i.test(url)) return el('span', null, url);
+      var a = el('a', null, url); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      return a;
+    }
+
+    var ui = {
+      drop: $('smpDrop'), file: $('smpFileInput'), ws: $('smpWorkspace'), info: $('smpFile'),
+      results: $('smpResults'), providers: $('smpProviders'), dbInfo: $('smpDbInfo'), sub: $('smpSub'),
+      addRec: $('smpAddRecBtn'), addRel: $('smpAddRelBtn'), recForm: $('smpRecForm'), relForm: $('smpRelForm')
+    };
+    var cur = { fp: null, name: '', recordingId: null };
+    var actx = null;
+
+    function refreshProviders(){
+      return Promise.all([providerStatuses(), Local.ready]).then(function(r){
+        ui.providers.innerHTML = '';
+        r[0].forEach(function(x){
+          var d = el('div', 'smp-prov');
+          d.appendChild(el('div', 'pn', x.provider.name + ' · ' + (x.status.ready ? 'READY' : 'NO DATA')));
+          d.appendChild(el('div', 'ps', x.status.detail));
+          d.appendChild(el('div', 'ps', 'Licence: ' + x.provider.license));
+          ui.providers.appendChild(d);
+        });
+        var st = Local.stats();
+        ui.dbInfo.textContent = st.recordings + ' recording' + (st.recordings === 1 ? '' : 's') + ' · ' + st.relations + ' known sample' + (st.relations === 1 ? '' : 's') + (st.persistent ? ' · stored in this browser only' : ' · browser storage unavailable: memory only');
+        ui.addRec.disabled = !cur.fp || !!cur.recordingId;
+        ui.addRel.disabled = !cur.recordingId;
+      });
+    }
+
+    function renderLookup(found){
+      ui.results.innerHTML = '';
+      if (!found.length){
+        cur.recordingId = null;
+        ui.results.appendChild(noneBox('NO SAMPLE INFORMATION FOUND',
+          'No configured provider recognised this recording. ' +
+          (Local.stats().recordings ? '' : 'The local database is empty, and no licensed provider is configured. ') +
+          'Nothing is guessed.'));
+        return;
+      }
+      cur.recordingId = found[0].provider.id === Local.provider.id ? found[0].match.recordingRef : null;
+      var anyRel = false;
+      found.forEach(function(f){
+        var c = el('div', 'smp-card rec');
+        c.appendChild(el('div', 'ct', who(f.match)));
+        c.appendChild(el('div', 'cm', 'Recording identified · ' + f.match.confidence + ' · ' + evidence(f.match) + ' · ' + f.match.source));
+        ui.results.appendChild(c);
+        f.relations.forEach(function(r){
+          anyRel = true;
+          var rc = el('div', 'smp-card');
+          rc.appendChild(el('div', 'ct', (r.sourceArtist || 'Unknown artist') + ' — ' + (r.sourceTrack || 'Untitled') + (r.sourceYear ? ' (' + r.sourceYear + ')' : '')));
+          var tags = el('div');
+          if (r.sampleType) tags.appendChild(el('span', 'tag', r.sampleType));
+          if (r.confidence) tags.appendChild(el('span', 'tag', 'conf: ' + r.confidence));
+          rc.appendChild(tags);
+          if (r.sampledSection) rc.appendChild(el('div', null, 'Sampled section: ' + r.sampledSection));
+          if (r.sampleTimestamp) rc.appendChild(el('div', null, 'Appears at ~' + r.sampleTimestamp + ' in this track'));
+          if (r.externalRef){ var rf = el('div', null, 'Reference: '); rf.appendChild(safeLink(r.externalRef)); rc.appendChild(rf); }
+          rc.appendChild(el('div', 'cm', 'Source: ' + (r.source || 'unspecified')));
+          ui.results.appendChild(rc);
+        });
+      });
+      if (!anyRel) ui.results.appendChild(noneBox('NO SAMPLE INFORMATION FOUND', 'The recording was identified, but no provider holds sample relationships for it.'));
+    }
+
+    function loadTrack(file){
+      cur = { fp: null, name: file.name, recordingId: null };
+      ui.recForm.hidden = true; ui.relForm.hidden = true;
+      ui.drop.hidden = true; ui.ws.hidden = false;
+      ui.info.textContent = 'Reading ' + file.name + '…';
+      ui.results.innerHTML = '';
+      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      file.arrayBuffer().then(function(buf){ return actx.decodeAudioData(buf); }).then(function(ab){
+        var chans = [];
+        for (var c = 0; c < ab.numberOfChannels; c++) chans.push(ab.getChannelData(c));
+        return computeFingerprint(chans, ab.sampleRate, 0, ab.length, function(p){
+          ui.info.textContent = 'Fingerprinting ' + file.name + '… ' + Math.round(p * 100) + '%';
+        }).then(function(fp){ return { fp: fp, ab: ab }; });
+      }).then(function(r){
+        cur.fp = r.fp;
+        ui.info.innerHTML = '';
+        var b = el('b', null, file.name); ui.info.appendChild(b);
+        ui.info.appendChild(document.createElement('br'));
+        ui.info.appendChild(document.createTextNode(fmtTime(r.ab.duration) + ' · ' + r.fp.hashes.length.toLocaleString() + ' fingerprint hashes (' + fmtBytes(r.fp.hashes.length * 8) + ' if stored)'));
+        if (r.fp.hashes.length < 50) ui.info.appendChild(document.createTextNode(' · too little distinct audio to fingerprint reliably'));
+        return Local.ready.then(function(){ return lookupKnownSamples(r.fp); });
+      }).then(function(found){
+        renderLookup(found);
+        return refreshProviders();
+      })['catch'](function(err){
+        ui.info.textContent = 'Could not read ' + file.name + ': ' + (err && err.message ? err.message : 'unreadable file');
+        ui.results.innerHTML = '';
+      });
+    }
+
+    ui.drop.addEventListener('click', function(){ ui.file.click(); });
+    ui.file.addEventListener('change', function(){ if (ui.file.files[0]) loadTrack(ui.file.files[0]); ui.file.value = ''; });
+    ['dragenter', 'dragover'].forEach(function(evt){ ui.drop.addEventListener(evt, function(e){ e.preventDefault(); }); });
+    ui.drop.addEventListener('drop', function(e){
+      e.preventDefault();
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) loadTrack(f);
+    });
+    // Dropping another track onto the loaded screen replaces it.
+    $('screenSamples').addEventListener('dragover', function(e){ e.preventDefault(); });
+    $('screenSamples').addEventListener('drop', function(e){
+      e.preventDefault();
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f && ui.drop.hidden) loadTrack(f);
+    });
+
+    /* ---- local DB actions ---- */
+    function year(v){ return /^\d{4}$/.test(v.trim()) ? v.trim() : ''; }
+    ui.addRec.addEventListener('click', function(){
+      ui.relForm.hidden = true; ui.recForm.hidden = !ui.recForm.hidden;
+    });
+    $('smpRecSave').addEventListener('click', function(){
+      if (!cur.fp) return;
+      if (!$('smpRecRights').checked){ alert('Please confirm you have the right to fingerprint this recording.'); return; }
+      var title = $('smpRecTitle').value.trim(), artist = $('smpRecArtist').value.trim();
+      if (!title || !artist){ alert('Artist and title are required.'); return; }
+      cur.recordingId = Local.addRecording({ title: title, artist: artist, year: year($('smpRecYear').value) }, cur.fp);
+      ui.recForm.hidden = true;
+      $('smpRecRights').checked = false;
+      lookupKnownSamples(cur.fp).then(renderLookup).then(refreshProviders);
+    });
+    ui.addRel.addEventListener('click', function(){
+      ui.recForm.hidden = true; ui.relForm.hidden = !ui.relForm.hidden;
+    });
+    $('smpRelSave').addEventListener('click', function(){
+      if (!cur.recordingId) return;
+      var a = $('smpRelArtist').value.trim(), t = $('smpRelTrack').value.trim();
+      if (!a || !t){ alert('Source artist and source track are required.'); return; }
+      Local.addRelation(cur.recordingId, {
+        sourceArtist: a, sourceTrack: t, sourceYear: year($('smpRelYear').value),
+        sampleType: $('smpRelType').value, sampledSection: $('smpRelSection').value.trim(),
+        sampleTimestamp: $('smpRelTime').value.trim(), externalRef: $('smpRelRef').value.trim(),
+        provenance: $('smpRelProv').value.trim()
+      });
+      ['smpRelArtist', 'smpRelTrack', 'smpRelYear', 'smpRelType', 'smpRelSection', 'smpRelTime', 'smpRelRef', 'smpRelProv'].forEach(function(id){ $(id).value = ''; });
+      ui.relForm.hidden = true;
+      lookupKnownSamples(cur.fp).then(renderLookup).then(refreshProviders);
+    });
+    $('smpExportBtn').addEventListener('click', function(){
+      downloadFile(new Blob([Local.exportJson()], { type: 'application/json' }), 'SP404-DROP-sample-db.json');
+    });
+    $('smpImportBtn').addEventListener('click', function(){ $('smpImportInput').click(); });
+    $('smpImportInput').addEventListener('change', function(){
+      var f = $('smpImportInput').files[0]; $('smpImportInput').value = '';
+      if (!f) return;
+      f.text().then(function(txt){
+        var r = Local.importJson(txt);
+        alert('Imported ' + r.recordings + ' recording(s) and ' + r.relations + ' relationship(s).');
+        return refreshProviders();
+      })['catch'](function(err){ alert('Import failed: ' + (err && err.message ? err.message : 'invalid file')); });
+    });
+    $('smpClearDbBtn').addEventListener('click', function(){
+      if (!confirm('Delete every recording and relationship in the local database? This cannot be undone.')) return;
+      Local.clear();
+      if (cur.fp) lookupKnownSamples(cur.fp).then(renderLookup).then(refreshProviders); else refreshProviders();
+    });
+
+    /* ---- Chop: FIND SOURCE ---- */
+    var MIN_REGION_SEC = 2;
+    var fsBtn = $('findSourceBtn'), fsPanel = $('findSourcePanel');
+    fsBtn.addEventListener('click', function(){
+      var reg = Chop.getSelectedRegion();
+      if (!reg) return;
+      fsPanel.hidden = false; fsPanel.innerHTML = '';
+      if (reg.end - reg.start < MIN_REGION_SEC){
+        fsPanel.appendChild(noneBox('REGION TOO SHORT', 'Select a sample of at least ' + MIN_REGION_SEC + ' seconds — shorter clips do not carry enough fingerprint data for a trustworthy comparison.'));
+        return;
+      }
+      fsBtn.disabled = true;
+      fsPanel.appendChild(el('div', 'smp-status', 'Fingerprinting selection…'));
+      var from = Math.floor(reg.start * reg.sampleRate), to = Math.floor(reg.end * reg.sampleRate);
+      Local.ready.then(function(){
+        return computeFingerprint(reg.channels, reg.sampleRate, from, to);
+      }).then(function(fp){
+        return findSource(fp).then(function(cands){ return { fp: fp, cands: cands }; });
+      }).then(function(r){
+        fsPanel.innerHTML = '';
+        if (!r.cands.length){
+          var n = Local.stats().recordings;
+          fsPanel.appendChild(noneBox('NO CONFIDENT MATCH',
+            (n ? 'Compared against ' + n + ' recording' + (n === 1 ? '' : 's') + ' in the local database; none showed enough evidence. ' : 'The local database is empty — add recordings on the SAMPLES screen first. ') +
+            'This only finds near-verbatim reuse; pitched, stretched or heavily processed samples will usually not match.'));
+          return;
+        }
+        r.cands.slice(0, 5).forEach(function(m){
+          var c = el('div', 'smp-card');
+          c.appendChild(el('div', 'ct', who(m)));
+          var t = el('div'); t.appendChild(el('span', 'tag', m.confidence + ' confidence')); c.appendChild(t);
+          c.appendChild(el('div', null, 'Best alignment with the source at ~' + fmtTime(Math.max(0, m.offsetSec))));
+          c.appendChild(el('div', 'cm', evidence(m) + ' · ' + m.source + ' · experimental'));
+          fsPanel.appendChild(c);
+        });
+      })['catch'](function(err){
+        fsPanel.innerHTML = '';
+        fsPanel.appendChild(noneBox('COULD NOT ANALYSE', err && err.message ? err.message : 'unknown error'));
+      }).then(function(){ fsBtn.disabled = false; });
+    });
+
+    refreshProviders();
+    return { registerProvider: registerProvider, computeFingerprint: computeFingerprint, matchFingerprint: matchFingerprint, buildIndex: buildIndex };
   })();
 })();
 </script>
