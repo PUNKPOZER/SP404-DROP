@@ -16,8 +16,14 @@ SOURCE) without an entry here first.**
 **Datasets approved: none.** SP404 DROP bundles no sample database, no
 fingerprints and no recordings.
 
-**APIs approved: none.** `LicensedAPIProvider` is an unconfigured placeholder
-that makes no network requests.
+**APIs approved:**
+
+| API | Data licence | Terms / caveats | Status |
+|---|---|---|---|
+| MusicBrainz web service (`musicbrainz.org/ws/2`), used by `MusicBrainzProvider` | Core data is **CC0** (public domain) | Opt-in toggle (default on, can be turned off). Sends only artist + title text, never audio. Public API is limited to ~1 request/second (enforced in code). Browsers cannot set a custom User-Agent, which MusicBrainz asks API clients to send. Heavy or commercial use of the hosted API may need a MetaBrainz commercial plan — review before commercial distribution. | Approved for the current free/MIT distribution. |
+
+Only the CC0 core relationship data (`samples material` recording relations)
+is read. MusicBrainz's supplementary data (CC BY-NC-SA) is not used.
 
 ## Existing (non-Sample-Finder) assets
 
@@ -29,6 +35,9 @@ that makes no network requests.
 
 - **WhoSampled** — product/workflow inspiration only. No scraping, no
   unofficial scraper APIs, no copied data.
+- **AcoustID / Chromaprint** audio identification — the hosted service is free
+  for non-commercial use only, so it is not used. Identification is by
+  artist/title text instead.
 - Any scraped sample database, or dataset of unclear provenance.
 - Research-only or non-commercial datasets/libraries (they would block
   commercial distribution).

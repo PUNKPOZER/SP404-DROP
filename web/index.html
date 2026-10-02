@@ -467,6 +467,16 @@
   .findsrc-row .pill{width:100%;}
   #findSourcePanel .smp-card{margin-bottom:6px;}
 
+  .lang{position:absolute;top:14px;right:16px;z-index:5;display:flex;border:2px solid var(--ink);border-radius:6px;overflow:hidden;}
+  .lang button{font-family:var(--font-ui);font-weight:700;font-size:10px;letter-spacing:.06em;padding:4px 8px;border:none;background:var(--card);color:var(--ink);cursor:pointer;}
+  .lang button.active{background:var(--ink);color:var(--white);}
+  .smp-query{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:8px;}
+  .smp-query input[type=text]{font-family:var(--font-ui);font-size:11px;border:2px solid var(--ink);border-radius:6px;padding:7px 8px;background:var(--card);color:var(--ink);width:100%;min-width:0;}
+  .smp-query .pill{font-size:11px;padding:7px 12px;}
+  .smp-subhead{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:10px 0 6px;}
+  .smp-online{font-size:10px;line-height:1.5;display:flex;gap:6px;align-items:flex-start;color:var(--ink-soft);margin-top:8px;}
+  @media (max-width:420px){ .smp-query{grid-template-columns:1fr;} }
+
   @media (max-width:420px){
     .device{padding:14px 12px 16px;}
     .home-tiles{grid-template-columns:1fr;}
@@ -478,6 +488,7 @@
 
 <div class="page">
   <div class="device" id="device">
+    <div class="lang" id="langSwitch"><button type="button" data-lang="en">EN</button><button type="button" data-lang="ru">RU</button></div>
 
     <!-- ============ HOME ============ -->
     <section class="screen active" id="screenHome">
@@ -517,14 +528,14 @@
           </svg>
           <div>
             <div class="tile-title">Samples</div>
-            <div class="tile-desc">Look up known samples in a track from your own local database.</div>
+            <div class="tile-desc">Find which tracks a song samples, plus your own database.</div>
           </div>
         </div>
       </div>
 
       <div class="home-info">
         <b>How it works:</b> CONVERT &rarr; CHOP &rarr; LOOP &rarr; EXPORT.<br>
-        Everything runs on this device &mdash; nothing is uploaded anywhere.
+        Audio never leaves this device. Sample lookup sends only artist + title text to MusicBrainz, and can be turned off.
       </div>
       <div class="home-foot">Unofficial &middot; not affiliated with Roland &middot; MIT</div>
     </section>
@@ -686,18 +697,24 @@
 
       <div class="chop-drop" id="smpDrop" style="min-height:130px;">
         <div class="dt">&#9662; Drop a track</div>
-        <div class="ds">or click to browse &mdash; fingerprinted on this device, never uploaded</div>
+        <div class="ds">or click to browse &mdash; audio is analysed on this device and never uploaded</div>
       </div>
       <input type="file" id="smpFileInput" accept="audio/*,.wav,.mp3,.aif,.aiff,.flac,.ogg,.m4a">
 
       <div id="smpWorkspace" hidden>
         <div class="smp-file" id="smpFile"></div>
+        <div class="smp-query">
+          <input type="text" id="smpQArtist" placeholder="Artist" maxlength="200">
+          <input type="text" id="smpQTitle" placeholder="Track title" maxlength="200">
+          <button class="pill solid" id="smpSearchBtn">Search</button>
+        </div>
         <div class="smp-head"><h3>Known samples</h3></div>
         <div id="smpResults"></div>
       </div>
 
       <div class="smp-head"><h3>Providers</h3></div>
       <div id="smpProviders"></div>
+      <label class="smp-online"><input type="checkbox" id="smpOnline" checked><span>Online lookup (MusicBrainz) &mdash; sends only the artist and title text, never audio.</span></label>
 
       <div class="smp-head"><h3>Local database</h3></div>
       <div class="mode-panel" id="smpDb">
@@ -731,8 +748,8 @@
             <input type="text" id="smpRelYear" placeholder="Source year" maxlength="4" inputmode="numeric">
             <select id="smpRelType">
               <option value="">Sample type&hellip;</option>
-              <option>loop</option><option>drum break</option><option>vocal</option>
-              <option>melodic / chop</option><option>interpolation</option><option>other</option>
+              <option value="loop">loop</option><option value="drum break">drum break</option><option value="vocal">vocal</option>
+              <option value="melodic / chop">melodic / chop</option><option value="interpolation">interpolation</option><option value="other">other</option>
             </select>
           </div>
           <div class="two">
@@ -744,7 +761,7 @@
           <button class="pill solid" id="smpRelSave">Save relationship</button>
         </div>
       </div>
-      <div class="chop-hint">SP404 DROP ships with no sample data. Results come only from providers you have configured and from data you add yourself &mdash; nothing is guessed. Matching is exact-recording fingerprinting; it does not work from the filename.</div>
+      <div class="chop-hint">Lookup uses the artist and title (read from the file's tags, or typed above) against MusicBrainz's open data, plus your local database. Nothing is guessed, and coverage is only as good as what the MusicBrainz community has entered &mdash; an empty result means &ldquo;not listed&rdquo;, not &ldquo;not sampled&rdquo;.</div>
     </section>
 
   </div>
@@ -753,6 +770,225 @@
 <script>
 (function(){
   "use strict";
+
+  /* =========================================================
+     Language (EN / RU)
+     ---------------------------------------------------------
+     English text is the key. Static HTML text nodes and title/aria-label/
+     placeholder attributes are translated by matching their text against RU;
+     dynamic strings go through tr(). "a|b" keys are singular|plural; the RU
+     value then holds "one|few|many" forms. {x} are placeholders.
+     ========================================================= */
+  var RU = {
+    // home
+    'Sample Prep · SP-404MKII': 'Подготовка сэмплов · SP-404MKII',
+    'Convert': 'Конвертер',
+    'Batch fix WAV/MP3/AIFF to 16-bit / 48kHz for the sampler.': 'Пакетно приводит WAV/MP3/AIFF к 16 бит / 48 кГц для сэмплера.',
+    'Chop / Loop': 'Нарезка / Луп',
+    'Slice one track into samples, find a loop, export.': 'Режем трек на сэмплы, ищем луп, экспортируем.',
+    'Samples': 'Сэмплы',
+    'Find which tracks a song samples, plus your own database.': 'Узнай, что семплирует трек, плюс твоя собственная база.',
+    'How it works:': 'Как это работает:',
+    'CONVERT → CHOP → LOOP → EXPORT.': 'КОНВЕРТ → НАРЕЗКА → ЛУП → ЭКСПОРТ.',
+    'Audio never leaves this device. Sample lookup sends only artist + title text to MusicBrainz, and can be turned off.': 'Аудио не покидает устройство. Поиск сэмплов отправляет в MusicBrainz только текст «исполнитель + название», это можно отключить.',
+    'Unofficial · not affiliated with Roland · MIT': 'Неофициально · не связано с Roland · MIT',
+    // convert
+    'PCM WAV · 16-bit · 48kHz': 'PCM WAV · 16 бит · 48 кГц',
+    'Tracks': 'Треки', 'Good': 'Ок', 'As-is': 'Как есть', 'Err': 'Ошибки',
+    'Drop samples or a folder': 'Перетащи сэмплы или папку',
+    'or': 'или', 'click to browse': 'выбери файлы',
+    '— analysis starts automatically': '— анализ начнётся сам',
+    'Clear': 'Очистить',
+    '⇩ Download ZIP': '⇩ Скачать ZIP',
+    'Filenames and folders preserved in the ZIP. No loudness/level changes applied.': 'Имена файлов и папок сохраняются в ZIP. Громкость не меняется.',
+    'Drop audio files or folders here, or click to browse': 'Перетащи сюда аудиофайлы или папки, либо нажми для выбора',
+    'file queued|files queued': 'файл в очереди|файла в очереди|файлов в очереди',
+    'Analyzing automatically…': 'Анализирую автоматически…',
+    'Done': 'Готово', 'analyzed': 'проанализировано', 'converted': 'сконвертировано', 'already OK': 'уже в порядке', 'failed': 'с ошибкой',
+    'already 16-bit/48kHz, kept as-is': 'уже 16 бит/48 кГц, оставлен как есть',
+    'converted to 48kHz/16-bit': 'сконвертирован в 48 кГц/16 бит',
+    'could not decode': 'не удалось декодировать', 'unreadable': 'нечитаемый файл',
+    // chop
+    'No track loaded': 'Трек не загружен',
+    '▾ Drop a track': '▾ Перетащи трек',
+    'or click to browse — one file at a time': 'или нажми для выбора — по одному файлу',
+    'Could not load:': 'Не удалось загрузить:', 'unreadable file': 'нечитаемый файл',
+    'Play / pause the whole track': 'Играть / пауза всего трека',
+    'Play/Pause': 'Играть/Пауза',
+    'Zoom the waveform — you can also scroll/pinch over it': 'Масштаб волны — можно также прокруткой/щипком над ней',
+    'Zoom out': 'Уменьшить', 'Zoom in': 'Увеличить',
+    'Toggle add-marker mode': 'Режим добавления маркеров',
+    'Add marker on click, in any mode': 'Ставить маркер по клику в любом режиме',
+    'Toggle snap to zero crossing': 'Привязка к нулевому пересечению',
+    'Snap to zero crossing': 'Привязка к нулевому пересечению',
+    'Back': 'Назад',
+    'Click waveform to seek · drag a marker tab to move it · double-click a marker to delete it': 'Клик по волне — перемотка · тяни вкладку маркера, чтобы сдвинуть · двойной клик по маркеру — удалить',
+    'Click waveform to seek': 'Клик по волне — перемотка',
+    'drag a marker tab to move it': 'тяни вкладку маркера, чтобы сдвинуть',
+    'double-click a marker to delete it': 'двойной клик по маркеру — удалить',
+    'Click the waveform to add a marker': 'Кликни по волне, чтобы добавить маркер',
+    'drag a tab to move it': 'тяни вкладку, чтобы сдвинуть',
+    'double-click a tab to delete it': 'двойной клик по вкладке — удалить',
+    'Transient': 'Транзиенты', 'Equal': 'Поровну', 'Manual': 'Вручную',
+    'Sensitivity': 'Чувствительность',
+    'Auto Chop': 'Авто-нарезка',
+    'Split': 'Разбить',
+    'Manual mode is on': 'Ручной режим включён',
+    "— click anywhere on the waveform to drop a marker there. Drag a marker's tab to move it, double-click a tab to remove it.": '— кликни в любом месте волны, чтобы поставить маркер. Тяни вкладку маркера, чтобы сдвинуть, двойной клик — удалить.',
+    'Clear All Markers': 'Убрать все маркеры',
+    '{n} Sample|{n} Samples': '{n} сэмпл|{n} сэмпла|{n} сэмплов',
+    '0 Samples': '0 сэмплов',
+    'User-supplied data; no data bundled with SP404 DROP.': 'Данные пользователя; вместе с SP404 DROP данные не поставляются.',
+    'MusicBrainz core data is CC0 (public domain). Rate-limited public API.': 'Основные данные MusicBrainz — CC0 (общественное достояние). Публичный API с ограничением частоты.',
+    'Tap a numbered sample above to select it, then preview or loop just that piece:': 'Выбери номер сэмпла выше, затем прослушай или зацикли только этот кусок:',
+    '▶ Play Sample': '▶ Играть сэмпл', 'Play Sample': 'Играть сэмпл', 'Stop': 'Стоп',
+    '↻ Loop': '↻ Луп',
+    '⚲ Find Source': '⚲ Найти источник',
+    'FIND SOURCE is experimental: it fingerprints the selected sample and compares it with recordings in your local database. Needs about 2 seconds or more.': 'НАЙТИ ИСТОЧНИК — экспериментальная функция: она делает отпечаток выбранного сэмпла и сравнивает его с записями в твоей локальной базе. Нужно около 2 секунд и больше.',
+    'Export Selected': 'Экспорт выбранного', 'Export Sample': 'Экспорт сэмпла', 'Export All': 'Экспорт всех',
+    'Export Selected saves just the sample picked above as one WAV. Export All saves every sample as a ZIP (sample_01.wav, sample_02.wav, …). Both render fresh from the source — 16-bit / 48kHz, no normalization.': 'Экспорт выбранного сохраняет один сэмпл как WAV. Экспорт всех — все сэмплы в ZIP (sample_01.wav, sample_02.wav, …). Оба рендерятся заново из исходника — 16 бит / 48 кГц, без нормализации.',
+    // samples screen
+    'Known samples · local database': 'Известные сэмплы · локальная база',
+    'or click to browse — audio is analysed on this device and never uploaded': 'или нажми для выбора — аудио анализируется на устройстве и никуда не загружается',
+    'Artist': 'Исполнитель', 'Track title': 'Название трека', 'Year': 'Год',
+    'Search': 'Искать',
+    'Known samples': 'Известные сэмплы',
+    'Providers': 'Источники данных',
+    'Online lookup (MusicBrainz) — sends only the artist and title text, never audio.': 'Онлайн-поиск (MusicBrainz) — отправляется только текст исполнителя и названия, никогда не аудио.',
+    'Local database': 'Локальная база',
+    '+ Add this track': '+ Добавить этот трек', '+ Add known sample': '+ Добавить известный сэмпл',
+    'Import JSON': 'Импорт JSON', 'Export JSON': 'Экспорт JSON',
+    'Clear local database': 'Очистить локальную базу',
+    'I have the right to fingerprint this recording. Only the fingerprint and the details above are stored — never the audio.': 'У меня есть право делать отпечаток этой записи. Хранится только отпечаток и данные выше — никогда не аудио.',
+    'Save to local database': 'Сохранить в локальную базу',
+    'This track samples…': 'Этот трек семплирует…',
+    'Source artist': 'Исполнитель источника', 'Source track': 'Трек-источник', 'Source year': 'Год источника',
+    'Sample type…': 'Тип сэмпла…',
+    'loop': 'луп', 'drum break': 'драм-брейк', 'vocal': 'вокал', 'melodic / chop': 'мелодия / чоп', 'interpolation': 'интерполяция', 'other': 'другое',
+    'Sampled section (e.g. intro)': 'Какой фрагмент (напр. интро)',
+    'Time in this track (e.g. 0:32)': 'Время в этом треке (напр. 0:32)',
+    'Reference URL (optional)': 'Ссылка на источник (необязательно)',
+    'Where did you learn this? (liner notes, clearance record…)': 'Откуда это известно? (буклет, документы о клиренсе…)',
+    'Save relationship': 'Сохранить связь',
+    "Lookup uses the artist and title (read from the file's tags, or typed above) against MusicBrainz's open data, plus your local database. Nothing is guessed, and coverage is only as good as what the MusicBrainz community has entered — an empty result means “not listed”, not “not sampled”.": 'Поиск идёт по исполнителю и названию (из тегов файла или введённым выше) в открытой базе MusicBrainz плюс твоя локальная база. Ничего не угадывается, а полнота зависит от того, что внесло сообщество MusicBrainz — пустой результат значит «не указано», а не «не семплировано».',
+    // samples dynamic
+    '{n} recording|{n} recordings': '{n} запись|{n} записи|{n} записей',
+    '{n} relationship|{n} relationships': '{n} связь|{n} связи|{n} связей',
+    '{n} known sample|{n} known samples': '{n} известный сэмпл|{n} известных сэмпла|{n} известных сэмплов',
+    'memory only — not saved': 'только в памяти — не сохраняется',
+    'turned off': 'выключено',
+    'last request failed:': 'последний запрос не удался:',
+    'online · artist + title text only': 'онлайн · только текст исполнитель + название',
+    'matched by artist/title text (MusicBrainz score {n}), not by audio': 'найдено по тексту исполнитель/название (оценка MusicBrainz {n}), а не по аудио',
+    'Unknown artist': 'Неизвестный исполнитель', 'Untitled': 'Без названия',
+    '{a} aligned fingerprint hits · {p}% of the audio checked': '{a} совпавших хэшей отпечатка · {p}% проверенного аудио',
+    'READY': 'ГОТОВО', 'NO DATA': 'НЕТ ДАННЫХ',
+    'Licence:': 'Лицензия:',
+    'stored in this browser only': 'хранится только в этом браузере',
+    'browser storage unavailable: memory only': 'хранилище браузера недоступно: только память',
+    '{n} fingerprint hashes': '{n} хэшей отпечатка',
+    'too little distinct audio to fingerprint reliably': 'слишком мало различимого звука для надёжного отпечатка',
+    'Names guessed from the filename — check them': 'Имена угаданы по имени файла — проверь их',
+    'Names read from the file tags': 'Имена прочитаны из тегов файла',
+    'No configured provider recognised this recording.': 'Ни один источник данных не узнал эту запись.',
+    'Online lookup is turned off.': 'Онлайн-поиск выключен.',
+    'The online lookup failed:': 'Онлайн-поиск не удался:',
+    'Type the artist and title above and press Search.': 'Введи исполнителя и название выше и нажми «Искать».',
+    'MusicBrainz has no confident match for that artist and title — try correcting the spelling above.': 'В MusicBrainz нет уверенного совпадения для этих исполнителя и названия — попробуй поправить написание выше.',
+    'NO SAMPLE INFORMATION FOUND': 'ИНФОРМАЦИИ О СЭМПЛАХ НЕ НАЙДЕНО',
+    'Nothing is guessed.': 'Ничего не угадывается.',
+    'Recording identified': 'Запись опознана',
+    'HIGH': 'ВЫСОКАЯ', 'MEDIUM': 'СРЕДНЯЯ', 'LOW': 'НИЗКАЯ',
+    'confidence': 'уверенность',
+    'Sampled by other tracks': 'Семплировано в других треках',
+    'This track samples': 'Этот трек семплирует',
+    'conf:': 'увер.:',
+    'Sampled section:': 'Фрагмент:',
+    'Appears at ~{t} in this track': 'Звучит примерно на {t} этого трека',
+    'Reference:': 'Ссылка:', 'Source:': 'Источник:', 'unspecified': 'не указан',
+    'The recording was identified, but no provider holds sample relationships for it. That means "not listed", not "not sampled".': 'Запись опознана, но ни у одного источника нет для неё связей по сэмплам. Это значит «не указано», а не «не семплировано».',
+    'Searching…': 'Ищу…',
+    'COULD NOT ANALYSE': 'НЕ УДАЛОСЬ ПРОАНАЛИЗИРОВАТЬ',
+    'Reading {f}…': 'Читаю {f}…', 'Fingerprinting {f}…': 'Делаю отпечаток {f}…', 'Could not read {f}:': 'Не удалось прочитать {f}:',
+    'Please confirm you have the right to fingerprint this recording.': 'Подтверди, что у тебя есть право делать отпечаток этой записи.',
+    'Artist and title are required.': 'Нужны исполнитель и название.',
+    'Source artist and source track are required.': 'Нужны исполнитель и трек-источник.',
+    'Imported {a} recording(s) and {b} relationship(s).': 'Импортировано записей: {a}, связей: {b}.',
+    'Import failed:': 'Ошибка импорта:', 'invalid file': 'неверный файл',
+    'Delete every recording and relationship in the local database? This cannot be undone.': 'Удалить все записи и связи из локальной базы? Это нельзя отменить.',
+    'REGION TOO SHORT': 'ФРАГМЕНТ СЛИШКОМ КОРОТКИЙ',
+    'Select a sample of at least {s} seconds — shorter clips do not carry enough fingerprint data for a trustworthy comparison.': 'Выбери сэмпл не короче {s} секунд — в коротких кусках слишком мало данных отпечатка для надёжного сравнения.',
+    'Fingerprinting selection…': 'Делаю отпечаток выделения…',
+    'NO CONFIDENT MATCH': 'УВЕРЕННОГО СОВПАДЕНИЯ НЕТ',
+    'Compared against {n} recording(s) in the local database; none showed enough evidence.': 'Сравнил с записями в локальной базе ({n}); ни у одной нет достаточных доказательств.',
+    'The local database is empty — add recordings on the SAMPLES screen first.': 'Локальная база пуста — сначала добавь записи на экране «Сэмплы».',
+    'This only finds near-verbatim reuse; pitched, stretched or heavily processed samples will usually not match.': 'Находит только почти дословное повторное использование; сэмплы со сменой тона, растянутые или сильно обработанные обычно не совпадут.',
+    'Best alignment with the source at ~{t}': 'Лучшее совпадение с источником около {t}',
+    'experimental': 'экспериментально'
+  };
+
+  var I18N = (function(){
+    var lang = 'en', listeners = [], tracked = [];
+    try {
+      lang = localStorage.getItem('sp404drop.lang') || '';
+    } catch(e){}
+    if (lang !== 'en' && lang !== 'ru') lang = /^ru/i.test(navigator.language || '') ? 'ru' : 'en';
+
+    function ruPlural(n, forms){
+      var m10 = n % 10, m100 = n % 100;
+      return m10 === 1 && m100 !== 11 ? forms[0] : (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) ? forms[1] : forms[2];
+    }
+    function format(str, v){
+      return v ? str.replace(/\{(\w+)\}/g, function(m, k){ return v[k] != null ? v[k] : m; }) : str;
+    }
+    function tr(key, v){
+      var plural = key.indexOf('|') >= 0 && key.indexOf('{n}') >= 0;
+      if (lang === 'ru' && RU[key]){
+        var out = RU[key];
+        if (plural) out = ruPlural(v.n, out.split('|'));
+        return format(out, v);
+      }
+      if (plural){ var f = key.split('|'); key = v.n === 1 ? f[0] : f[1]; }
+      return format(key, v);
+    }
+    function norm(t){ return t.replace(/\s+/g, ' ').trim(); }
+    function collect(){
+      var w = document.createTreeWalker(document.querySelector('.page'), NodeFilter.SHOW_TEXT, null), n;
+      while ((n = w.nextNode())){
+        var key = norm(n.nodeValue);
+        if (key && RU[key]) tracked.push({ node: n, key: key, lead: /^\s/.test(n.nodeValue), trail: /\s$/.test(n.nodeValue) });
+      }
+      Array.prototype.forEach.call(document.querySelectorAll('[title],[aria-label],[placeholder]'), function(e){
+        ['title', 'aria-label', 'placeholder'].forEach(function(a){
+          var v = e.getAttribute(a);
+          if (v && RU[norm(v)]) tracked.push({ el: e, attr: a, key: norm(v) });
+        });
+      });
+    }
+    function apply(){
+      document.documentElement.lang = lang;
+      tracked.forEach(function(x){
+        var text = tr(x.key);
+        if (x.node) x.node.nodeValue = (x.lead ? ' ' : '') + text + (x.trail ? ' ' : '');
+        else x.el.setAttribute(x.attr, text);
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('#langSwitch button'), function(b){
+        b.classList.toggle('active', b.dataset.lang === lang);
+      });
+    }
+    function set(l){
+      lang = l;
+      try { localStorage.setItem('sp404drop.lang', l); } catch(e){}
+      apply();
+      listeners.forEach(function(fn){ try { fn(); } catch(e){ if (window.console) console.error(e); } });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('#langSwitch button'), function(b){
+      b.addEventListener('click', function(){ set(b.dataset.lang); });
+    });
+    collect();
+    return { tr: tr, apply: apply, set: set, lang: function(){ return lang; }, onChange: function(fn){ listeners.push(fn); } };
+  })();
+  var tr = I18N.tr;
 
   /* =========================================================
      Navigation
@@ -975,8 +1211,8 @@
       els.screenIdle.hidden = true; els.screenBody.hidden = false;
       var totalBytes = queue.reduce(function (s, e) { return s + (e.file.size || 0); }, 0);
       els.screenBody.innerHTML =
-        '<div class="q-summary"><b>' + queue.length + '</b> file' + (queue.length === 1 ? '' : 's') +
-        ' queued &middot; ' + fmtBytes(totalBytes) + '<br>Analyzing automatically&hellip;</div>';
+        '<div class="q-summary"><b>' + queue.length + '</b> ' + tr('file queued|files queued', { n: queue.length }) +
+        ' &middot; ' + fmtBytes(totalBytes) + '<br>' + tr('Analyzing automatically…') + '</div>';
     }
     function appendLogLine(cls, tag, name, note) {
       var row = document.createElement('div');
@@ -988,8 +1224,8 @@
     function renderSummary(counts) {
       var line = document.createElement('div');
       line.className = 'summary-line';
-      line.innerHTML = 'Done &mdash; <span class="n">' + counts.total + '</span> analyzed, <span class="n">' + counts.converted +
-        '</span> converted, <span class="n">' + counts.skipped + '</span> already OK, <span class="n">' + counts.failed + '</span> failed.';
+      line.innerHTML = tr('Done') + ' &mdash; <span class="n">' + counts.total + '</span> ' + tr('analyzed') + ', <span class="n">' + counts.converted +
+        '</span> ' + tr('converted') + ', <span class="n">' + counts.skipped + '</span> ' + tr('already OK') + ', <span class="n">' + counts.failed + '</span> ' + tr('failed') + '.';
       els.screenBody.appendChild(line);
       els.screen.scrollTop = els.screen.scrollHeight;
     }
@@ -1033,15 +1269,15 @@
         if (entry.file.name.toLowerCase().slice(-4) === '.wav') {
           var fmt = sniffWav(bytes);
           if (fmt && fmt.audioFormat === 1 && fmt.sampleRate === TARGET_RATE && fmt.bitsPerSample === 16) {
-            return { status: 'skipped', bytes: bytes, outPath: entry.relPath, note: 'already 16-bit/48kHz, kept as-is' };
+            return { status: 'skipped', bytes: bytes, outPath: entry.relPath, note: tr('already 16-bit/48kHz, kept as-is') };
           }
         }
         return getCtx().decodeAudioData(buf).then(function (audioBuffer) {
           var wavBytes = encodeWav16(audioBuffer);
-          return { status: 'converted', bytes: wavBytes, outPath: swapExt(entry.relPath, '.wav'), note: 'converted to 48kHz/16-bit' };
+          return { status: 'converted', bytes: wavBytes, outPath: swapExt(entry.relPath, '.wav'), note: tr('converted to 48kHz/16-bit') };
         });
       })['catch'](function (err) {
-        return { status: 'failed', bytes: null, outPath: entry.relPath, note: 'could not decode (' + (err && err.message ? err.message : 'unreadable') + ')' };
+        return { status: 'failed', bytes: null, outPath: entry.relPath, note: tr('could not decode') + ' (' + (err && err.message ? err.message : tr('unreadable')) + ')' };
       });
     }
 
@@ -1227,7 +1463,7 @@
       state.transientChopped = false;
       els.workspace.hidden = true;
       els.drop.hidden = false;
-      els.sub.textContent = 'No track loaded';
+      els.sub.textContent = tr('No track loaded');
     }
 
     function loadFile(file){
@@ -1251,7 +1487,7 @@
         drawOverlay();
         renderSamples();
       })['catch'](function(err){
-        els.sub.textContent = 'Could not load: ' + (err && err.message ? err.message : 'unreadable file');
+        els.sub.textContent = tr('Could not load:') + ' ' + (err && err.message ? err.message : tr('unreadable file'));
       });
     }
 
@@ -1632,8 +1868,8 @@
       els.waveFrame.classList.toggle('add-mode', on);
       els.waveStage.classList.toggle('add-mode', on);
       els.chopHint.innerHTML = on
-        ? '<b>Click the waveform to add a marker</b> &middot; drag a tab to move it &middot; double-click a tab to delete it'
-        : 'Click waveform to seek &middot; drag a marker tab to move it &middot; double-click a marker to delete it';
+        ? '<b>' + tr('Click the waveform to add a marker') + '</b> &middot; ' + tr('drag a tab to move it') + ' &middot; ' + tr('double-click a tab to delete it')
+        : tr('Click waveform to seek') + ' &middot; ' + tr('drag a marker tab to move it') + ' &middot; ' + tr('double-click a marker to delete it');
     }
 
     /* ---- mode row ---- */
@@ -1751,7 +1987,7 @@
     /* ---- sample list ---- */
     function renderSamples(){
       var segs = segments();
-      els.samplesCount.textContent = segs.length + (segs.length===1?' Sample':' Samples');
+      els.samplesCount.textContent = tr('{n} Sample|{n} Samples', { n: segs.length });
       els.samplesRow.innerHTML = '';
       if (state.selected >= segs.length) state.selected = segs.length-1;
       segs.forEach(function(seg, i){
@@ -1777,8 +2013,8 @@
       // Spell out exactly what each export button will do instead of a generic
       // "Selected" / "All" label, so it's clear one saves a single file and the
       // other saves a ZIP of everything.
-      els.exportSelectedBtn.textContent = hasSel ? ('Export Sample ' + padNum(state.selected+1)) : 'Export Selected';
-      els.exportAllBtn.textContent = hasSel ? ('Export All (' + segs.length + ')') : 'Export All';
+      els.exportSelectedBtn.textContent = hasSel ? (tr('Export Sample') + ' ' + padNum(state.selected+1)) : tr('Export Selected');
+      els.exportAllBtn.textContent = hasSel ? (tr('Export All') + ' (' + segs.length + ')') : tr('Export All');
       drawOverlay();
     }
 
@@ -1797,7 +2033,7 @@
     }
     function updatePlaybackUI(){
       if (els.playBtn) els.playBtn.innerHTML = (state.playKind === 'transport') ? '&#10074;&#10074;' : '&#9654;';
-      if (els.playSampleBtn) els.playSampleBtn.innerHTML = (state.playKind === 'sample') ? '&#9632; Stop' : '&#9654; Play Sample';
+      if (els.playSampleBtn) els.playSampleBtn.innerHTML = (state.playKind === 'sample') ? '&#9632; ' + tr('Stop') : '&#9654; ' + tr('Play Sample');
       if (els.loopBtn) els.loopBtn.classList.toggle('active', state.playKind === 'loop');
     }
     function stopAll(){
@@ -2010,6 +2246,12 @@
       });
     });
 
+    I18N.onChange(function(){
+      setMarkMode(state.markMode);
+      updatePlaybackUI();
+      if (state.audioBuffer) renderSamples(); else els.sub.textContent = tr('No track loaded');
+    });
+
     // The selected sample as raw channel data, for FIND SOURCE.
     function getSelectedRegion(){
       var b = state.audioBuffer;
@@ -2035,7 +2277,7 @@
                                 "what recording is this?", "what does it
                                 sample?" and "where might this region come from?"
        3. Providers           — LocalSampleDatabaseProvider (IndexedDB),
-                                LicensedAPIProvider (placeholder, unconfigured)
+                                MusicBrainzProvider (online, opt-in, CC0 data)
        4. UI                  — SAMPLES screen and Chop's FIND SOURCE
 
      Rule: nothing is ever inferred or guessed. If no provider has evidence,
@@ -2236,7 +2478,9 @@
          id, name, kind                 identification
          license                        text shown in the UI; must match THIRD_PARTY_NOTICES.md
          getStatus() -> {ready, detail}
-         identifyRecording(fp, meta)    -> [{ recordingRef, title, artist, year, aligned, ratio, confidence, source }]
+         identifyRecording(fp, meta)    -> [{ recordingRef, title, artist, year, confidence, source,
+                                              aligned+ratio (audio match) or evidenceKey+evidenceVars (metadata match) }]
+                                           meta = { artist, title } from tags / user input
          getSampleRelations(recordingRef) -> [SampleRelation]
          findSourceCandidates(regionFp) -> [{ title, artist, year, aligned, ratio, confidence, offsetSec, source }]
 
@@ -2263,6 +2507,7 @@
         sourceArtist: str(r.sourceArtist), sourceTrack: str(r.sourceTrack), sourceYear: str(r.sourceYear, 4),
         sampledSection: str(r.sampledSection), sampleType: str(r.sampleType, 40),
         sampleTimestamp: str(r.sampleTimestamp, 20), confidence: str(r.confidence, 40),
+        direction: r.direction === 'sampledBy' ? 'sampledBy' : 'samples',
         source: str(r.provenance || r.source || fallbackSource), externalRef: str(r.externalRef, 500)
       };
     }
@@ -2331,7 +2576,7 @@
         license: 'User-supplied data; no data bundled with SP404 DROP.',
         getStatus: function(){
           return ready.then(function(){
-            return { ready: recs.length > 0, detail: recs.length + ' recording' + (recs.length === 1 ? '' : 's') + ', ' + rels.length + ' relationship' + (rels.length === 1 ? '' : 's') + (persistent ? '' : ' (memory only — not saved)') };
+            return { ready: recs.length > 0, detail: tr('{n} recording|{n} recordings', { n: recs.length }) + ', ' + tr('{n} relationship|{n} relationships', { n: rels.length }) + (persistent ? '' : ' (' + tr('memory only — not saved') + ')') };
           });
         },
         identifyRecording: function(fp){
@@ -2407,17 +2652,197 @@
     })();
     registerProvider(Local.provider);
 
-    /* ---------- 3b. LicensedAPIProvider ----------
-       Placeholder. No third-party sample-data API has passed the licensing
-       review in THIRD_PARTY_NOTICES.md, so this is deliberately unconfigured:
-       it makes no network requests and returns nothing. When one is approved,
-       implement identifyRecording / getSampleRelations here (or add a new
-       provider object) — the rest of the app does not change. */
-    registerProvider({
-      id: 'licensed-api', name: 'Licensed API', kind: 'api',
-      license: 'None approved yet — see THIRD_PARTY_NOTICES.md.',
-      getStatus: function(){ return Promise.resolve({ ready: false, detail: 'not configured — no licensed data provider approved' }); }
-    });
+    /* ---------- 3b. MusicBrainzProvider ----------
+       Online, opt-in. Looks the recording up by artist + title text (never
+       audio) in MusicBrainz's open database and reads its "samples material"
+       relationships, both directions. Core MusicBrainz data is CC0. The public
+       API allows ~1 request/second, which is enforced here.
+       Identification is by text, so it is only as right as the tags/typed
+       names; the match score is shown and wrong picks can be fixed by editing
+       the artist/title boxes. */
+    var MB = (function(){
+      var BASE = 'https://musicbrainz.org/ws/2/';
+      var enabled = true, lastReq = 0, chain = Promise.resolve(), cache = new Map(), cand = new Map();
+      var lastError = '';
+      try { enabled = localStorage.getItem('sp404drop.online') !== '0'; } catch(e){}
+
+      function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+      function get(path){
+        if (cache.has(path)) return cache.get(path);
+        var p = chain.then(function attempt(){
+          var wait = Math.max(0, lastReq + 1100 - Date.now());
+          return sleep(wait).then(function(){
+            lastReq = Date.now();
+            return fetch(BASE + path, { headers: { Accept: 'application/json' } });
+          });
+        }).then(function(res){
+          if (res.status === 503 || res.status === 429){
+            return sleep(2500).then(function(){ lastReq = Date.now(); return fetch(BASE + path, { headers: { Accept: 'application/json' } }); });
+          }
+          return res;
+        }).then(function(res){
+          if (!res.ok) throw new Error('MusicBrainz HTTP ' + res.status);
+          return res.json();
+        });
+        chain = p.then(function(){}, function(){});
+        cache.set(path, p);
+        p['catch'](function(){ cache['delete'](path); }); // don't cache failures
+        return p;
+      }
+      function esc(v){ return String(v).replace(/["\\]/g, ' ').replace(/\s+/g, ' ').trim(); }
+      function credit(rec){ return (rec['artist-credit'] || []).map(function(c){ return (c.name || '') + (c.joinphrase || ''); }).join('').trim(); }
+
+      var provider = {
+        id: 'musicbrainz', name: 'MusicBrainz', kind: 'api',
+        license: 'MusicBrainz core data is CC0 (public domain). Rate-limited public API.',
+        getStatus: function(){
+          if (!enabled) return Promise.resolve({ ready: false, detail: tr('turned off') });
+          return Promise.resolve({ ready: true, detail: lastError ? tr('last request failed:') + ' ' + lastError : tr('online · artist + title text only') });
+        },
+        identifyRecording: function(fp, meta){
+          if (!enabled || !meta || !meta.artist || !meta.title) return Promise.resolve([]);
+          lastError = '';
+          var q = 'recording:"' + esc(meta.title) + '" AND artist:"' + esc(meta.artist) + '"';
+          return get('recording?query=' + encodeURIComponent(q) + '&fmt=json&limit=20').then(function(d){
+            var recs = (d.recordings || []).filter(function(r){ return r.score >= 90; });
+            if (!recs.length) return [];
+            var studio = recs.filter(function(r){ return !/live|karaoke|cover|remix|instrumental/i.test(r.disambiguation || '') && !/live/i.test(r.title || ''); });
+            var pick = (studio.length ? studio : recs).slice(0, 5);
+            var key = 'mb:' + pick[0].id;
+            cand.set(key, pick.map(function(r){ return r.id; }));
+            var best = pick[0];
+            return [{ recordingRef: key, title: best.title, artist: credit(best), year: (best['first-release-date'] || '').slice(0, 4),
+                      confidence: best.score >= 98 ? 'HIGH' : 'MEDIUM',
+                      evidenceKey: 'matched by artist/title text (MusicBrainz score {n}), not by audio', evidenceVars: { n: best.score },
+                      source: 'MusicBrainz' }];
+          })['catch'](function(err){ lastError = err && err.message ? err.message : 'network error'; return []; });
+        },
+        getSampleRelations: function(ref){
+          var ids = cand.get(ref) || [];
+          var seen = {}, out = [];
+          return ids.reduce(function(prev, id){
+            return prev.then(function(){
+              return get('recording/' + id + '?inc=recording-rels+artist-credits&fmt=json').then(function(d){
+                (d.relations || []).forEach(function(r){
+                  if (r.type !== 'samples material' || !r.recording) return;
+                  var dir = r.direction === 'backward' ? 'sampledBy' : 'samples';
+                  var k = dir + r.recording.id;
+                  if (seen[k]) return;
+                  seen[k] = 1;
+                  out.push(normalizeRelation({
+                    direction: dir, sourceArtist: credit(r.recording), sourceTrack: r.recording.title,
+                    sourceYear: (r.recording['first-release-date'] || '').slice(0, 4),
+                    sampleType: (r.attributes || []).join(', '),
+                    externalRef: 'https://musicbrainz.org/recording/' + r.recording.id,
+                    provenance: 'MusicBrainz (CC0)'
+                  }, 'MusicBrainz'));
+                });
+              }, function(err){ lastError = err && err.message ? err.message : 'network error'; });
+            });
+          }, Promise.resolve()).then(function(){
+            out.sort(function(a, b){ return a.direction === b.direction ? 0 : (a.direction === 'samples' ? -1 : 1); });
+            return out;
+          });
+        }
+      };
+      return {
+        provider: provider,
+        isEnabled: function(){ return enabled; },
+        setEnabled: function(v){ enabled = !!v; try { localStorage.setItem('sp404drop.online', enabled ? '1' : '0'); } catch(e){} },
+        lastError: function(){ return lastError; }
+      };
+    })();
+    registerProvider(MB.provider);
+
+    /* ---------- tag reader ----------
+       Pulls artist/title out of ID3v2/ID3v1 (MP3), FLAC Vorbis comments and
+       MP4/M4A atoms; falls back to "Artist - Title" in the filename. */
+    function decodeText(bytes, enc){
+      var label = enc === 1 ? 'utf-16' : enc === 2 ? 'utf-16be' : enc === 3 ? 'utf-8' : 'windows-1252';
+      try { return new TextDecoder(label).decode(bytes).replace(/\0+$/g, '').replace(/^\uFEFF/, '').trim(); } catch(e){ return ''; }
+    }
+    function readId3v2(u8){
+      if (u8.length < 10 || u8[0] !== 0x49 || u8[1] !== 0x44 || u8[2] !== 0x33) return null;
+      var ver = u8[3], total = ((u8[6] & 127) << 21 | (u8[7] & 127) << 14 | (u8[8] & 127) << 7 | (u8[9] & 127)) + 10;
+      var end = Math.min(total, u8.length), pos = 10, tags = {};
+      var idLen = ver === 2 ? 3 : 4, hdr = ver === 2 ? 6 : 10;
+      while (pos + hdr <= end){
+        var id = String.fromCharCode.apply(null, u8.subarray(pos, pos + idLen));
+        if (!/^[A-Z0-9]+$/.test(id)) break;
+        var size = ver === 2 ? (u8[pos + 3] << 16 | u8[pos + 4] << 8 | u8[pos + 5])
+          : ver === 4 ? ((u8[pos + 4] & 127) << 21 | (u8[pos + 5] & 127) << 14 | (u8[pos + 6] & 127) << 7 | (u8[pos + 7] & 127))
+          : (u8[pos + 4] * 16777216 + (u8[pos + 5] << 16) + (u8[pos + 6] << 8) + u8[pos + 7]);
+        var body = u8.subarray(pos + hdr, pos + hdr + size);
+        if (id === 'TIT2' || id === 'TT2') tags.title = decodeText(body.subarray(1), body[0]);
+        if (id === 'TPE1' || id === 'TP1') tags.artist = decodeText(body.subarray(1), body[0]);
+        pos += hdr + size;
+        if (size <= 0) break;
+      }
+      return tags;
+    }
+    function readId3v1(u8){
+      var n = u8.length;
+      if (n < 128 || u8[n - 128] !== 0x54 || u8[n - 127] !== 0x41 || u8[n - 126] !== 0x47) return null;
+      return { title: decodeText(u8.subarray(n - 125, n - 95), 0), artist: decodeText(u8.subarray(n - 95, n - 65), 0) };
+    }
+    function readFlac(u8){
+      if (u8.length < 8 || u8[0] !== 0x66 || u8[1] !== 0x4C || u8[2] !== 0x61 || u8[3] !== 0x43) return null;
+      var pos = 4, tags = {}, dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+      while (pos + 4 <= u8.length){
+        var last = u8[pos] & 128, type = u8[pos] & 127, len = u8[pos + 1] << 16 | u8[pos + 2] << 8 | u8[pos + 3];
+        pos += 4;
+        if (type === 4 && pos + len <= u8.length){
+          var p = pos + 4 + dv.getUint32(pos, true), cnt = dv.getUint32(p, true); p += 4;
+          for (var i = 0; i < cnt && p + 4 <= pos + len; i++){
+            var l = dv.getUint32(p, true); p += 4;
+            var kv = decodeText(u8.subarray(p, p + l), 3), eq = kv.indexOf('=');
+            if (eq > 0){ var k = kv.slice(0, eq).toUpperCase(); if (k === 'TITLE') tags.title = kv.slice(eq + 1); if (k === 'ARTIST') tags.artist = kv.slice(eq + 1); }
+            p += l;
+          }
+        }
+        pos += len;
+        if (last) break;
+      }
+      return tags;
+    }
+    function readMp4(u8){
+      function find(code){
+        for (var i = 4; i + 24 < u8.length; i++){
+          if (u8[i] === 0xA9 && u8[i + 1] === code[0] && u8[i + 2] === code[1] && u8[i + 3] === code[2]){
+            // atom: size(4) '\xA9xxx' size(4) 'data' flags(4) locale(4) text
+            for (var j = i + 4; j < i + 24; j++){
+              if (u8[j] === 0x64 && u8[j + 1] === 0x61 && u8[j + 2] === 0x74 && u8[j + 3] === 0x61){
+                var size = (u8[j - 4] << 24 | u8[j - 3] << 16 | u8[j - 2] << 8 | u8[j - 1]) >>> 0;
+                return decodeText(u8.subarray(j + 12, j - 4 + size), 3);
+              }
+            }
+          }
+        }
+        return '';
+      }
+      if (!(u8[4] === 0x66 && u8[5] === 0x74 && u8[6] === 0x79 && u8[7] === 0x70)) return null;
+      return { title: find([0x6E, 0x61, 0x6D]), artist: find([0x41, 0x52, 0x54]) };
+    }
+    function fromFilename(name){
+      var base = name.replace(/\.[^.]+$/, '').replace(/_/g, ' ').replace(/\s*[\[(][^\])]*(official|video|audio|lyrics|hd|hq|remaster)[^\])]*[\])]/ig, '').trim();
+      base = base.replace(/^\d{1,3}\s*[-.)]\s*/, '');
+      var m = base.split(/\s+[-–—]\s+/);
+      return m.length >= 2 ? { artist: m[0].trim(), title: m.slice(1).join(' - ').trim() } : { artist: '', title: base };
+    }
+    function readTags(file){
+      var head = file.slice(0, 2 * 1048576).arrayBuffer();
+      var tail = file.size > 2 * 1048576 ? file.slice(file.size - 2 * 1048576).arrayBuffer() : Promise.resolve(null);
+      return Promise.all([head, tail]).then(function(r){
+        var h = new Uint8Array(r[0]), tl = r[1] ? new Uint8Array(r[1]) : h, tags = null;
+        // ID3v2 can be larger than the window (cover art) — it is only needed up to its text frames, which come first.
+        tags = readId3v2(h) || readFlac(h) || readMp4(h) || readMp4(tl) || readId3v1(tl);
+        var fn = fromFilename(file.name);
+        if (tags && (tags.artist || tags.title)){
+          return { artist: tags.artist || fn.artist, title: tags.title || fn.title, from: tags.artist && tags.title ? 'tags' : 'tags+filename' };
+        }
+        return { artist: fn.artist, title: fn.title, from: 'filename' };
+      })['catch'](function(){ var fn = fromFilename(file.name); fn.from = 'filename'; return fn; });
+    }
 
     /* ---------- orchestration ---------- */
     function providerStatuses(){
@@ -2425,10 +2850,10 @@
         return p.getStatus().then(function(s){ return { provider: p, status: s }; }, function(){ return { provider: p, status: { ready: false, detail: 'error' } }; });
       }));
     }
-    // Mode 1: fingerprint -> recording(s) -> known sample relationships.
-    function lookupKnownSamples(fp){
+    // Mode 1: fingerprint/metadata -> recording(s) -> known sample relationships.
+    function lookupKnownSamples(fp, meta){
       return Promise.all(registry.map(function(p){
-        return p.identifyRecording(fp, {}).then(function(matches){
+        return p.identifyRecording(fp, meta || {}).then(function(matches){
           return Promise.all(matches.slice(0, 3).map(function(m){
             return p.getSampleRelations(m.recordingRef).then(function(rels){ return { match: m, relations: rels, provider: p }; });
           }));
@@ -2452,8 +2877,10 @@
       return n;
     }
     function $(id){ return document.getElementById(id); }
-    function who(m){ return (m.artist || 'Unknown artist') + ' — ' + (m.title || 'Untitled') + (m.year ? ' (' + m.year + ')' : ''); }
-    function evidence(m){ return m.aligned + ' aligned fingerprint hits · ' + Math.round(m.ratio * 100) + '% of the audio checked'; }
+    function who(m){ return (m.artist || tr('Unknown artist')) + ' \u2014 ' + (m.title || tr('Untitled')) + (m.year ? ' (' + m.year + ')' : ''); }
+    function evidence(m){
+      return m.evidenceKey ? tr(m.evidenceKey, m.evidenceVars) : tr('{a} aligned fingerprint hits · {p}% of the audio checked', { a: m.aligned, p: Math.round(m.ratio * 100) });
+    }
     function noneBox(title, sub){
       var b = el('div', 'smp-none');
       b.appendChild(el('div', 'nt', title));
@@ -2469,89 +2896,124 @@
     var ui = {
       drop: $('smpDrop'), file: $('smpFileInput'), ws: $('smpWorkspace'), info: $('smpFile'),
       results: $('smpResults'), providers: $('smpProviders'), dbInfo: $('smpDbInfo'), sub: $('smpSub'),
-      addRec: $('smpAddRecBtn'), addRel: $('smpAddRelBtn'), recForm: $('smpRecForm'), relForm: $('smpRelForm')
+      addRec: $('smpAddRecBtn'), addRel: $('smpAddRelBtn'), recForm: $('smpRecForm'), relForm: $('smpRelForm'),
+      qArtist: $('smpQArtist'), qTitle: $('smpQTitle'), search: $('smpSearchBtn'), online: $('smpOnline')
     };
-    var cur = { fp: null, name: '', recordingId: null };
+    var cur = { fp: null, name: '', recordingId: null, meta: null, found: null, info: null };
     var actx = null;
+    var EMPTY_FP = { v: FP.VERSION, hashes: new Uint32Array(0), times: new Uint32Array(0), frames: 0, duration: 0, peaks: 0 };
 
     function refreshProviders(){
       return Promise.all([providerStatuses(), Local.ready]).then(function(r){
         ui.providers.innerHTML = '';
         r[0].forEach(function(x){
           var d = el('div', 'smp-prov');
-          d.appendChild(el('div', 'pn', x.provider.name + ' · ' + (x.status.ready ? 'READY' : 'NO DATA')));
+          d.appendChild(el('div', 'pn', x.provider.name + ' \u00b7 ' + (x.status.ready ? tr('READY') : tr('NO DATA'))));
           d.appendChild(el('div', 'ps', x.status.detail));
-          d.appendChild(el('div', 'ps', 'Licence: ' + x.provider.license));
+          d.appendChild(el('div', 'ps', tr('Licence:') + ' ' + tr(x.provider.license)));
           ui.providers.appendChild(d);
         });
         var st = Local.stats();
-        ui.dbInfo.textContent = st.recordings + ' recording' + (st.recordings === 1 ? '' : 's') + ' · ' + st.relations + ' known sample' + (st.relations === 1 ? '' : 's') + (st.persistent ? ' · stored in this browser only' : ' · browser storage unavailable: memory only');
+        ui.dbInfo.textContent = tr('{n} recording|{n} recordings', { n: st.recordings }) + ' \u00b7 ' + tr('{n} known sample|{n} known samples', { n: st.relations }) + (st.persistent ? ' \u00b7 ' + tr('stored in this browser only') : ' \u00b7 ' + tr('browser storage unavailable: memory only'));
         ui.addRec.disabled = !cur.fp || !!cur.recordingId;
         ui.addRel.disabled = !cur.recordingId;
       });
     }
 
+    function renderInfo(){
+      var i = cur.info;
+      ui.info.innerHTML = '';
+      if (!i) return;
+      if (i.text){ ui.info.textContent = i.text; return; }
+      ui.info.appendChild(el('b', null, cur.name));
+      ui.info.appendChild(document.createElement('br'));
+      ui.info.appendChild(document.createTextNode(fmtTime(i.duration) + ' \u00b7 ' + tr('{n} fingerprint hashes', { n: i.hashes.toLocaleString() }) +
+        (i.hashes < 50 ? ' \u00b7 ' + tr('too little distinct audio to fingerprint reliably') : '')));
+      if (i.from){
+        ui.info.appendChild(document.createElement('br'));
+        ui.info.appendChild(document.createTextNode(tr(i.from === 'filename' ? 'Names guessed from the filename — check them' : 'Names read from the file tags')));
+      }
+    }
+
     function renderLookup(found){
+      cur.found = found;
       ui.results.innerHTML = '';
+      var local = found.filter(function(f){ return f.provider.id === Local.provider.id; })[0];
+      cur.recordingId = local ? local.match.recordingRef : null;
       if (!found.length){
-        cur.recordingId = null;
-        ui.results.appendChild(noneBox('NO SAMPLE INFORMATION FOUND',
-          'No configured provider recognised this recording. ' +
-          (Local.stats().recordings ? '' : 'The local database is empty, and no licensed provider is configured. ') +
-          'Nothing is guessed.'));
+        var why = tr('No configured provider recognised this recording.') + ' ';
+        if (!MB.isEnabled()) why += tr('Online lookup is turned off.') + ' ';
+        else if (MB.lastError()) why += tr('The online lookup failed:') + ' ' + MB.lastError() + '. ';
+        else if (!ui.qArtist.value.trim() || !ui.qTitle.value.trim()) why += tr('Type the artist and title above and press Search.') + ' ';
+        else why += tr('MusicBrainz has no confident match for that artist and title — try correcting the spelling above.') + ' ';
+        ui.results.appendChild(noneBox(tr('NO SAMPLE INFORMATION FOUND'), why + tr('Nothing is guessed.')));
         return;
       }
-      cur.recordingId = found[0].provider.id === Local.provider.id ? found[0].match.recordingRef : null;
       var anyRel = false;
       found.forEach(function(f){
         var c = el('div', 'smp-card rec');
         c.appendChild(el('div', 'ct', who(f.match)));
-        c.appendChild(el('div', 'cm', 'Recording identified · ' + f.match.confidence + ' · ' + evidence(f.match) + ' · ' + f.match.source));
+        c.appendChild(el('div', 'cm', tr('Recording identified') + ' \u00b7 ' + tr(f.match.confidence) + ' \u00b7 ' + evidence(f.match) + ' \u00b7 ' + f.match.source));
         ui.results.appendChild(c);
+        var lastDir = null;
         f.relations.forEach(function(r){
           anyRel = true;
+          if (r.direction !== lastDir){
+            ui.results.appendChild(el('div', 'smp-subhead', r.direction === 'sampledBy' ? tr('Sampled by other tracks') : tr('This track samples')));
+            lastDir = r.direction;
+          }
           var rc = el('div', 'smp-card');
-          rc.appendChild(el('div', 'ct', (r.sourceArtist || 'Unknown artist') + ' — ' + (r.sourceTrack || 'Untitled') + (r.sourceYear ? ' (' + r.sourceYear + ')' : '')));
+          rc.appendChild(el('div', 'ct', (r.sourceArtist || tr('Unknown artist')) + ' \u2014 ' + (r.sourceTrack || tr('Untitled')) + (r.sourceYear ? ' (' + r.sourceYear + ')' : '')));
           var tags = el('div');
-          if (r.sampleType) tags.appendChild(el('span', 'tag', r.sampleType));
-          if (r.confidence) tags.appendChild(el('span', 'tag', 'conf: ' + r.confidence));
+          if (r.sampleType) tags.appendChild(el('span', 'tag', tr(r.sampleType)));
+          if (r.confidence) tags.appendChild(el('span', 'tag', tr('conf:') + ' ' + r.confidence));
           rc.appendChild(tags);
-          if (r.sampledSection) rc.appendChild(el('div', null, 'Sampled section: ' + r.sampledSection));
-          if (r.sampleTimestamp) rc.appendChild(el('div', null, 'Appears at ~' + r.sampleTimestamp + ' in this track'));
-          if (r.externalRef){ var rf = el('div', null, 'Reference: '); rf.appendChild(safeLink(r.externalRef)); rc.appendChild(rf); }
-          rc.appendChild(el('div', 'cm', 'Source: ' + (r.source || 'unspecified')));
+          if (r.sampledSection) rc.appendChild(el('div', null, tr('Sampled section:') + ' ' + r.sampledSection));
+          if (r.sampleTimestamp) rc.appendChild(el('div', null, tr('Appears at ~{t} in this track', { t: r.sampleTimestamp })));
+          if (r.externalRef){ var rf = el('div', null, tr('Reference:') + ' '); rf.appendChild(safeLink(r.externalRef)); rc.appendChild(rf); }
+          rc.appendChild(el('div', 'cm', tr('Source:') + ' ' + (r.source || tr('unspecified'))));
           ui.results.appendChild(rc);
         });
       });
-      if (!anyRel) ui.results.appendChild(noneBox('NO SAMPLE INFORMATION FOUND', 'The recording was identified, but no provider holds sample relationships for it.'));
+      if (!anyRel) ui.results.appendChild(noneBox(tr('NO SAMPLE INFORMATION FOUND'), tr('The recording was identified, but no provider holds sample relationships for it. That means "not listed", not "not sampled".')));
+    }
+
+    function runLookup(){
+      var meta = { artist: ui.qArtist.value.trim(), title: ui.qTitle.value.trim() };
+      cur.meta = meta;
+      ui.results.innerHTML = '';
+      ui.results.appendChild(el('div', 'smp-status', tr('Searching…')));
+      ui.search.disabled = true;
+      return Local.ready.then(function(){ return lookupKnownSamples(cur.fp || EMPTY_FP, meta); })
+        .then(renderLookup).then(refreshProviders)
+        ['catch'](function(err){ ui.results.innerHTML = ''; ui.results.appendChild(noneBox(tr('COULD NOT ANALYSE'), err && err.message ? err.message : '')); })
+        .then(function(){ ui.search.disabled = false; });
     }
 
     function loadTrack(file){
-      cur = { fp: null, name: file.name, recordingId: null };
+      cur = { fp: null, name: file.name, recordingId: null, meta: null, found: null, info: { text: tr('Reading {f}…', { f: file.name }) } };
       ui.recForm.hidden = true; ui.relForm.hidden = true;
       ui.drop.hidden = true; ui.ws.hidden = false;
-      ui.info.textContent = 'Reading ' + file.name + '…';
+      renderInfo();
       ui.results.innerHTML = '';
       if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      var tagsP = readTags(file);
       file.arrayBuffer().then(function(buf){ return actx.decodeAudioData(buf); }).then(function(ab){
         var chans = [];
         for (var c = 0; c < ab.numberOfChannels; c++) chans.push(ab.getChannelData(c));
         return computeFingerprint(chans, ab.sampleRate, 0, ab.length, function(p){
-          ui.info.textContent = 'Fingerprinting ' + file.name + '… ' + Math.round(p * 100) + '%';
+          cur.info = { text: tr('Fingerprinting {f}…', { f: file.name }) + ' ' + Math.round(p * 100) + '%' }; renderInfo();
         }).then(function(fp){ return { fp: fp, ab: ab }; });
       }).then(function(r){
         cur.fp = r.fp;
-        ui.info.innerHTML = '';
-        var b = el('b', null, file.name); ui.info.appendChild(b);
-        ui.info.appendChild(document.createElement('br'));
-        ui.info.appendChild(document.createTextNode(fmtTime(r.ab.duration) + ' · ' + r.fp.hashes.length.toLocaleString() + ' fingerprint hashes (' + fmtBytes(r.fp.hashes.length * 8) + ' if stored)'));
-        if (r.fp.hashes.length < 50) ui.info.appendChild(document.createTextNode(' · too little distinct audio to fingerprint reliably'));
-        return Local.ready.then(function(){ return lookupKnownSamples(r.fp); });
-      }).then(function(found){
-        renderLookup(found);
-        return refreshProviders();
+        return tagsP.then(function(tg){
+          ui.qArtist.value = tg.artist; ui.qTitle.value = tg.title;
+          cur.info = { duration: r.ab.duration, hashes: r.fp.hashes.length, from: tg.from }; renderInfo();
+          return runLookup();
+        });
       })['catch'](function(err){
-        ui.info.textContent = 'Could not read ' + file.name + ': ' + (err && err.message ? err.message : 'unreadable file');
+        cur.info = { text: tr('Could not read {f}:', { f: file.name }) + ' ' + (err && err.message ? err.message : tr('unreadable file')) };
+        renderInfo();
         ui.results.innerHTML = '';
       });
     }
@@ -2571,38 +3033,49 @@
       var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
       if (f && ui.drop.hidden) loadTrack(f);
     });
+    ui.search.addEventListener('click', runLookup);
+    [ui.qArtist, ui.qTitle].forEach(function(i){ i.addEventListener('keydown', function(e){ if (e.key === 'Enter') runLookup(); }); });
+    ui.online.checked = MB.isEnabled();
+    ui.online.addEventListener('change', function(){
+      MB.setEnabled(ui.online.checked);
+      refreshProviders();
+      if (cur.fp || cur.meta) runLookup();
+    });
 
     /* ---- local DB actions ---- */
     function year(v){ return /^\d{4}$/.test(v.trim()) ? v.trim() : ''; }
     ui.addRec.addEventListener('click', function(){
       ui.relForm.hidden = true; ui.recForm.hidden = !ui.recForm.hidden;
+      if (!ui.recForm.hidden){
+        $('smpRecArtist').value = ui.qArtist.value; $('smpRecTitle').value = ui.qTitle.value;
+      }
     });
     $('smpRecSave').addEventListener('click', function(){
       if (!cur.fp) return;
-      if (!$('smpRecRights').checked){ alert('Please confirm you have the right to fingerprint this recording.'); return; }
+      if (!$('smpRecRights').checked){ alert(tr('Please confirm you have the right to fingerprint this recording.')); return; }
       var title = $('smpRecTitle').value.trim(), artist = $('smpRecArtist').value.trim();
-      if (!title || !artist){ alert('Artist and title are required.'); return; }
+      if (!title || !artist){ alert(tr('Artist and title are required.')); return; }
       cur.recordingId = Local.addRecording({ title: title, artist: artist, year: year($('smpRecYear').value) }, cur.fp);
       ui.recForm.hidden = true;
       $('smpRecRights').checked = false;
-      lookupKnownSamples(cur.fp).then(renderLookup).then(refreshProviders);
+      runLookup();
     });
     ui.addRel.addEventListener('click', function(){
       ui.recForm.hidden = true; ui.relForm.hidden = !ui.relForm.hidden;
     });
     $('smpRelSave').addEventListener('click', function(){
       if (!cur.recordingId) return;
-      var a = $('smpRelArtist').value.trim(), t = $('smpRelTrack').value.trim();
-      if (!a || !t){ alert('Source artist and source track are required.'); return; }
+      var srcArtist = $('smpRelArtist').value.trim(), srcTrack = $('smpRelTrack').value.trim();
+      if (!srcArtist || !srcTrack){ alert(tr('Source artist and source track are required.')); return; }
       Local.addRelation(cur.recordingId, {
-        sourceArtist: a, sourceTrack: t, sourceYear: year($('smpRelYear').value),
+        sourceArtist: srcArtist, sourceTrack: srcTrack, sourceYear: year($('smpRelYear').value),
         sampleType: $('smpRelType').value, sampledSection: $('smpRelSection').value.trim(),
         sampleTimestamp: $('smpRelTime').value.trim(), externalRef: $('smpRelRef').value.trim(),
         provenance: $('smpRelProv').value.trim()
       });
       ['smpRelArtist', 'smpRelTrack', 'smpRelYear', 'smpRelType', 'smpRelSection', 'smpRelTime', 'smpRelRef', 'smpRelProv'].forEach(function(id){ $(id).value = ''; });
       ui.relForm.hidden = true;
-      lookupKnownSamples(cur.fp).then(renderLookup).then(refreshProviders);
+      runLookup();
     });
     $('smpExportBtn').addEventListener('click', function(){
       downloadFile(new Blob([Local.exportJson()], { type: 'application/json' }), 'SP404-DROP-sample-db.json');
@@ -2613,14 +3086,14 @@
       if (!f) return;
       f.text().then(function(txt){
         var r = Local.importJson(txt);
-        alert('Imported ' + r.recordings + ' recording(s) and ' + r.relations + ' relationship(s).');
+        alert(tr('Imported {a} recording(s) and {b} relationship(s).', { a: r.recordings, b: r.relations }));
         return refreshProviders();
-      })['catch'](function(err){ alert('Import failed: ' + (err && err.message ? err.message : 'invalid file')); });
+      })['catch'](function(err){ alert(tr('Import failed:') + ' ' + (err && err.message ? err.message : tr('invalid file'))); });
     });
     $('smpClearDbBtn').addEventListener('click', function(){
-      if (!confirm('Delete every recording and relationship in the local database? This cannot be undone.')) return;
+      if (!confirm(tr('Delete every recording and relationship in the local database? This cannot be undone.'))) return;
       Local.clear();
-      if (cur.fp) lookupKnownSamples(cur.fp).then(renderLookup).then(refreshProviders); else refreshProviders();
+      if (cur.fp) runLookup(); else refreshProviders();
     });
 
     /* ---- Chop: FIND SOURCE ---- */
@@ -2631,11 +3104,11 @@
       if (!reg) return;
       fsPanel.hidden = false; fsPanel.innerHTML = '';
       if (reg.end - reg.start < MIN_REGION_SEC){
-        fsPanel.appendChild(noneBox('REGION TOO SHORT', 'Select a sample of at least ' + MIN_REGION_SEC + ' seconds — shorter clips do not carry enough fingerprint data for a trustworthy comparison.'));
+        fsPanel.appendChild(noneBox(tr('REGION TOO SHORT'), tr('Select a sample of at least {s} seconds — shorter clips do not carry enough fingerprint data for a trustworthy comparison.', { s: MIN_REGION_SEC })));
         return;
       }
       fsBtn.disabled = true;
-      fsPanel.appendChild(el('div', 'smp-status', 'Fingerprinting selection…'));
+      fsPanel.appendChild(el('div', 'smp-status', tr('Fingerprinting selection…')));
       var from = Math.floor(reg.start * reg.sampleRate), to = Math.floor(reg.end * reg.sampleRate);
       Local.ready.then(function(){
         return computeFingerprint(reg.channels, reg.sampleRate, from, to);
@@ -2645,28 +3118,37 @@
         fsPanel.innerHTML = '';
         if (!r.cands.length){
           var n = Local.stats().recordings;
-          fsPanel.appendChild(noneBox('NO CONFIDENT MATCH',
-            (n ? 'Compared against ' + n + ' recording' + (n === 1 ? '' : 's') + ' in the local database; none showed enough evidence. ' : 'The local database is empty — add recordings on the SAMPLES screen first. ') +
-            'This only finds near-verbatim reuse; pitched, stretched or heavily processed samples will usually not match.'));
+          fsPanel.appendChild(noneBox(tr('NO CONFIDENT MATCH'),
+            (n ? tr('Compared against {n} recording(s) in the local database; none showed enough evidence.', { n: n }) + ' ' : tr('The local database is empty — add recordings on the SAMPLES screen first.') + ' ') +
+            tr('This only finds near-verbatim reuse; pitched, stretched or heavily processed samples will usually not match.')));
           return;
         }
         r.cands.slice(0, 5).forEach(function(m){
           var c = el('div', 'smp-card');
           c.appendChild(el('div', 'ct', who(m)));
-          var t = el('div'); t.appendChild(el('span', 'tag', m.confidence + ' confidence')); c.appendChild(t);
-          c.appendChild(el('div', null, 'Best alignment with the source at ~' + fmtTime(Math.max(0, m.offsetSec))));
-          c.appendChild(el('div', 'cm', evidence(m) + ' · ' + m.source + ' · experimental'));
+          var tg = el('div'); tg.appendChild(el('span', 'tag', tr(m.confidence) + ' ' + tr('confidence'))); c.appendChild(tg);
+          c.appendChild(el('div', null, tr('Best alignment with the source at ~{t}', { t: fmtTime(Math.max(0, m.offsetSec)) })));
+          c.appendChild(el('div', 'cm', evidence(m) + ' \u00b7 ' + m.source + ' \u00b7 ' + tr('experimental')));
           fsPanel.appendChild(c);
         });
       })['catch'](function(err){
         fsPanel.innerHTML = '';
-        fsPanel.appendChild(noneBox('COULD NOT ANALYSE', err && err.message ? err.message : 'unknown error'));
+        fsPanel.appendChild(noneBox(tr('COULD NOT ANALYSE'), err && err.message ? err.message : ''));
       }).then(function(){ fsBtn.disabled = false; });
+    });
+
+    // Re-render dynamic content when the language is switched.
+    I18N.onChange(function(){
+      renderInfo();
+      if (cur.found) renderLookup(cur.found);
+      refreshProviders();
+      fsPanel.hidden = true;
     });
 
     refreshProviders();
     return { registerProvider: registerProvider, computeFingerprint: computeFingerprint, matchFingerprint: matchFingerprint, buildIndex: buildIndex };
   })();
+  I18N.apply();
 })();
 </script>
 

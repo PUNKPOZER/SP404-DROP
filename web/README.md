@@ -1,8 +1,9 @@
 # SP404 DROP (web)
 
 A single self-contained HTML page — no install, no build, no server. Everything
-runs client-side (decoding, resampling, re-encoding, waveform analysis, zipping)
-and nothing is ever uploaded anywhere.
+runs client-side (decoding, resampling, re-encoding, waveform analysis, zipping).
+Audio is never uploaded; the only network use is fonts and the optional
+artist/title lookup on the SAMPLES screen.
 
 Open the app and you get three choices: **CONVERT**, **CHOP / LOOP** or **SAMPLES**.
 
@@ -63,42 +64,53 @@ Load one track at a time and slice it into numbered samples:
 ## SAMPLES / FIND SOURCE
 
 A sample-discovery module inspired by the workflow of sites like WhoSampled. It
-does **not** scrape or use any such site's data, and it ships with **no sample
-data at all**. Results come only from data providers that have been
-licence-checked (see [`../THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md))
+does **not** scrape or use any such site's data. Results come only from
+licence-checked sources (see [`../THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md))
 and from data you add yourself. If nothing is known it says
 `NO SAMPLE INFORMATION FOUND` — nothing is ever guessed.
 
-- **Known samples (SAMPLES screen)** — drop a track; it is fingerprinted on your
-  device, the fingerprint is offered to every provider, and any recording that
-  matches is shown with the sample relationships the provider holds for it
-  (source artist/track/year, sampled section, type, timestamp, confidence,
-  provenance, reference link). Matching uses the audio, never the filename.
+- **Known samples (SAMPLES screen)** — drop a track. The artist and title are
+  read from its tags (MP3 ID3, FLAC, M4A) or guessed from the filename
+  (`Artist - Title.mp3`); both boxes are editable, then press **Search**. The
+  lookup asks [MusicBrainz](https://musicbrainz.org) (open CC0 data) for that
+  recording and lists what it samples and what samples it, with a link to each
+  entry. Your local database is searched too, by audio fingerprint.
+  - Identification is by **text, not audio**, so it is only as right as the tags
+    or names; the match score is shown. An empty result means *not listed in
+    MusicBrainz*, not *not sampled* — coverage depends on what the community has
+    entered.
+  - The **Online lookup** checkbox turns this off. When on, only the artist and
+    title text is sent to MusicBrainz — never audio.
 - **Find Source (Chop screen)** — select a sample and press **Find Source** to
-  compare that region against the recordings in the local database. It needs
-  about 2 seconds or more, only reports a match with enough evidence, and shows
-  a LOW / MEDIUM / HIGH label plus the raw evidence (aligned hits, share of the
-  region). It is experimental and finds near-verbatim reuse; pitched, stretched
-  or heavily processed samples usually will not match.
+  compare that region against the recordings in the local database by audio
+  fingerprint. It needs about 2 seconds or more, only reports a match with
+  enough evidence, and shows a LOW / MEDIUM / HIGH label plus the raw evidence.
+  Experimental: it finds near-verbatim reuse; pitched, stretched or heavily
+  processed samples usually will not match. Because it compares against *your*
+  database, add some recordings first.
 - **Local database** — stores fingerprints (hashes + times) and metadata only,
-  never audio, in your browser (IndexedDB). Add a track you have the right to
-  fingerprint with **+ Add this track**, record what it samples with
-  **+ Add known sample**, and move data between browsers with Import / Export
-  JSON (format `sp404drop-sampledb` v1).
+  never audio, in your browser (IndexedDB). **+ Add this track** (you confirm
+  you have the right to fingerprint it), **+ Add known sample** to record what
+  it samples, and Import / Export JSON (format `sp404drop-sampledb` v1) to move
+  data between browsers.
+
+### Language
+
+The **EN / RU** switch in the top-right corner translates the whole app. It
+defaults to your browser language and remembers your choice.
 
 ### Architecture
 
 ```
-audio -> fingerprint engine -> SampleProvider(s) -> results
+audio / tags -> SampleProvider(s) -> results
 ```
 
-Everything lives in the `SampleFinder` module in `index.html`, in four layers:
-fingerprint engine, the `SampleProvider` interface (documented in the code),
-providers, and UI. Providers: `LocalSampleDatabaseProvider` (working),
-`LicensedAPIProvider` (placeholder, unconfigured, no network access). To add a
-data source, write a provider object and call
-`SampleFinder.registerProvider(...)`; the rest of the app is untouched. Review
-its licence and add it to `THIRD_PARTY_NOTICES.md` first.
+Everything lives in the `SampleFinder` module in `index.html`: fingerprint
+engine, the `SampleProvider` interface (documented in the code), providers, and
+UI. Providers: `LocalSampleDatabaseProvider` (audio fingerprints) and
+`MusicBrainzProvider` (online, opt-in). To add a data source, write a provider
+object and call `SampleFinder.registerProvider(...)`; the rest of the app is
+untouched. Review its licence and add it to `THIRD_PARTY_NOTICES.md` first.
 
 ## Using it
 
