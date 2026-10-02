@@ -28,11 +28,25 @@ re-encoding, no re-compression, no loudness changes).
 
 Load one track at a time and slice it into numbered samples:
 
-- **Waveform** — loads full-width (it's sized to fill the frame, not a sliver on
-  a mostly-empty one), click to seek. Zoom with the **−/+** buttons or by
-  scrolling/pinching over the waveform itself; it zooms around wherever your
-  cursor is, and scrolls when zoomed in.
-- **Auto Chop** — three modes, picked with the Transient / Equal / Manual tiles:
+- **Waveform** — a viewport onto the track with a time ruler, the beat grid and
+  numbered samples drawn on it. Move around any way you like:
+  - **drag** the waveform to scroll; **click** to seek (or to drop a marker in
+    add-marker mode); **scroll wheel / pinch** zooms around the cursor, and
+    sideways scrolling or Shift+wheel pans;
+  - the **overview strip** under it shows the whole track — drag the box to jump
+    anywhere;
+  - three **knobs**: **ZOOM** (continuous, from the whole track down to individual
+    samples), **SCRUB** (an endless jog wheel — turn it to travel along the
+    track) and **HEIGHT** (waveform gain, so quiet audio is readable). Drag them,
+    scroll over them, or focus and use the arrow keys; double-click resets;
+  - **Fit** shows the whole track, **Zoom to sample** frames the selected
+    sample, **Follow** keeps the playhead in view while playing, **↕ Height**
+    makes the waveform taller;
+  - dragging a marker near the edge scrolls the view so it can be carried far.
+- **Keys** — Space play, M marker at the playhead, Del remove the nearest
+  marker, ← → scroll, + − zoom, 0 fit, S zoom to sample, `,` `.` previous/next
+  sample, Enter play sample, L loop.
+- **Auto Chop** — four modes, picked with the Transient / Equal / Manual / Beats tiles:
   - **Transient** — detects attacks/onsets in the signal and drops a marker at
     each one. The **Sensitivity** slider controls how many cut points you get —
     drag it after a first Auto Chop and the markers update live, so you can see
@@ -44,10 +58,17 @@ Load one track at a time and slice it into numbered samples:
     **+M** button in the toolbar offers the same add-on-click behavior as a
     quick override while in Transient/Equal, e.g. to hand-place one extra point
     after an auto-chop.
+  - **Beats** — the auto-loop mode. It detects the tempo (BPM) and where the
+    beats fall, draws a beat grid over the waveform, and **Make Loops** drops
+    markers on it every 1 beat / 2 beats / 1 bar / 2 bars / 4 bars. Detection can
+    land on half or double the real tempo (common with fast music): use **÷2** /
+    **×2**, type the BPM, or set **Beat 1 = playhead** on a downbeat to line the
+    grid up by hand.
 - Markers can always be fine-tuned afterward, in any mode: drag a marker's tab to
   move it, double-click a tab to delete it.
 - **Snap to zero crossing** (the `0⋮` toggle, on by default) nudges a marker to
   the nearest zero crossing so cuts don't click or pop.
+- **Load another track** replaces the loaded one at any time.
 - Each region between two markers is a numbered sample (`01`, `02`, …). Tap one
   to select it — the buttons below act on whichever sample is selected:
   - **Play Sample** previews just that region; it turns into **Stop** while
