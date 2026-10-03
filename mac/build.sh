@@ -13,4 +13,4 @@ ICON_ARGS=()
 if [ -f icon.icns ]; then ICON_ARGS=(--icon=icon.icns); fi
 npx @electron/packager app "SP404 DROP" --platform=darwin --arch="$ARCH" --out=dist --overwrite \
   --app-bundle-id=com.sp404drop.app --app-copyright="MIT" "${ICON_ARGS[@]}"
-echo "Built: $(ls -d dist/*/SP404\ DROP.app)"
+echo "Built into dist/ ($ARCH)"

@@ -22,7 +22,9 @@ chore that comes up over and over when prepping sample packs for this machine.
   entirely in the browser, nothing uploaded anywhere. Open
   [`web/index.html`](web/index.html) directly, or host it with GitHub Pages. See
   [`web/README.md`](web/README.md).
-- **[`mac/`](mac/)** — builds the web app into a native macOS `.app` (`./build.sh`).
+- **[`mac/`](mac/)** — the native macOS app. Download the `.dmg` from
+  [Releases](https://github.com/PUNKPOZER/SP404-DROP/releases), or build it yourself
+  (`./build.sh`, `./make-dmg.sh`). See [`mac/README.md`](mac/README.md).
 - **[`cli/`](cli/)** — the original Python command-line scripts this project started
   from: batch WAV conversion, renaming, metadata prepending, and sorting samples into
   category folders (kicks, snares, etc). See [`cli/README.md`](cli/README.md).
