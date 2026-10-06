@@ -2,6 +2,8 @@
 
 ## Unreleased — SP SYSTEM redesign
 
+- **App shell matched to the SP SYSTEM reference board:** dark top strip, ink sidebar (Drop / Convert / Chop-Loop, language, About) with a red active tab,
+  heavy grotesk titles, a fixed *Output* panel with the red CONVERT button, tiles, and a real "This session" file list; About screen.
 - **New visual language (SP SYSTEM):** paper + ink with Signal Red / Electric Blue /
   Moss Green accents, system condensed + sans + mono type, thin rules, restrained
   radii, hardware-like motion. Tokens in `web/sp-system.css`; documented in

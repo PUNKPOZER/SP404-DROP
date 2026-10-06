@@ -77,3 +77,12 @@ test('accessibility: icon-only buttons are labelled, pads are buttons, status re
 test('mac shell: main.js parses', () => {
   execFileSync('node', ['--check', path.join(root, 'mac', 'app', 'main.js')]);
 });
+
+test('shell: top strip, ink sidebar with Drop / Convert / Chop nav and About, real screens', () => {
+  assert.match(html, /class="sp-topstrip"><span>SP SYSTEM \/ DROP<\/span><span>FOR SP-404MKII<\/span>/);
+  for (const sc of ['home', 'convert', 'chop', 'about']) {
+    assert.match(html, new RegExp('class="side-btn[^"]*"[^>]*data-screen="' + sc + '"'));
+    assert.match(html, new RegExp('id="screen' + sc[0].toUpperCase() + sc.slice(1) + '"'));
+  }
+  assert.ok(!/Settings|Batch<|>Export</.test(html.replace(/<script[\s\S]*$/, '').replace(/Export (Selected|All)/g, '')));   // no nav items for features that do not exist
+});

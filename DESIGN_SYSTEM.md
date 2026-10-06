@@ -36,7 +36,7 @@ changes weight or adds an outline; errors carry an icon and text. No gradients, 
 
 | Role | Token | Stack | Used for |
 |---|---|---|---|
-| Display / hardware | `--sp-font-display` | DIN Condensed → Avenir Next Condensed → Bahnschrift → Arial Narrow → Helvetica Neue → Arial | headings, BPM and numeric readouts, pad numbers, hero title |
+| Display / hardware | `--sp-font-display` (+ `--sp-display-weight: 800`) | SF Pro Display → system UI → Helvetica Neue → Segoe UI → Arial, set **heavy (800), uppercase, tight tracking** | page titles ("SP404 DROP"), section headings, BPM and numeric readouts, pad numbers, hero title, primary buttons |
 | UI / information | `--sp-font-ui` | system sans (SF Pro / Segoe UI / Inter / Helvetica Neue) | controls, paragraphs, metadata |
 | Technical | `--sp-font-mono` | ui-monospace / SF Mono / Menlo / Consolas | timecodes, file names, log lines, ruler |
 
@@ -47,7 +47,7 @@ Display text is uppercase via `.sp-display` or component rules.
 ## 3. Spacing, radius, borders, sizes
 
 * Spacing (4 px base): `--sp-space-1…7` = 4 · 8 · 12 · 16 · 24 · 32 · 48.
-* Radius (restrained — it is a tool, not a card deck): `--sp-radius-1 2px` · `-2 4px` · `-3 6px`; `--sp-radius-pill` only for meters/switches.
+* Radius (restrained — it is a tool, not a card deck): `--sp-radius-1 2px` · `-2 6px` · `-3 6px`; `--sp-radius-pill` only for meters/switches.
 * Borders: `--sp-border-w 2px` (controls, panels) · `-thin 1px` (rules) · `-heavy 3px` (header rule, dashed drop zones). Colour: `--sp-border` = ink.
 * Control height `--sp-control-h 40px` (small `32px`), minimum target `--sp-hit 40px`.
 * Pads: `--sp-pad-gap 8px`, preferred size `--sp-pad-size 72px` (the grid shrinks to its container), radius `--sp-pad-radius`.
@@ -74,7 +74,9 @@ Display text is uppercase via `.sp-display` or component rules.
 | Alert / status | `.sp-alert` + `.error` (red edge, `role="alert"`) · `.ok` (green) · `.busy` (blue) | — |
 | Icon | `<svg class="sp-icon [fill|sm|lg]"><use href="#i-…"/></svg>` | colour = `currentColor` |
 | Knob | `makeKnob()` in `index.html` — SVG body (white, ink stroke), **red needle**, value + name; bounded or endless | drag, wheel, arrow keys, double-click reset, `role="slider"` |
-| Header | `.sp-header` > `.sp-brand` (cow mark + `SP404 DROP` + `FOR SP-404MKII`), `.sp-nav`, `.lang` | `.on` + `aria-current="page"` on the active nav button |
+| App shell | `.sp-topstrip` (ink strip: `SP SYSTEM / DROP` · `FOR SP-404MKII`) + `.sp-shell` = ink **sidebar** (`.sp-side`: red cow mark, `.side-btn` nav, `.lang`, About) + paper `.sp-main`. Below 820 px the sidebar becomes a top bar | the active `.side-btn.on` is **red with ink text** and shows its caption; `aria-current="page"` |
+| Output panel | `.out-panel` — read-only readouts (`.out-row .v` = ink "LCD" boxes) for the fixed output format, and the red primary `CONVERT →` button | readouts are **not** controls: the format is fixed, so nothing pretends to be editable |
+| Session list | `.recent` — files handled since the app opened (real, in-memory; chop entries have an *Open* button) | hidden while empty |
 
 ### Pad grid contract (shared with LEARN)
 One canonical 4×4 CSS grid. Physical order, **pad 1 bottom-left, pad 16 top-right**: rows are `13 14 15 16 / 9 10 11 12 / 5 6 7 8 / 1 2 3 4`
@@ -101,8 +103,8 @@ Electron). A test verifies the sprite is in sync. Icon-only buttons must have `a
 * **Production mark:** [`web/assets/brand-logo.svg`](web/assets/brand-logo.svg) — the same file **minus the ® sub-paths**, `fill="currentColor"`.
   The cow/chair path data is byte-identical to the master (a test compares them). No ® appears anywhere in product UI.
 * Do not redraw, re-proportion, outline, tilt or replace it (no running-person logo, no other mascot). Scale uniformly only.
-* Use: header (36 × 41 px, ink), Home hero (64 × 72 px, ink), app icon (paper on red). Monochrome only (`currentColor`: ink on paper,
-  paper on red/ink). Keep clear space ≥ ¼ of the mark's height; minimum size 16 px tall in the header context.
+* Use: sidebar (44 × 50 px, **Signal Red on ink**), About (72 × 82 px, red), app icon (paper on red). Monochrome only (`currentColor`: red or paper on ink, ink on paper,
+  paper on red). Keep clear space ≥ ¼ of the mark's height; minimum size 16 px tall in the header context.
 * Wording is neutral: **"FOR SP-404MKII"**. The ecosystem is independent — no Roland logo in product chrome; the footer states
   "Unofficial · not affiliated with Roland".
 

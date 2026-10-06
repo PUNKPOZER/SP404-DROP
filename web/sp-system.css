@@ -18,6 +18,8 @@
   --sp-paper-3: #DAD7CB;  /* pressed / hover on paper */
   --sp-rule:    #C4C1B4;  /* hairlines, ruler ticks, minor grid */
   --sp-ink-2:   #4A4944;  /* secondary text (8.0:1 on paper) */
+  --sp-ink-hover: #2B2A28; /* hover on ink surfaces (sidebar) */
+  --sp-line-on-ink: #3A3936; /* hairlines on ink */
   --sp-ink-3:   #66645D;  /* tertiary text (5.2:1 on paper) */
   --sp-red-ink: #B8140A;  /* red used as TEXT on paper (5.9:1) */
   --sp-green-ink: #566A27; /* green used as TEXT on paper (5.3:1) */
@@ -40,7 +42,7 @@
   /* ---- radius (restrained: this is a tool, not a card deck) ---- */
   --sp-radius-0: 0;
   --sp-radius-1: 2px;
-  --sp-radius-2: 4px;
+  --sp-radius-2: 6px;
   --sp-radius-3: 6px;
   --sp-radius-pill: 999px;   /* meters / language switch only */
 
@@ -50,7 +52,8 @@
   --sp-border-w-heavy: 3px;
 
   /* ---- typography ---- */
-  --sp-font-display: "DIN Condensed", "Avenir Next Condensed", "Bahnschrift", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --sp-font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Arial, sans-serif;   /* heavy grotesk, set at weight 800 */
+  --sp-display-weight: 800;
   --sp-font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, "Helvetica Neue", Arial, sans-serif;
   --sp-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --sp-text-2xs: 10px;
@@ -101,7 +104,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 button, input, select { font: inherit; color: inherit; }
-.sp-display { font-family: var(--sp-font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .02em; line-height: 1; }
+.sp-display { font-family: var(--sp-font-display); font-weight: var(--sp-display-weight); text-transform: uppercase; letter-spacing: .02em; line-height: 1; }
 .sp-mono { font-family: var(--sp-font-mono); }
 .sp-caps { text-transform: uppercase; letter-spacing: var(--sp-tracking-caps); font-size: var(--sp-text-xs); font-weight: 600; }
 .sp-muted { color: var(--sp-ink-2); }
@@ -173,7 +176,7 @@ button, input, select { font: inherit; color: inherit; }
 
 /* ---- stat tile ---- */
 .sp-stat { border: var(--sp-border-w) solid var(--sp-border); border-radius: var(--sp-radius-2); padding: var(--sp-space-2) var(--sp-space-1); text-align: center; background: var(--sp-white); }
-.sp-stat .num { font-family: var(--sp-font-display); font-weight: 700; font-size: 28px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.sp-stat .num { font-family: var(--sp-font-display); font-weight: var(--sp-display-weight); font-size: 28px; line-height: 1.05; font-variant-numeric: tabular-nums; }
 .sp-stat .lbl { font-size: var(--sp-text-2xs); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--sp-ink-2); margin-top: 2px; }
 .sp-stat.alert { background: var(--sp-red); }
 .sp-stat.alert .lbl { color: var(--sp-ink); }
@@ -196,7 +199,7 @@ button, input, select { font: inherit; color: inherit; }
 .sp-pad:hover:not(:disabled) { background: var(--sp-paper-3); }
 .sp-pad:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
 .sp-pad:disabled { cursor: default; border-style: dashed; background: var(--sp-paper-2); color: var(--sp-ink-3); }
-.sp-pad .n { font-family: var(--sp-font-display); font-weight: 700; font-size: clamp(18px, 4vw, 26px); line-height: 1; }
+.sp-pad .n { font-family: var(--sp-font-display); font-weight: var(--sp-display-weight); font-size: clamp(18px, 4vw, 26px); line-height: 1; }
 .sp-pad .m { font-family: var(--sp-font-mono); font-size: var(--sp-text-2xs); }
 .sp-pad .p { position: absolute; top: 4px; right: 6px; font-family: var(--sp-font-mono); font-size: 9px; color: var(--sp-ink-3); }
 .sp-pad[aria-pressed="true"], .sp-pad.selected { background: var(--sp-red); }
@@ -204,7 +207,7 @@ button, input, select { font: inherit; color: inherit; }
 .sp-pad.playing { box-shadow: inset 0 0 0 3px var(--sp-blue); }
 
 /* ---- form controls ---- */
-.sp-input { min-height: var(--sp-control-h); border: var(--sp-border-w) solid var(--sp-ink); border-radius: var(--sp-radius-2); background: var(--sp-white); padding: 0 var(--sp-space-3); font-family: var(--sp-font-display); font-size: 22px; font-weight: 700; text-align: center; }
+.sp-input { min-height: var(--sp-control-h); border: var(--sp-border-w) solid var(--sp-ink); border-radius: var(--sp-radius-2); background: var(--sp-white); padding: 0 var(--sp-space-3); font-family: var(--sp-font-display); font-size: 20px; font-weight: var(--sp-display-weight); text-align: center; }
 input[type=range].sp-range { -webkit-appearance: none; appearance: none; width: 100%; height: 24px; background: transparent; cursor: pointer; }
 .sp-range::-webkit-slider-runnable-track { height: 6px; background: var(--sp-ink); border-radius: 0; }
 .sp-range::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 22px; margin-top: -8px; background: var(--sp-red); border: var(--sp-border-w) solid var(--sp-ink); border-radius: var(--sp-radius-1); }

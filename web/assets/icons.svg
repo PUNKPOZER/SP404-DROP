@@ -19,4 +19,9 @@
   <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6h7l2 3h9v10H3z"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3L2 20h20zM12 10v5M12 17.5v1"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 3v15M6 12l6 6 6-6M4 21h16"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6zM14 3v5h5M9 14h7M9 18h7"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v6M12 7.5v1"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3v11M7 9l5 5 5-5M4 15v5h16v-5"/></symbol>
 </svg>

@@ -9,7 +9,7 @@ nothing is fetched from the network — fonts are the system's own.
 The look is the **SP SYSTEM** design language — see
 [`../DESIGN_SYSTEM.md`](../DESIGN_SYSTEM.md).
 
-The first screen is one big drop area: **drop audio files here**. Dropped files
+The app has an ink sidebar (**Drop**, **Convert**, **Chop / Loop**, language, **About**). The first screen is one big drop area: **drop audio files here**. Dropped files
 wait (in memory only) until you choose **Chop / Loop** (uses the first file) or
 **Convert** (all of them). You can also open either tool from the header or the
 two big tiles.

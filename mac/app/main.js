@@ -4,10 +4,10 @@ const path = require('path');
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 760,
-    height: 960,
-    minWidth: 380,
-    minHeight: 600,
+    width: 1120,
+    height: 820,
+    minWidth: 360,
+    minHeight: 560,
     backgroundColor: '#F2F1EC', // SP SYSTEM paper
     title: 'SP404 DROP',
     webPreferences: {
