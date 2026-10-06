@@ -73,3 +73,7 @@ test('accessibility: icon-only buttons are labelled, pads are buttons, status re
   assert.match(html, /class="sp-pad-grid" id="padGrid" role="group"/);
   assert.ok(!/<div class="mode-tile|<div class="part-chip/.test(html));   // tiles are real <button>s
 });
+
+test('mac shell: main.js parses', () => {
+  execFileSync('node', ['--check', path.join(root, 'mac', 'app', 'main.js')]);
+});

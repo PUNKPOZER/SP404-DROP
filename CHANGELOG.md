@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased — SP SYSTEM redesign
+
+- **New visual language (SP SYSTEM):** paper + ink with Signal Red / Electric Blue /
+  Moss Green accents, system condensed + sans + mono type, thin rules, restrained
+  radii, hardware-like motion. Tokens in `web/sp-system.css`; documented in
+  `DESIGN_SYSTEM.md`.
+- **New brand:** the cow-on-a-chair mark replaces the old logo (production copy
+  without the ® glyph); new DROP app icon (red field, paper mark) at 16–1024 px.
+- **New Home:** one big "Drop audio files here" area with a real pending-files
+  state, Chop / Loop and Convert actions, no fake recents.
+- **4×4 pad preview** of the slices with banks of 16; pad = select + audition.
+- **Export:** explicit busy / success / error status with progress; files are named
+  after the source (`<track>_NN.wav`, `SP404-DROP-<track>.zip`).
+- Convert and Chop restyled (waveform stays dominant); SVG icon sprite instead of
+  Unicode glyphs; keyboard focus ring, labelled icon buttons, reduced-motion support,
+  responsive layout. A drop that misses a drop zone no longer opens the file.
+- Fonts are no longer loaded from Google (fully offline). The Mac build now copies the
+  CSS/JS/assets next to `main.js`.
+- Dev: `npm test` runs unit + static checks (`web/test`); `npm run sync-assets`
+  syncs the icon sprite; `node scripts/make-icons.js` regenerates the icons.
+- Unchanged: all DSP (transient/beat detection, zero-crossing snap), the marker/slice
+  model, keyboard shortcuts, WAV/ZIP byte format, EN/RU switching.
+
 ## 1.1.0
 
 - **Chop / Loop waveform rebuilt.** Continuous zoom from the whole track down to

@@ -17,10 +17,10 @@
   --sp-paper-2: #E8E6DE;  /* recessed panels */
   --sp-paper-3: #DAD7CB;  /* pressed / hover on paper */
   --sp-rule:    #C4C1B4;  /* hairlines, ruler ticks, minor grid */
-  --sp-ink-2:   #4A4944;  /* secondary text (9:1 on paper) */
+  --sp-ink-2:   #4A4944;  /* secondary text (8.0:1 on paper) */
   --sp-ink-3:   #66645D;  /* tertiary text (5.2:1 on paper) */
-  --sp-red-ink: #B8140A;  /* red used as TEXT on paper (5.5:1) */
-  --sp-green-ink: #566A27; /* green used as TEXT on paper (5.4:1) */
+  --sp-red-ink: #B8140A;  /* red used as TEXT on paper (5.9:1) */
+  --sp-green-ink: #566A27; /* green used as TEXT on paper (5.3:1) */
 
   /* ---- semantic roles ---- */
   --sp-bg: var(--sp-paper);
@@ -132,7 +132,7 @@ button, input, select { font: inherit; color: inherit; }
 .sp-btn:hover:not(:disabled) { background: var(--sp-paper-3); }
 .sp-btn:active:not(:disabled) { transform: translateY(1px); }
 .sp-btn:disabled { opacity: .38; cursor: not-allowed; }
-.sp-btn.primary { background: var(--sp-red); color: var(--sp-ink); }          /* ink on red: 5.9:1 */
+.sp-btn.primary { background: var(--sp-red); color: var(--sp-ink); }          /* ink on red: 4.7:1 */
 .sp-btn.primary:hover:not(:disabled) { background: #FF4636; }
 .sp-btn.solid { background: var(--sp-ink); color: var(--sp-paper); }
 .sp-btn.solid:hover:not(:disabled) { background: #33322F; }

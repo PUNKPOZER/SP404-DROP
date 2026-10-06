@@ -1,4 +1,4 @@
-<p align="center"><img src="icon.svg" width="90" height="87" alt="SP404 DROP"></p>
+<p align="center"><img src="icon.svg" width="96" height="96" alt="SP404 DROP"></p>
 
 # SP404 DROP
 
@@ -18,8 +18,8 @@ chore that comes up over and over when prepping sample packs for this machine.
 
 ## What's here
 
-- **[`web/`](web/)** — the app itself: a single self-contained HTML page, runs
-  entirely in the browser, nothing uploaded anywhere. Open
+- **[`web/`](web/)** — the app itself: a small static page (`index.html` + CSS/JS/assets
+  next to it, no dependencies), runs entirely in the browser, nothing uploaded anywhere. Open
   [`web/index.html`](web/index.html) directly, or host it with GitHub Pages. See
   [`web/README.md`](web/README.md).
 - **[`mac/`](mac/)** — the native macOS app. Download the `.dmg` from

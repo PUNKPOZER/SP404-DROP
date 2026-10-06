@@ -85,3 +85,14 @@ DSP/analysis algorithms and thresholds; WAV/ZIP byte format; marker/segment mode
 Convert pipeline logic; CLI scripts; Electron security settings (sandbox, contextIsolation, no preload); release versioning scheme; repo structure
 (no merge with SP-404 LEARN, no framework migration, no Web Workers, no Demucs/stems, no course system, no new audio features).
 A framework migration is documented as a **future phase** only (see `DESIGN_SYSTEM.md`).
+
+
+## 8. Status log (updated at the end of implementation)
+Implemented as planned, in order: safety net (`sp-core.js` + Node tests) → tokens → assets/sprite → shell + Home → Convert → Chop → pad preview → quality
+fixes → icons + packaging → docs → verification. Differences from the plan above:
+* **® glyph.** The owner decided to remove it from product UI. `design-reference/brand-logo.svg` stays byte-identical to the supplied file; the production mark
+  `web/assets/brand-logo.svg` is that file **minus its four trailing ® sub-paths** (cow/chair path data unchanged — a test compares them). The earlier line
+  "its path data is never edited" applies to the master file.
+* **Icon rasteriser.** `scripts/make-icons.js` (Node + Chrome headless + `sips`/`iconutil`) replaced the planned numpy script.
+* **i18n test.** Implemented as a static check of static strings and `tr()` keys against the `RU` dictionary rather than a runtime test.
+* Not done (explicitly out of scope): framework migration, Web Workers, LEARN implementation, SP-404 device diagram component.

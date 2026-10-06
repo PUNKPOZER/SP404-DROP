@@ -11,7 +11,8 @@ hand-written code in the file.
 
 | Item | Licence | Note |
 |---|---|---|
-| Silkscreen, Pixelify Sans (Google Fonts, loaded at runtime from `fonts.googleapis.com`) | SIL Open Font License 1.1 | The only network request the app makes. |
+| *(no fonts bundled or fetched)* | — | Typography uses the system's installed fonts (see `DESIGN_SYSTEM.md` §2). Silkscreen / Pixelify Sans / Google Fonts were removed in the SP SYSTEM redesign; the app makes **no** network requests. |
+| `design-reference/brand-logo.svg` (cow-on-a-chair mark) | Supplied by the project owner | Brand asset; the production copy `web/assets/brand-logo.svg` omits its ® glyph. |
 
 ## Mac app (`mac/`)
 
