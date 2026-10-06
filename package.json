@@ -1,0 +1,11 @@
+{
+  "name": "sp404-drop-dev",
+  "private": true,
+  "version": "1.1.0",
+  "description": "Dev-only manifest for tests and asset scripts. The app itself has no dependencies.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test web/test/*.test.js",
+    "sync-assets": "node scripts/sync-assets.js"
+  }
+}
