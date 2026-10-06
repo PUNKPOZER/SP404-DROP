@@ -8,7 +8,7 @@ function createWindow() {
     height: 960,
     minWidth: 380,
     minHeight: 600,
-    backgroundColor: '#131311',
+    backgroundColor: '#F2F1EC'    // SP SYSTEM paper,
     title: 'SP404 DROP',
     webPreferences: {
       contextIsolation: true,

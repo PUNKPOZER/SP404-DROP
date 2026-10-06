@@ -142,3 +142,13 @@ input[type=file] { display: none; }
   .wave-stage { height: 200px; }
   .view-panel { justify-content: center; }
 }
+
+/* ---- additions (DROP) ---- */
+.sp-meter i.on { background: var(--sp-blue); }             /* progress = secondary state, not an action */
+.bpm-readout { display: inline-flex; align-items: baseline; gap: 4px; padding: 0 var(--sp-space-2); border-left: var(--sp-border-w-thin) solid var(--sp-rule); }
+.bpm-readout b { font-family: var(--sp-font-display); font-size: 24px; line-height: 1; font-weight: 700; }
+.bpm-readout small { font-family: var(--sp-font-mono); font-size: var(--sp-text-2xs); color: var(--sp-ink-2); letter-spacing: .08em; }
+.mode-panel { margin: 0; }
+.mode-panel .sp-btn.block { width: 100%; }
+.chop-col > .sp-alert { margin: 0; }
+.hero-mark, .sp-brand-mark { fill: currentColor; }

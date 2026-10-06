@@ -7,8 +7,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 ARCH="${1:-arm64}"
 [ -d node_modules ] || npm install
-cp ../web/index.html app/index.html
-cp ../web/icon.svg app/icon.svg
+# the web app is index.html + sp-system.css + drop.css + sp-core.js + assets/ — copy all of it next to main.js
+cp ../web/index.html ../web/sp-system.css ../web/drop.css ../web/sp-core.js ../web/icon.svg app/
+rm -rf app/assets && cp -R ../web/assets app/assets
 ICON_ARGS=()
 if [ -f icon.icns ]; then ICON_ARGS=(--icon=icon.icns); fi
 npx @electron/packager app "SP404 DROP" --platform=darwin --arch="$ARCH" --out=dist --overwrite \
