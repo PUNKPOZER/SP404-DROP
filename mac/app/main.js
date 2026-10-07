@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, shell, ipcMain } = require('electron');
 const path = require('path');
 
 function createWindow() {
@@ -13,7 +13,8 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true
+      sandbox: true,
+      preload: path.join(__dirname, 'preload.js')
     }
   });
   win.loadFile(path.join(__dirname, 'index.html'));
@@ -24,6 +25,12 @@ function createWindow() {
   });
   win.webContents.on('will-navigate', (e) => e.preventDefault());
 }
+
+ipcMain.handle('spsystem:open-in-learn', (event, payload) => {
+  // only our own window may ask; the payload is plain data (no paths) — the file location is decided here
+  if (!event.senderFrame || !/^file:/.test(event.senderFrame.url)) return { ok: false, code: 'E_FORBIDDEN', message: 'untrusted sender' };
+  return require('./open-in-learn.js').run(payload);
+});
 
 app.whenReady().then(() => {
   createWindow();

@@ -294,6 +294,9 @@
               <button class="sp-btn" type="button" id="exportSelectedBtn" disabled>Export Selected</button>
               <button class="sp-btn primary" type="button" id="exportAllBtn" disabled>Export All</button>
             </div>
+            <div class="export-actions">
+              <button class="sp-btn" type="button" id="openLearnBtn" disabled>Open in LEARN</button>
+            </div>
             <p class="export-hint" id="exportHint"></p>
             <div id="chopAlert" class="sp-alert" role="status" hidden></div>
             <div class="chop-hint">Export Selected saves just the picked slice as one WAV. Export All saves every slice as a ZIP. Both render fresh from the source &mdash; 16-bit / 48kHz, no normalization. This pad view is a preview of your slices, not a connection to the sampler.</div>
@@ -323,6 +326,11 @@
 </div>
 
 <script src="sp-core.js"></script>
+<script src="sp-schemas.js"></script>
+<script src="sp-validate.js"></script>
+<script src="sp-package.js"></script>
+<script src="sp-project.js"></script>
+<script src="sp-bridge.js"></script>
 <script>
 (function(){
   "use strict";
@@ -433,6 +441,13 @@
     "Export Selected": "Экспорт выбранного",
     "Export Sample": "Экспорт сэмпла",
     "Export All": "Экспорт всех",
+    "Open in LEARN": "Открыть в LEARN",
+    "Project saved (revision {r}) and sent to SP-404 LEARN: {f}": "Проект сохранён (ревизия {r}) и отправлен в SP-404 LEARN: {f}",
+    "Project saved (revision {r}): {f}. SP-404 LEARN was not found — the file is shown in Finder.": "Проект сохранён (ревизия {r}): {f}. SP-404 LEARN не найден — файл показан в Finder.",
+    "The project file was changed by another app (LEARN). Nothing was overwritten. Open it in LEARN, or reload the track in DROP to start a new project file.": "Файл проекта изменён другим приложением (LEARN). Ничего не перезаписано. Открой его в LEARN или загрузи трек в DROP заново, чтобы начать новый файл проекта.",
+    "Could not open in LEARN:": "Не удалось открыть в LEARN:",
+    "Saving the project…": "Сохраняю проект…",
+    "Downloaded {f} — open it in SP-404 LEARN.": "Скачан {f} — открой его в SP-404 LEARN.",
     "A conversion is already running — wait for it to finish.": "Конвертация уже идёт — дождись окончания.",
     "Bank": "Банк",
     "Bank A": "Банк A",
@@ -975,7 +990,8 @@
       playSampleBtn: document.getElementById('playSampleBtn'),
       loopBtn: document.getElementById('loopBtn'),
       exportSelectedBtn: document.getElementById('exportSelectedBtn'),
-      exportAllBtn: document.getElementById('exportAllBtn')
+      exportAllBtn: document.getElementById('exportAllBtn'),
+      openLearnBtn: document.getElementById('openLearnBtn')
     };
 
     var CHUNK = 512;
@@ -984,6 +1000,9 @@
     var state = {
       audioBuffer: null,
       fileName: '',
+      sourceFile: null,     // the File as loaded (bytes go into a .spsystem project)
+      sessionKey: '',       // one project per loaded track
+      spProject: null,      // browser-only: project kept between downloads (same UUID)
       peaksMin: null,
       peaksMax: null,
       grid: { bpm: 0, offset: 0, div: 4, show: false, detected: false },
@@ -1038,6 +1057,8 @@
       }).then(function(audioBuffer){
         state.audioBuffer = audioBuffer;
         state.fileName = file.name;
+        state.sourceFile = file; state.spProject = null;
+        state.sessionKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random();
         state.markers = [];
         state.selected = 0;
         state.cursorTime = 0;
@@ -1754,6 +1775,7 @@
       els.loopBtn.disabled = !hasSel;
       els.exportSelectedBtn.disabled = !hasSel || state.exporting;
       els.exportAllBtn.disabled = !hasSel || state.exporting;
+      els.openLearnBtn.disabled = !hasSel || state.exporting;
       els.exportSelectedBtn.textContent = hasSel ? (tr('Export Sample') + ' ' + padNum(state.selected + 1)) : tr('Export Selected');
       els.exportAllBtn.textContent = hasSel ? (tr('Export All') + ' (' + total + ')') : tr('Export All');
       els.exportHint.textContent = hasSel ? SPCore.sampleFileName(state.fileName, state.selected + 1) + '  ·  ' + SPCore.zipFileName(state.fileName) : '';
@@ -2223,6 +2245,7 @@
       state.exporting = on;
       els.exportSelectedBtn.disabled = on || !segments().length;
       els.exportAllBtn.disabled = on || !segments().length;
+      els.openLearnBtn.disabled = on || !segments().length;
     }
 
     els.exportSelectedBtn.addEventListener('click', function(){
@@ -2253,6 +2276,60 @@
         downloadFile(zip.generate(), zipName);
         showAlert(els.alert, 'ok', tr('Exported {n} files → {z}', { n: segs.length, z: zipName }));
       })['catch'](exportError).then(function(){ setExporting(false); });
+    });
+
+    /* ---- Open in LEARN: the current chops become a .spsystem project (see DROP_SPSYSTEM_HANDOFF.md) ---- */
+    function learnPayload(){
+      var d = state.audioBuffer.duration, segs = segments().filter(function(sg){ return sg.end - sg.start > 1e-6; }), ext = (/\.([A-Za-z0-9]+)$/.exec(state.fileName) || [0, 'wav'])[1].toLowerCase();
+      return state.sourceFile.arrayBuffer().then(function(buf){
+        var chain = Promise.resolve(), slices = [];
+        segs.forEach(function(seg, i){
+          chain = chain.then(function(){
+            showAlert(els.alert, 'busy', tr('Rendering {i} of {n}…', { i: i + 1, n: segs.length }));
+            return renderSegmentTo48k(seg).then(function(bytes){ slices.push({ start: seg.start, end: seg.end, wav: bytes }); });
+          });
+        });
+        return chain.then(function(){
+          return { sessionKey: state.sessionKey, fileName: state.fileName, mode: state.mode, duration: d, sampleRate: state.audioBuffer.sampleRate,
+            channels: state.audioBuffer.numberOfChannels, markers: state.markers.map(function(m){ return { time: m.time }; }),
+            grid: { bpm: state.grid.bpm, offset: state.grid.offset, div: state.grid.div, show: state.grid.show, detected: state.grid.detected },
+            sourceBytes: new Uint8Array(buf), sourceExt: ext, slices: slices, renderKey: '48k16', version: '1.1.0', now: Date.now() };
+        });
+      });
+    }
+    function learnMessage(res){
+      if (res.ok) {
+        if (res.launched === 'learn') showAlert(els.alert, 'ok', tr('Project saved (revision {r}) and sent to SP-404 LEARN: {f}', { r: res.revision, f: res.file }));
+        else showAlert(els.alert, 'ok', tr('Project saved (revision {r}): {f}. SP-404 LEARN was not found — the file is shown in Finder.', { r: res.revision, f: res.file }));
+      } else if (res.conflict) showAlert(els.alert, 'error', tr('The project file was changed by another app (LEARN). Nothing was overwritten. Open it in LEARN, or reload the track in DROP to start a new project file.'));
+      else showAlert(els.alert, 'error', tr('Could not open in LEARN:') + ' ' + (res.message || res.code || tr('unknown error')));
+    }
+    els.openLearnBtn.addEventListener('click', function(){
+      if (!state.audioBuffer || !state.sourceFile || state.exporting || !segments().length) return;
+      setExporting(true);
+      learnPayload().then(function(payload){
+        if (window.spBridge && window.spBridge.openInLearn) {
+          showAlert(els.alert, 'busy', tr('Saving the project…'));
+          return window.spBridge.openInLearn(payload).then(learnMessage);
+        }
+        // browser: no file system access — build the package and download it
+        var P = window.SPProject, B = window.SPBridge, SPk = window.SPPackage;
+        var chain = state.spProject ? Promise.resolve(state.spProject) : B.create(payload);
+        return chain.then(function(project){
+          state.spProject = project;
+          return Promise.resolve(B.sync(project, payload)).then(function(r){
+            if (!r.ok) throw new Error(r.code);
+            var prep = project.prepareSave({ now: payload.now, version: payload.version }), sink = SPk.memorySink();
+            return SPk.assemble(null, prep.plan, sink, { now: payload.now, deflate: true }).then(function(){
+              project.baseRevision = prep.nextRevision; project.manifest.revision = prep.nextRevision;
+              var name = B.titleOf(state.fileName).replace(/[\\\/:*?"<>|]/g, '_') + '.spsystem';
+              downloadFile(new Blob([sink.bytes()], { type: 'application/octet-stream' }), name);
+              showAlert(els.alert, 'ok', tr('Downloaded {f} — open it in SP-404 LEARN.', { f: name }));
+            });
+          });
+        });
+      })['catch'](function(err){ showAlert(els.alert, 'error', tr('Could not open in LEARN:') + ' ' + (err && err.message ? err.message : tr('unknown error'))); })
+        .then(function(){ setExporting(false); });
     });
 
     I18N.onChange(function(){

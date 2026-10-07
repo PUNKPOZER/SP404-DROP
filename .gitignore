@@ -14,6 +14,7 @@ mac/app/sp-schemas.js
 mac/app/sp-validate.js
 mac/app/sp-package.js
 mac/app/sp-project.js
+mac/app/sp-bridge.js
 mac/app/assets/
 
 # generated icon renders (reproduce with: node scripts/make-icons.js)

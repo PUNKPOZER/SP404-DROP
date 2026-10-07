@@ -2,6 +2,11 @@
 
 ## Unreleased — SP SYSTEM redesign
 
+- **Open in LEARN (Chop / Loop):** new button saves the current chops, rendered samples, pad layout, tempo and the source audio as a `.spsystem` project
+  (`~/Documents/SP404 DROP/Projects/<track>.spsystem`, same UUID and revision +1 on every later click) and opens it in SP-404 LEARN; if LEARN is
+  not installed the file is revealed in Finder. In a browser it downloads the `.spsystem`. If LEARN changed the file meanwhile, DROP reports a conflict
+  and overwrites nothing. LEARN must handle the opened file itself (file-open support is LEARN's side).
+
 - **`.spsystem` interchange foundation (Phase 1a, no UI yet):** vendored canonical spec snapshot (`sp-system-spec/`, `SPEC_HASH`),
   schema validator, hardened package reader/writer (path/symlink/executable/zip-bomb/size checks, raw copy-through of
   LEARN-owned and unknown data), project model (stable ids, chops/samples/pads/loops serialisation, revision + conflict state),

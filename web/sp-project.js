@@ -310,6 +310,27 @@
     });
   };
 
+  /* Samples DROP rendered for a chop that no longer exists are removed (file + record); pads that pointed at them
+     become empty slots (the slot itself and any label stay). Samples DROP did not render are never touched. */
+  Project.prototype.pruneOrphanSamples = function () {
+    if (this.isReadOnly('samples')) return { removed: 0 };
+    var chopIds = {}, self = this, gone = {}, n = 0;
+    this.list('chops').forEach(function (c) { chopIds[c.id] = 1; });
+    var mod = this._mod('samples');
+    mod.data.samples = mod.data.samples.filter(function (s) {
+      var mine = s[EXT_KEY] && s[EXT_KEY].renderedFrom;
+      if (!mine || !s.sourceChopId || chopIds[s.sourceChopId]) return true;
+      gone[s.id] = 1; n++;
+      if (self.newFiles[s.file]) delete self.newFiles[s.file];
+      else if (self.pkg && self.pkg.has(s.file) && self.removeFiles.indexOf(s.file) < 0) self.removeFiles.push(s.file);
+      return false;
+    });
+    if (n && !this.isReadOnly('pads')) {
+      this._mod('pads').data.assignments.forEach(function (a) { if (a.sampleId && gone[a.sampleId]) a.sampleId = null; });
+    }
+    return { removed: n };
+  };
+
   /* ---- pads (D1: explicit mapping, separate project state) ---------------------------------------------------- */
   Project.prototype.padLayout = function () {
     var map = {};
