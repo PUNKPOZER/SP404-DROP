@@ -1,0 +1,16 @@
+{
+  "requirementsVersion": 1,
+  "lesson": "jg-05-chops",
+  "title": "Chop a break",
+  "needs": [
+    {
+      "type": "break-chop",
+      "count": 8
+    },
+    {
+      "type": "bass",
+      "count": 1,
+      "note": "one sub or reese"
+    }
+  ]
+}

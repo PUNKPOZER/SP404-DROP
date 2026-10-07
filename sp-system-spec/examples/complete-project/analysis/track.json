@@ -1,0 +1,102 @@
+{
+  "analysisVersion": 1,
+  "producedBy": {
+    "app": "sp404-learn",
+    "version": "0.4.0"
+  },
+  "producedAt": "2026-10-07T09:20:00Z",
+  "audioSha256": "12e3a1c0d54b77f2a8c19e03bb64d5f1",
+  "tempo": {
+    "raw": {
+      "bpm": 174.2,
+      "confidence": 0.74,
+      "beatOffsetSeconds": 0.42
+    },
+    "userOverride": {
+      "bpm": 172.0
+    }
+  },
+  "meter": {
+    "raw": {
+      "beatsPerBar": 4,
+      "confidence": 0.9
+    }
+  },
+  "key": {
+    "raw": {
+      "tonic": "F",
+      "mode": "minor",
+      "confidence": 0.41
+    }
+  },
+  "genre": {
+    "raw": {
+      "status": "confident",
+      "primary": "drum_and_bass",
+      "subgenre": null,
+      "candidates": [
+        {
+          "genre": "drum_and_bass",
+          "confidence": 0.83
+        },
+        {
+          "genre": "jungle",
+          "confidence": 0.1
+        }
+      ]
+    },
+    "userOverride": null
+  },
+  "structure": {
+    "raw": {
+      "sections": [
+        {
+          "label": "INTRO",
+          "startSeconds": 0,
+          "endSeconds": 11.0,
+          "startBar": 1,
+          "endBar": 5
+        },
+        {
+          "label": "DROP",
+          "startSeconds": 11.0,
+          "endSeconds": 38.4,
+          "startBar": 5,
+          "endBar": 17
+        }
+      ]
+    }
+  },
+  "chopCandidates": [
+    {
+      "id": "cand-01",
+      "kind": "drum-break",
+      "label": "Drum break",
+      "startSeconds": 31.0,
+      "endSeconds": 35.0,
+      "confidence": 0.72,
+      "reason": "Drums-only passage with a clean 4-bar loop",
+      "state": "accepted",
+      "acceptedChopId": "chop-05"
+    },
+    {
+      "id": "cand-02",
+      "kind": "vocal",
+      "label": "Vocal",
+      "startSeconds": 28.0,
+      "endSeconds": 29.0,
+      "confidence": 0.55,
+      "state": "suggested"
+    }
+  ],
+  "loopCandidates": [
+    {
+      "id": "lc-01",
+      "startSeconds": 96.0,
+      "endSeconds": 104.0,
+      "bars": 4,
+      "confidence": 0.6,
+      "state": "suggested"
+    }
+  ]
+}

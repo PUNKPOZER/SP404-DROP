@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sp-system/progress.schema.json",
+  "title": "Lesson progress (learn/progress.json)",
+  "description": "LEARN-owned; DROP ignores and preserves it.",
+  "type": "object",
+  "properties": {
+    "progressVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "lessonsDone": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "description": "lesson id -> completion time (epoch ms)"
+    },
+    "practice": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object"
+      }
+    }
+  },
+  "required": [
+    "progressVersion"
+  ],
+  "additionalProperties": true
+}

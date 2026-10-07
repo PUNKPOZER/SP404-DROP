@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sp-system/chops.schema.json",
+  "title": "Confirmed chops (project/chops.json)",
+  "description": "Only chops a person confirmed (or that the app created on the person's request). Analysis suggestions live in analysis/track.json and are NOT chops until accepted.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "chops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/stableId"
+          },
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "common.schema.json#/$defs/relPath"
+          },
+          "sourceSha256": {
+            "$ref": "common.schema.json#/$defs/sha256"
+          },
+          "startSeconds": {
+            "$ref": "common.schema.json#/$defs/seconds"
+          },
+          "endSeconds": {
+            "$ref": "common.schema.json#/$defs/seconds"
+          },
+          "type": {
+            "enum": [
+              "manual",
+              "transient",
+              "beat",
+              "loop",
+              "analysis-suggestion"
+            ]
+          },
+          "fromCandidateId": {
+            "$ref": "common.schema.json#/$defs/stableId"
+          },
+          "confidence": {
+            "$ref": "common.schema.json#/$defs/confidence"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "$ref": "common.schema.json#/$defs/isoTime"
+          }
+        },
+        "required": [
+          "id",
+          "startSeconds",
+          "endSeconds",
+          "type"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "chops"
+  ],
+  "additionalProperties": true
+}

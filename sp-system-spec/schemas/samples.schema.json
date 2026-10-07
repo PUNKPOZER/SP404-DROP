@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sp-system/samples.schema.json",
+  "title": "Sample records (project/samples.json)",
+  "description": "Describes the audio files in samples/. Classification (category) is optional and never required.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/stableId"
+          },
+          "file": {
+            "$ref": "common.schema.json#/$defs/relPath"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sourceChopId": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/stableId"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "durationSeconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "sampleRate": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "bitDepth": {
+            "type": "integer",
+            "enum": [
+              8,
+              16,
+              24,
+              32
+            ]
+          },
+          "channels": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "category": {
+            "$ref": "common.schema.json#/$defs/sampleCategory"
+          },
+          "sha256": {
+            "$ref": "common.schema.json#/$defs/sha256"
+          }
+        },
+        "required": [
+          "id",
+          "file",
+          "durationSeconds",
+          "sampleRate",
+          "bitDepth",
+          "channels"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "samples"
+  ],
+  "additionalProperties": true
+}

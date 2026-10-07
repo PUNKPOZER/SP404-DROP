@@ -4,504 +4,137 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="SP404 DROP — convert audio to SP-404-ready WAV and chop/loop tracks into numbered samples. Runs entirely in your browser.">
+<meta name="theme-color" content="#F2F1EC">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <title>SP404 DROP</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --page:#131311;
-    --card:#f0efe8;
-    --card-2:#e4e2d6;
-    --ink:#0c0c0a;
-    --ink-soft:#55524a;
-    --ink-faint:#8b8778;
-    --white:#f6f5ef;
-    --font-ui:'Silkscreen','Pixelify Sans',system-ui,sans-serif;
-    --font-lcd:'Silkscreen','Pixelify Sans',monospace;
-    color-scheme: dark;
-    background:var(--page);
-  }
-  *{box-sizing:border-box;}
-  [hidden]{display:none !important;}
-  body{
-    margin:0;
-    min-height:100%;
-    background:var(--page);
-    font-family:var(--font-ui);
-    color:var(--white);
-    display:flex;
-    justify-content:center;
-    padding-block:32px 48px;
-  }
-  .page{width:100%;max-width:640px;padding:0 14px;}
-  button{font-family:inherit;}
+<link rel="stylesheet" href="sp-system.css">
+<link rel="stylesheet" href="drop.css">
+</head>
+<body>
+<!-- sp:sprite:start -->
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><path d="M5 5h14v14H5z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-loop" viewBox="0 0 24 24"><path d="M4 11V9a3 3 0 0 1 3-3h12M16 3l3 3-3 3M20 13v2a3 3 0 0 1-3 3H5M8 21l-3-3 3-3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-marker" viewBox="0 0 24 24"><path d="M6 3v18M6 4h12l-3 4 3 4H6"/></symbol>
+  <symbol id="i-snap" viewBox="0 0 24 24"><path d="M2 12h20M3 12c2.5-8 5-8 7.5 0s5 8 7.5 0"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
+  <symbol id="i-convert" viewBox="0 0 24 24"><path d="M3 12h11M10 7l5 5-5 5M20 5v14"/></symbol>
+  <symbol id="i-chop" viewBox="0 0 24 24"><path d="M2 12h3l2-7 3 14 3-11 2 4h2M20 4v16"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M3 5v14M21 5v14M7 12h10M7 12l3-3M7 12l3 3M17 12l-3-3M17 12l-3 3"/></symbol>
+  <symbol id="i-height" viewBox="0 0 24 24"><path d="M12 3v18M7 8l5-5 5 5M7 16l5 5 5-5"/></symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 4l8 8-8 8"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6h7l2 3h9v10H3z"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3L2 20h20zM12 10v5M12 17.5v1"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 3v15M6 12l6 6 6-6M4 21h16"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6zM14 3v5h5M9 14h7M9 18h7"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v6M12 7.5v1"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3v11M7 9l5 5 5-5M4 15v5h16v-5"/></symbol>
+  <symbol id="sp-brand" viewBox="0 0 947 1072"><path d="M861.495 183.4C902.804 179.481 919.384 181.855 932.724 193.598C941.316 201.161 945.806 209.54 946.869 219.998C947.685 228.033 942.252 266.766 933.475 315.456C931.038 328.979 927.248 352.423 925.056 367.552C922.861 382.683 920.107 400.316 918.933 406.736C916.35 420.863 907.875 473.479 900.581 520.671C897.634 539.73 893.466 566.208 891.319 579.514C889.171 592.818 887.415 604.351 887.415 605.143C887.415 605.934 890.094 607.949 893.368 609.619C909.221 617.707 916.066 639.901 909.545 662.067C907.736 668.216 905.199 672.247 899.907 677.381C893.371 683.721 891.067 684.81 874.32 689.495C864.198 692.327 855.311 695.191 854.568 695.86C853.803 696.551 854.281 707.228 855.68 720.624C857.029 733.575 858.893 753.852 859.819 765.684C860.746 777.516 863.554 807.595 866.061 832.527C875.349 924.917 879.684 971.819 879.707 980.185C879.758 998.175 868.619 1009.24 850.452 1009.24C838.29 1009.24 829.488 1004.36 824.642 994.947C821.287 988.428 820.762 984.468 818.841 951.256C817.679 931.17 815.692 902.289 814.426 887.076C813.161 871.864 811.721 854.231 811.227 847.893C810.733 841.554 810.06 835.501 809.734 834.441C809.028 832.152 808.871 832.209 763.718 851.352C745.97 858.877 721.423 868.427 709.168 872.575C696.913 876.724 682.738 881.723 677.667 883.684L671.354 886.124C669.575 886.812 668.342 888.453 668.176 890.353L667.448 898.687C666.9 904.978 665.967 939.514 665.377 975.432C664.785 1011.35 663.681 1043.22 662.922 1046.26C656.724 1071.07 621.201 1080.62 601.065 1062.9C589.055 1052.33 588.88 1050.59 592.794 980.81C594.168 956.301 595.724 922.073 596.253 904.747L597.079 877.626C597.155 875.12 595.363 872.945 592.889 872.539L576.744 869.896C565.485 868.052 549.706 865.754 541.677 864.792C521.641 862.389 463.11 851.78 393.535 837.94C361.503 831.567 335.097 826.551 334.849 826.79C333.234 828.405 322.347 901.401 314.97 960.066C310.524 995.425 310.109 997.611 306.528 1004.63C299.949 1017.52 289.408 1023.08 271.666 1023.03C250.744 1022.97 238.386 1014.11 235.146 996.838C234.178 991.683 238.529 965.409 253.617 885.292C263.095 834.968 271.025 789.133 274.309 765.684C276.085 753.007 278.931 735.097 280.634 725.885C283.055 712.784 283.315 708.88 281.824 707.959C280.777 707.312 275.177 706.306 269.38 705.724C249.558 703.734 235.951 692.905 231.104 675.265C226.086 657.004 230.769 632.298 241.499 620.421C255.075 605.393 277.58 604.213 281.127 618.342C284.111 630.232 300.127 643.503 315.295 646.652C330.509 649.811 346.744 646.703 358.47 638.388C364.009 634.462 365.688 633.964 369.226 635.205C373.158 636.585 373.485 637.415 374.502 648.602C375.813 663.029 380.998 673.613 390.612 681.492C398.205 687.713 412.766 692.695 423.357 692.695C432.327 692.695 446.915 688.343 456.21 682.896C473.251 672.909 485.45 648.967 488.711 619.108C489.602 610.942 490.64 608.354 494.865 603.741L498.488 599.784C499.418 598.768 500.726 598.181 502.103 598.161L532.72 597.715C583.814 596.97 582.397 596.181 582.397 625.332C582.397 644.674 582.64 646.321 586.704 654.599C600.073 681.823 640.032 687.676 662.344 665.681C666.133 661.945 670.113 658.889 671.188 658.889C675.235 658.889 679.972 663.701 679.974 667.813C679.976 674.629 688.269 690.174 694.761 695.529C714.721 711.992 746.634 709.579 764.441 690.259C776.213 677.49 785.187 653.654 789.092 624.787C792.033 603.044 797.031 599.482 822.245 601.169L833.144 601.898C835.744 602.072 838.042 600.219 838.424 597.641L839.409 590.98C840.322 584.805 844.96 554.86 849.716 524.436C862.694 441.403 865.486 422.977 873.404 368.085L879.841 323.475C880.276 320.461 877.937 317.761 874.892 317.761H867.479C846.466 317.761 842.854 313.172 842.854 286.48C842.853 262.602 837.138 235.793 828.23 217.881C823.021 207.406 822.272 201.951 825.194 195.79C828.919 187.943 834.812 185.932 861.495 183.4ZM796.342 709.773C795.302 709.87 781.312 713.676 765.254 718.232C749.196 722.788 721.538 730.271 703.79 734.861L675.189 742.256C673.02 742.817 671.488 744.753 671.442 746.993L670.491 792.855C669.924 820.162 669.609 842.653 669.792 842.834C669.975 843.015 680.463 838.971 693.103 833.847C705.741 828.721 736.136 817.814 760.645 809.607L801.766 795.838C803.818 795.151 805.195 793.222 805.178 791.058L805.143 786.331C805.076 777.679 800.097 719.156 798.907 713.055C798.535 711.154 797.382 709.676 796.342 709.773ZM351.59 715.759C350.573 715.75 349.388 717.99 348.956 720.738C348.526 723.485 347.406 732.993 346.467 741.866C345.526 750.74 343.773 763.187 342.57 769.526C339.208 787.223 339.283 787.542 346.911 788.324C354.916 789.144 408.713 796.923 456.686 804.198C476.284 807.169 509.129 813.074 529.675 817.318C550.221 821.56 574.042 826.256 582.61 827.751L592.617 829.497C595.578 830.013 598.322 827.819 598.47 824.817L599.106 811.906C599.609 801.696 600.46 782.485 600.995 769.216L601.82 748.813C601.907 746.66 600.435 744.756 598.33 744.297C596.328 743.861 586.737 742.75 577.019 741.829C567.299 740.907 548.284 738.835 534.762 737.223C521.239 735.611 498.075 732.845 483.285 731.076C424.583 724.059 353.342 715.773 351.59 715.759ZM287.971 1.99243C301.219 -0.647471 301.361 -0.64664 310.897 1.89185C321.054 4.59627 325.85 7.68023 329.691 13.9788C333.456 20.1543 333.449 24.0142 329.635 39.9211C325.955 55.2688 325.789 61.3618 328.884 67.3469C332.026 73.4238 335.774 74.0568 356.56 72.0286C376.234 70.1063 393.01 71.9915 412.602 78.3254C433.166 84.9728 457.524 99.9964 475.694 117.239C490.37 131.163 504.939 136.916 538.047 141.853C557.408 144.74 573.388 144.229 615.435 139.378C645.451 135.916 659.519 135.786 688.424 138.702C729.341 142.83 755.009 153.626 779.643 177.073C796.341 192.965 807.474 210.879 815.881 235.383C823.077 256.362 824.332 266.715 825.902 318.016C826.721 344.778 828.885 382.118 830.709 400.993C834.678 442.073 835.469 491.689 832.322 502.155C827.551 518.017 825.478 522.198 819.887 527.25C809.301 536.814 800.005 535.944 794.269 524.855C791.532 519.56 791.578 516.924 795.313 466.044C797.153 440.977 796.491 418.802 792.832 383.067C790.214 357.487 785.012 329.855 782.054 325.811C780.239 323.331 779.959 323.334 777.153 325.872C768.424 333.772 762.682 383.571 765.95 423.019C766.931 434.851 769.595 463.547 771.871 486.788C779.304 562.659 776.333 614.264 761.924 659.657C756.804 675.786 747.343 684.984 732.629 688.14C722.352 690.343 713.943 688.078 706.099 680.991C693.284 669.413 691.91 646.897 702.27 618.26C710.698 594.962 714.264 570.859 713.312 543.643C711.97 505.31 708.18 488.74 699.758 484.385C695.909 482.395 694.791 482.383 691.096 484.293C685.662 487.104 680.962 495.672 677.924 508.301C674.794 521.308 673.752 534.036 673.206 565.924C672.837 587.524 672.02 595.504 668.482 612.023C666.13 623.009 662.892 634.764 661.288 638.145C647.923 666.305 614.276 669.896 601.341 644.543C596.645 635.337 597.995 618.584 605.141 597.425C614.094 570.905 616.042 542.403 610.716 515.766C606.868 496.511 603.636 488.772 597.184 483.342C591.79 478.804 590.586 478.546 563.763 476.181C553.321 475.26 537.228 472.503 527.163 469.907C505.156 464.233 494.944 463.929 487.872 468.734C476.389 476.537 474.212 489.488 474.121 550.488C474.024 615.134 468.454 646.25 454.225 661.63C438.934 678.159 407.265 678.619 396.644 662.468C388.311 649.796 388.083 636.401 395.787 612.023C403.69 587.016 406.335 569.868 406.688 541.338C407.222 498.417 402.984 477.547 392.648 472.202C383.518 467.48 375.115 472.355 371.026 484.743C369.765 488.565 369.57 496.442 370.372 511.155C372.314 546.798 372.064 577.363 369.74 588.205C363.909 615.406 350.129 629.578 329.434 629.659C306.891 629.747 295.687 619.031 292.975 594.789C291.601 582.506 291.826 579.845 297.303 543.844C300.599 522.178 301.305 497.843 298.938 487.557C298.16 484.176 297.159 479.326 296.713 476.779C295.837 471.77 291.244 458.135 287.903 450.625C284.55 443.083 268.392 418.017 256.738 402.275C232.988 370.195 223.891 349.301 220.612 319.297C216.391 280.69 214.814 275.436 205.568 269.205C196.038 262.784 171.796 261.839 151.234 267.089C142.745 269.256 134.231 270.126 121.489 270.126C105.683 270.126 102.811 269.703 96.3926 266.437C87.0546 261.684 83.365 257.61 78.2266 246.388C73.2833 235.59 71.7312 219.584 74.4141 207.073C75.3898 202.523 79.0242 192.203 82.4893 184.14C89.8603 166.985 91.5963 155.251 89.0225 139.973C85.6481 119.948 79.5448 113.658 61.708 111.821C33.5327 108.918 8.10279 91.7327 1.6582 71.2405C-4.4191 51.9222 6.79538 35.0258 25.6973 35.0227C33.1684 35.0212 60.2681 39.6596 84.5342 45.093C102.715 49.165 111.789 46.1141 140.656 26.218C159.046 13.544 171.433 9.61919 188.543 11.0452C205.521 12.4619 218.49 17.0655 228.398 25.1926C237.721 32.8386 240.618 33.429 244.614 28.4934C249.823 22.0643 262.74 11.6768 270.3 7.83521C274.436 5.73469 282.388 3.10497 287.971 1.99243Z" fill="currentColor"/></symbol>
+</svg>
+<!-- sp:sprite:end -->
 
-  /* ---- shared card ---- */
-  .device{
-    position:relative;
-    background:var(--card);
-    color:var(--ink);
-    border-radius:22px;
-    padding:18px 18px 20px;
-    box-shadow:0 24px 50px -20px rgba(0,0,0,.7);
-  }
-  .screen{display:none;}
-  .screen.active{display:block;}
+<div class="sp-app">
+  <div class="sp-topstrip"><span>SP SYSTEM / DROP</span><span>FOR SP-404MKII</span></div>
+  <div class="sp-shell">
+    <aside class="sp-side"><div class="side-inner">
+      <button class="sp-brand" type="button" data-screen="home" aria-label="SP404 DROP — home">
+        <svg class="sp-brand-mark" viewBox="0 0 947 1072" aria-hidden="true" focusable="false"><use href="#sp-brand"/></svg>
+      </button>
+      <nav class="side-nav" aria-label="Main">
+        <button class="side-btn on" type="button" data-screen="home" aria-current="page"><svg class="sp-icon" aria-hidden="true"><use href="#i-drop"/></svg><span class="lbl">Drop<small>Sample preparation</small></span></button>
+        <button class="side-btn" type="button" data-screen="convert"><svg class="sp-icon" aria-hidden="true"><use href="#i-convert"/></svg><span class="lbl">Convert</span></button>
+        <button class="side-btn" type="button" data-screen="chop"><svg class="sp-icon" aria-hidden="true"><use href="#i-chop"/></svg><span class="lbl">Chop / Loop</span></button>
+      </nav>
+      <div class="side-spacer"></div>
+      <div class="side-foot">
+        <div class="lang" id="langSwitch" role="group" aria-label="Language"><button type="button" data-lang="en">EN</button><button type="button" data-lang="ru">RU</button></div>
+        <button class="side-btn" type="button" data-screen="about"><svg class="sp-icon" aria-hidden="true"><use href="#i-info"/></svg><span class="lbl">About</span></button>
+      </div>
+    </div></aside>
 
-  /* dot texture used inside solid black fills */
-  .dots{
-    background-image:radial-gradient(rgba(255,255,255,.35) .6px, transparent .6px);
-    background-size:3px 3px;
-  }
-
-  /* ---- top bar (Convert / Chop screens) ---- */
-  .topbar{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding-bottom:12px;
-    margin-bottom:14px;
-    border-bottom:3px dashed var(--ink);
-  }
-  .back-btn{
-    flex:none;
-    width:34px;height:34px;
-    border:2.5px solid var(--ink);
-    border-radius:8px;
-    background:var(--card);
-    color:var(--ink);
-    font-family:var(--font-ui);
-    font-weight:700;
-    font-size:16px;
-    cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-  }
-  .back-btn:active{background:var(--ink);color:var(--card);}
-  .topbar h2{
-    flex:1;
-    margin:0;
-    font-family:var(--font-lcd);
-    font-weight:700;
-    font-size:20px;
-    letter-spacing:.04em;
-    text-transform:uppercase;
-  }
-  .topbar .sub{
-    font-size:9.5px;
-    letter-spacing:.1em;
-    text-transform:uppercase;
-    color:var(--ink-faint);
-  }
-
-  /* =========================================================
-     HOME
-     ========================================================= */
-  .home-head{text-align:center;margin-bottom:6px;}
-  .brand-logo{width:112px;height:108px;color:var(--ink);margin:0 auto 8px;display:block;}
-  .home-wordmark{
-    font-family:var(--font-lcd);
-    font-weight:700;
-    font-size:clamp(30px,8vw,42px);
-    letter-spacing:.02em;
-    line-height:1;
-  }
-  .home-wordmark .n404{color:var(--ink-faint);}
-  .home-tag{
-    margin-top:8px;
-    font-size:11px;
-    letter-spacing:.16em;
-    text-transform:uppercase;
-    color:var(--ink-soft);
-  }
-  .home-tiles{
-    margin-top:22px;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-  }
-  .nav-tile{
-    border:3px solid var(--ink);
-    border-radius:16px;
-    padding:20px 14px 16px;
-    background:var(--card);
-    cursor:pointer;
-    text-align:left;
-    display:flex;
-    flex-direction:column;
-    gap:34px;
-    min-height:150px;
-  }
-  .nav-tile .tile-icon{width:30px;height:30px;}
-  .nav-tile .tile-title{
-    font-family:var(--font-lcd);
-    font-weight:700;
-    font-size:19px;
-    letter-spacing:.02em;
-    text-transform:uppercase;
-    line-height:1.15;
-  }
-  .nav-tile .tile-desc{
-    font-size:10px;
-    letter-spacing:.03em;
-    color:var(--ink-soft);
-    margin-top:4px;
-    line-height:1.5;
-  }
-  .home-info{
-    margin-top:16px;
-    background:var(--ink);
-    color:var(--white);
-    border-radius:12px;
-    padding:12px 14px;
-    font-size:10px;
-    line-height:1.8;
-    letter-spacing:.02em;
-  }
-  .home-info b{color:#fff;}
-  .home-foot{
-    margin-top:14px;
-    text-align:center;
-    font-size:9px;
-    letter-spacing:.08em;
-    color:var(--ink-faint);
-    text-transform:uppercase;
-  }
-
-  /* =========================================================
-     SHARED: pill buttons / mode tiles / stat tiles
-     ========================================================= */
-  .pill{
-    font-family:var(--font-ui);
-    font-weight:700;
-    font-size:13px;
-    letter-spacing:.03em;
-    text-transform:uppercase;
-    border:2.5px solid var(--ink);
-    border-radius:999px;
-    padding:11px 14px;
-    cursor:pointer;
-    background:var(--card);
-    color:var(--ink);
-    text-align:center;
-  }
-  .pill.solid{background:var(--ink);color:var(--white);}
-  .pill:disabled{opacity:.35;cursor:not-allowed;}
-  .pill:active:not(:disabled){transform:translateY(1px);}
-
-  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px;}
-  .stat-tile{
-    border:2.5px solid var(--ink);
-    border-radius:8px;
-    padding:7px 4px 6px;
-    text-align:center;
-    background:var(--card);
-  }
-  .stat-tile.hot{background:var(--ink);color:var(--white);}
-  .stat-num{font-family:var(--font-lcd);font-weight:700;font-size:20px;line-height:1.1;font-variant-numeric:tabular-nums;}
-  .stat-label{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px;}
-  .stat-tile.hot .stat-label{color:#cfcdc3;}
-
-  /* =========================================================
-     CONVERT
-     ========================================================= */
-  .drop{
-    position:relative;
-    border:3px dashed var(--ink);
-    border-radius:12px;
-    background:var(--card-2);
-    min-height:140px;
-    max-height:250px;
-    overflow-y:auto;
-    padding:16px;
-    margin-bottom:14px;
-  }
-  .drop.drag-over{background:var(--ink);color:var(--white);}
-  .drop-idle{
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    text-align:center;min-height:108px;gap:8px;cursor:pointer;
-  }
-  .drop-idle .di{font-size:18px;color:var(--ink-faint);letter-spacing:.3em;}
-  .drop-idle .dt{font-family:var(--font-lcd);font-weight:700;font-size:14px;letter-spacing:.02em;text-transform:uppercase;}
-  .drop-idle .ds{font-size:10.5px;color:var(--ink-soft);}
-  .drop-idle .dl{color:var(--ink);text-decoration:underline;font-weight:700;}
-
-  .q-summary{font-size:11.5px;line-height:1.7;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--ink-faint);}
-  .q-summary b{color:var(--ink);}
-
-  .log-line{font-size:11px;line-height:1.75;font-family:var(--font-ui);white-space:pre-wrap;word-break:break-word;}
-  .log-line .tag{display:inline-block;width:15px;font-weight:700;}
-  .log-line .name{font-weight:600;}
-  .log-line .note{color:var(--ink-soft);}
-
-  .summary-line{margin-top:8px;padding-top:8px;border-top:1px dashed var(--ink-faint);font-size:11.5px;line-height:1.7;}
-  .summary-line .n{font-weight:700;}
-
-  .meter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
-  .meter{flex:1;display:flex;gap:2px;}
-  .meter i{flex:1;height:10px;border:2px solid var(--ink);background:var(--card);}
-  .meter i.on{background:var(--ink);}
-  .meter-pct{font-family:var(--font-lcd);font-size:11px;min-width:34px;text-align:right;font-weight:700;}
-
-  .controls-2{display:grid;grid-template-columns:1fr;gap:8px;}
-  .controls-2 .pill.download{display:none;}
-  .controls-2 .pill.download.show{display:block;}
-
-  input[type=file]{display:none;}
-
-  .conv-foot{margin-top:16px;text-align:center;font-size:9.5px;line-height:1.8;color:var(--ink-faint);}
-
-  /* =========================================================
-     CHOP
-     ========================================================= */
-  .chop-drop{
-    border:3px dashed var(--ink);
-    border-radius:12px;
-    background:var(--card-2);
-    min-height:180px;
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;
-    flex-direction:column;gap:10px;text-align:center;padding:20px;
-  }
-  .chop-drop .dt{font-family:var(--font-lcd);font-weight:700;font-size:16px;text-transform:uppercase;}
-  .chop-drop .ds{font-size:10.5px;color:var(--ink-soft);}
-
-  .chop-toolbar{
-    display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;
-  }
-  .icon-btn{
-    width:36px;height:36px;flex:none;
-    border:2.5px solid var(--ink);border-radius:8px;
-    background:var(--card);color:var(--ink);
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;font-size:14px;font-weight:700;
-  }
-  .icon-btn.active{background:var(--ink);color:var(--white);}
-  .icon-btn:active{transform:translateY(1px);}
-  .chop-filename{
-    flex:1;min-width:60px;
-    font-size:10.5px;
-    color:var(--ink-soft);
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  }
-  .zoom-label{font-family:var(--font-lcd);font-size:11px;font-weight:700;min-width:30px;text-align:center;}
-  .zoom-group{
-    display:flex;align-items:center;gap:2px;flex:none;
-    background:var(--card-2);border:2px solid var(--ink);border-radius:9px;
-    padding:2px;
-  }
-  .zoom-group .icon-btn{border:none;background:transparent;width:30px;height:30px;}
-  .zoom-group .icon-btn.active,
-  .zoom-group .icon-btn:active{background:var(--ink);color:var(--white);border-radius:6px;}
-
-  .wave-frame{
-    border:2.5px solid var(--ink);
-    border-radius:10px;
-    background:var(--white);
-    margin-bottom:10px;
-    overflow:hidden;
-  }
-  .wave-frame.add-mode{border-style:dashed;}
-  .wave-stage.add-mode{cursor:crosshair;}
-  .wave-wrap{
-    overflow:hidden;
-    position:relative;
-  }
-  .wave-stage{position:relative;height:220px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;}
-  .wave-stage.panning{cursor:grabbing;}
-  .wave-stage canvas{position:absolute;left:0;top:0;display:block;}
-  .wave-empty-hint{
-    padding:10px 12px;font-size:10px;color:var(--ink-faint);text-align:center;
-  }
-  .marker-handle{
-    position:absolute;top:0;
-    width:22px;height:16px;
-    margin-left:-11px;
-    background:var(--ink);
-    cursor:ew-resize;
-    touch-action:none;
-    clip-path:polygon(0 0,100% 0,100% 60%,50% 100%,0 60%);
-  }
-  .marker-handle:active{background:var(--ink-soft);}
-
-  .wave-overview{
-    border:2.5px solid var(--ink);border-radius:8px;background:var(--card-2);
-    height:46px;margin-bottom:10px;overflow:hidden;position:relative;touch-action:none;cursor:pointer;
-  }
-  .wave-overview canvas{display:block;width:100%;height:100%;}
-  .view-panel{
-    display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
-    background:var(--card-2);border:2px solid var(--ink);border-radius:12px;
-    padding:10px 12px;margin-bottom:10px;
-  }
-  .knobs{display:flex;gap:14px;}
-  .knob{width:62px;text-align:center;cursor:ns-resize;outline:none;touch-action:none;user-select:none;-webkit-user-select:none;}
-  .knob svg{width:52px;height:52px;display:block;margin:0 auto;}
-  .knob:focus-visible svg circle.body{stroke-width:4;}
-  .knob .k-val{font-family:var(--font-lcd);font-weight:700;font-size:11px;margin-top:2px;}
-  .knob .k-name{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);}
-  .view-btns{display:grid;grid-template-columns:repeat(2,auto);gap:6px;}
-  .view-btns .pill{font-size:10.5px;padding:7px 12px;}
-  .view-btns .pill.on{background:var(--ink);color:var(--white);}
-  .bpm-input{
-    width:84px;font-family:var(--font-lcd);font-weight:700;font-size:16px;text-align:center;
-    border:2.5px solid var(--ink);border-radius:8px;padding:6px 4px;background:var(--card);color:var(--ink);
-  }
-  .mode-panel .mini{font-size:11px;padding:8px 10px;}
-  .mode-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
-  .mode-tile{
-    border:2.5px solid var(--ink);border-radius:8px;
-    padding:9px 4px;text-align:center;cursor:pointer;
-    font-family:var(--font-ui);font-weight:700;font-size:11px;
-    letter-spacing:.03em;text-transform:uppercase;
-    background:var(--card);color:var(--ink);
-  }
-  .mode-tile.active{background:var(--ink);color:var(--white);}
-
-  .mode-panel{
-    background:var(--card-2);
-    border:2px dashed var(--ink);
-    border-radius:10px;
-    padding:12px;
-    margin-bottom:10px;
-    font-size:11px;
-  }
-  .mode-panel .row{display:flex;align-items:center;gap:10px;}
-  .mode-panel .row + .row{margin-top:10px;}
-  .sens-label{
-    font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);
-    display:flex;justify-content:space-between;margin-bottom:4px;
-  }
-  input[type=range]{
-    -webkit-appearance:none;width:100%;height:18px;background:transparent;
-  }
-  input[type=range]::-webkit-slider-runnable-track{
-    height:6px;background:var(--ink-faint);border-radius:3px;
-  }
-  input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;width:16px;height:16px;margin-top:-5px;
-    background:var(--ink);border-radius:3px;cursor:pointer;
-  }
-  input[type=range]::-moz-range-track{height:6px;background:var(--ink-faint);border-radius:3px;}
-  input[type=range]::-moz-range-thumb{width:16px;height:16px;background:var(--ink);border:none;border-radius:3px;cursor:pointer;}
-
-  .parts-row{display:flex;gap:6px;flex:1;}
-  .part-chip{
-    flex:1;border:2px solid var(--ink);border-radius:6px;
-    padding:7px 0;text-align:center;font-family:var(--font-lcd);font-weight:700;font-size:12px;
-    cursor:pointer;background:var(--card);
-  }
-  .part-chip.active{background:var(--ink);color:var(--white);}
-  .go-btn{flex:none;}
-
-  .samples-head{
-    display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;
-  }
-  .samples-head h3{
-    margin:0;font-family:var(--font-lcd);font-size:13px;text-transform:uppercase;letter-spacing:.03em;
-  }
-  .clear-link{
-    font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);
-    background:none;border:none;text-decoration:underline;cursor:pointer;font-family:var(--font-ui);
-    padding:0;
-  }
-  .samples-row{
-    display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;
-  }
-  .sample-chip{
-    flex:none;min-width:56px;
-    border:2.5px solid var(--ink);border-radius:8px;
-    padding:6px 8px;text-align:center;cursor:pointer;background:var(--card);
-  }
-  .sample-chip.active{background:var(--ink);color:var(--white);}
-  .sample-chip .sc-num{font-family:var(--font-lcd);font-weight:700;font-size:14px;}
-  .sample-chip .sc-len{font-size:8px;color:var(--ink-faint);margin-top:1px;}
-  .sample-chip.active .sc-len{color:#cfcdc3;}
-
-  .sample-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
-  .export-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;}
-
-  .chop-hint{font-size:9.5px;color:var(--ink-faint);text-align:center;line-height:1.7;margin-top:4px;}
-
-  /* language switch */
-  .lang{position:absolute;top:14px;right:16px;z-index:5;display:flex;border:2px solid var(--ink);border-radius:6px;overflow:hidden;}
-  .lang button{font-family:var(--font-ui);font-weight:700;font-size:10px;letter-spacing:.06em;padding:4px 8px;border:none;background:var(--card);color:var(--ink);cursor:pointer;}
-  .lang button.active{background:var(--ink);color:var(--white);}
-
-  @media (max-width:420px){
-    .device{padding:14px 12px 16px;}
-    .home-tiles{grid-template-columns:1fr;}
-    .nav-tile{min-height:0;flex-direction:row;align-items:center;gap:14px;padding:14px;}
-    .nav-tile .tile-desc{margin-top:2px;}
-    .stat-row{grid-template-columns:repeat(2,1fr);}
-  }
-</style>
-
-<div class="page">
-  <div class="device" id="device">
-    <div class="lang" id="langSwitch"><button type="button" data-lang="en">EN</button><button type="button" data-lang="ru">RU</button></div>
-
+    <main class="sp-main">
     <!-- ============ HOME ============ -->
-    <section class="screen active" id="screenHome">
+    <section class="screen active" id="screenHome" aria-label="Home">
       <div class="home-head">
-        <svg class="brand-logo" id="homeLogo" viewBox="0 0 663 640" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path d="M32 380L107 299.5L258.5 289L327 200L399 151L425 37L588 79L539 326L643 380V467H588L566.5 562L510.5 597H434.5H246L102 562L83 494.5L78 467H32V380Z" fill="currentColor"/>
-    <path fill-rule="evenodd" clip-rule="evenodd" d="M410.855 1.01989C412.776 1.60229 421.098 3.80204 429.348 5.90888C446.703 10.3413 458.267 13.4042 465.348 15.4431C485.334 21.2012 488.848 22.365 488.848 23.2251C488.848 23.7596 487.877 27.7365 486.69 32.0641C484.008 41.8391 484.711 44.0818 491.011 45.839C503.511 49.3254 514.754 52.1365 518.012 52.5911C521.188 53.0336 521.916 52.7339 523.485 50.3414C524.481 48.8239 526.039 44.6222 526.947 41.0039C528.229 35.9002 529.044 34.3587 530.587 34.125C532.652 33.8123 537.433 34.8762 554.348 39.4136C559.848 40.8891 568.398 43.1447 573.348 44.4264C578.298 45.7081 586.623 47.9418 591.848 49.3923C597.073 50.8419 603.775 52.65 606.741 53.4102C609.707 54.1704 612.599 55.2563 613.167 55.8237C614.291 56.9466 613.026 63.2871 608.363 79.8801C606.897 85.0998 605.043 92.0676 604.245 95.3642C603.447 98.6609 602.371 102.257 601.853 103.356C600.997 105.173 599.172 111.659 595.247 126.832C594.465 129.854 592.981 135.248 591.949 138.82C588.727 149.973 585.979 159.879 582.806 171.786C581.122 178.104 579.145 185.522 578.411 188.269C577.678 191.016 575.857 197.984 574.365 203.753C572.873 209.522 570.815 216.94 569.793 220.236C568.771 223.533 567.502 228.028 566.973 230.226C566.444 232.424 564.81 238.717 563.341 244.212C561.872 249.706 559.624 258.247 558.346 263.192C557.067 268.137 554.804 276.454 553.317 281.673C550.64 291.07 546.948 305.507 546.882 306.839C546.863 307.217 555.587 307.667 566.267 307.838C576.947 308.007 586.06 308.521 586.517 308.977C586.974 309.435 587.573 312.582 587.848 315.97L588.348 322.132L598.348 322.743C612.733 323.623 612.101 323.067 611.692 334.512L611.348 344.109L621.559 345.108C627.175 345.658 632.22 346.562 632.77 347.117C633.32 347.673 633.9 352.618 634.059 358.106L634.348 368.085L646.348 368.33C652.948 368.464 659.361 368.81 660.598 369.098L662.848 369.621V423.847C662.848 464.69 662.552 478.368 661.648 479.271C660.827 480.091 655.937 480.47 646.148 480.47H631.848V494.333C631.848 504.206 631.488 508.494 630.598 509.23C629.911 509.799 623.85 510.415 617.131 510.601C607.356 510.871 604.58 511.272 603.243 512.61C601.765 514.089 601.52 518.331 601.106 549.572C600.701 580.244 600.432 585.027 599.053 586.111C597.988 586.95 593.605 587.36 585.728 587.36C570.469 587.36 570.848 586.989 570.848 601.982C570.848 608.298 570.382 614.335 569.813 615.397C568.881 617.136 567.624 617.329 557.247 617.329C546.223 617.329 542.356 618.12 540.613 620.726C540.209 621.33 539.872 625.777 539.863 630.607L539.848 639.388L432.098 639.139C372.835 639.002 320.167 638.727 315.056 638.527L305.765 638.164L306.429 632.299C307.156 625.882 306.643 622.878 304.298 619.827C302.797 617.873 301.281 617.818 235.555 617.329L168.348 616.83L168.054 609.587L167.76 602.345L135.554 602.331C117.841 602.324 102.336 602.046 101.098 601.716C98.978 601.148 98.848 600.598 98.848 592.217C98.848 581.613 99.043 581.78 85.348 580.626L76.348 579.868L76.498 545.403L76.648 510.938L62.024 511.242C49.051 511.511 47.256 511.349 46.124 509.803C45.26 508.622 44.848 504.251 44.848 496.263C44.848 480.753 44.605 480.47 31.348 480.47H21.848V469.515V458.56L11.098 458.276L0.347969 457.993L0.0889666 407.376C-0.142033 362.343 0.00398099 356.584 1.40998 355.179C2.67998 353.91 5.41596 353.6 15.338 353.6C22.128 353.6 28.396 353.327 29.266 352.993C30.606 352.48 30.848 350.208 30.848 338.126C30.848 321.294 29.459 322.666 46.527 322.645C55.342 322.634 58.037 322.3 59.277 321.062C60.595 319.744 60.848 316.435 60.848 300.517C60.848 289.348 61.274 280.747 61.883 279.609C62.877 277.755 64.354 277.676 98.633 277.663C118.276 277.656 135.36 277.379 136.598 277.048C138.631 276.504 138.848 275.835 138.848 270.127C138.848 266.653 139.262 263.554 139.769 263.241C140.275 262.929 169.5 262.675 204.713 262.678C254.222 262.681 268.909 262.404 269.495 261.456C269.912 260.782 271.301 255.727 272.581 250.223C278.648 224.138 288.456 186.624 291.045 179.6C292.375 175.993 293.844 175.621 300.059 177.322C321.184 183.105 321.602 183.026 324.783 172.618C330.029 155.449 330.107 155.293 333.372 155.408C336.6 155.522 351.625 159.194 356.137 160.972C359.779 162.407 361.28 160.459 362.814 152.307C363.434 149.009 364.583 144.289 365.368 141.817C366.152 139.344 367.914 133.051 369.283 127.831C370.652 122.611 373.643 111.373 375.93 102.857C378.217 94.3403 380.671 85.1247 381.382 82.3775C382.094 79.6304 383.578 74.0111 384.681 69.8903C385.784 65.7695 389.005 53.4232 391.84 42.4544C394.675 31.4857 397.166 22.2342 397.376 21.8945C397.585 21.5559 398.67 17.0994 399.786 11.9917C402.519 -0.519531 403.281 -1.27376 410.855 1.01989ZM432.906 53.7978C432.321 54.8897 431.186 58.6199 430.383 62.0873C429.58 65.5548 427.745 72.6625 426.305 77.8821C424.864 83.1018 422.887 90.2944 421.91 93.8658C420.934 97.4371 418.895 104.855 417.38 110.349C415.864 115.843 413.795 123.485 412.781 127.331C411.767 131.178 409.78 138.37 408.366 143.315C405.681 152.699 402.137 165.975 398.876 178.86C397.821 183.025 396.513 187.521 395.967 188.849C395.422 190.179 394.701 192.952 394.366 195.012C393.654 199.393 392.972 199.522 385.119 196.764C381.996 195.667 379.095 195.115 378.673 195.537C378.251 195.958 377.29 198.991 376.538 202.276C375.188 208.174 375.128 208.248 371.759 208.145C369.883 208.089 366.293 207.701 363.782 207.286L359.216 206.529L357.99 212C356.081 220.521 355.494 220.926 348.378 218.625C345.095 217.563 341.945 216.875 341.378 217.096C340.812 217.317 339.505 220.474 338.474 224.111C337.443 227.75 336.246 230.726 335.813 230.726C335.38 230.726 332.181 229.841 328.705 228.76C325.228 227.679 322.11 227.117 321.776 227.511C321.441 227.905 320.184 231.824 318.982 236.22C317.779 240.615 316.148 246.235 315.357 248.707C314.566 251.18 313.247 255.9 312.427 259.196C310.713 266.089 307.206 278.986 303.328 292.662C301.847 297.882 299.842 305.136 298.871 308.783C297.9 312.43 296.826 315.865 296.484 316.418C296.142 316.971 295.234 320.281 294.467 323.773C293.7 327.266 291.86 334.394 290.378 339.614C287.272 350.556 283.523 364.03 280.788 374.079C279.742 377.925 277.758 385.117 276.381 390.062C275.003 395.007 273.608 400.016 273.281 401.193C272.748 403.109 273.429 403.561 279.831 405.541C283.76 406.756 287.24 407.485 287.564 407.162C287.888 406.838 289.21 402.746 290.501 398.068C291.792 393.39 293.965 385.63 295.329 380.822C296.694 376.015 298.532 369.159 299.414 365.587C300.296 362.016 301.418 358.195 301.906 357.096C302.395 355.997 303.456 352.401 304.264 349.104C306.332 340.675 310.339 325.72 313.366 315.139C316.68 303.55 319.241 294.218 321.952 283.836L324.127 275.51L327.708 276.181C329.677 276.55 333.102 277.461 335.318 278.206C337.535 278.951 342.611 280.297 346.598 281.197C350.585 282.096 353.843 283.134 353.836 283.501C353.83 283.87 353.124 286.643 352.268 289.665C349.915 297.976 344.624 317.227 338.404 340.113C336.463 347.256 334.868 354.029 334.861 355.165C334.85 356.912 335.857 357.43 341.424 358.535C345.125 359.27 348.315 359.459 348.72 358.968C350.101 357.293 353.247 346.461 357.969 327.127C359.042 322.731 360.341 318.236 360.854 317.137C361.686 315.359 362.89 311.024 367.157 294.45C369.159 286.677 366.809 286.615 398.848 295.288C404.073 296.703 411.498 298.684 415.348 299.691C429.174 303.307 441.091 306.68 441.978 307.227C442.474 307.534 442.572 308.284 442.194 308.894C441.817 309.504 440.684 313.294 439.678 317.317C436.322 330.729 434.126 339.017 430.862 350.603C429.081 356.921 426.832 365.013 425.864 368.584C420.514 388.321 418.493 395.743 416.748 402.05C409.391 428.644 406.805 438.802 407.274 439.271C407.476 439.473 410.05 440.314 412.995 441.14C415.939 441.967 419.09 442.878 419.996 443.165C421.285 443.573 421.885 442.634 422.75 438.852C423.358 436.193 425.218 429.297 426.883 423.528C428.549 417.759 430.754 409.892 431.783 406.046C432.812 402.2 434.858 394.782 436.328 389.563C437.798 384.343 439.907 376.701 441.016 372.58C442.934 365.447 443.671 362.75 448.797 344.109C450.916 336.404 453.406 327.039 457.83 310.144C459.63 303.271 461.793 296.631 462.219 296.67C462.29 296.676 464.823 297.345 467.848 298.156C476.441 300.46 476.402 300.48 478.796 292.609C480.747 286.19 481.134 285.621 483.143 286.22C492.252 288.932 494.848 290.062 494.848 291.31C494.848 292.089 494 295.295 492.963 298.438C491.256 303.611 489.489 309.912 483.796 331.123C476.346 358.876 474.495 365.59 473.254 369.368C472.481 371.723 471.848 374.25 471.848 374.983C471.848 375.716 470.931 379.182 469.811 382.686C466.835 391.991 467.122 392.633 475.165 394.655C481.496 396.247 482.02 396.251 482.509 394.715C482.799 393.804 483.429 391.935 483.909 390.562C484.39 389.188 485.452 385.367 486.27 382.07C487.087 378.774 488.697 372.705 489.846 368.584C490.996 364.464 493.011 357.046 494.324 352.101C496.869 342.519 501.737 324.637 504.929 313.141C505.997 309.295 507.737 303.001 508.796 299.155C509.855 295.309 511.874 288.117 513.283 283.172C516.206 272.914 520.429 257.557 522.348 250.206C523.065 247.458 524.87 240.94 526.36 235.72C527.85 230.501 529.873 223.308 530.855 219.737C531.837 216.165 533.851 208.973 535.33 203.753C539.085 190.501 543.263 175.113 549.838 150.308C551.746 143.11 554.694 132.425 559.347 115.843C564.852 96.2283 566.131 91.3134 566.238 89.3704C566.33 87.7061 565.187 87.0827 559.398 85.6392C551.345 83.6303 551.458 83.5543 549.639 92.2015C548.125 99.3991 551.359 99.6299 515.848 89.7859C511.723 88.6421 504.748 86.828 500.348 85.7551C495.948 84.6822 491.448 83.3865 490.348 82.877C489.248 82.3675 484.748 81.0739 480.348 80.002C458.053 74.5725 444.848 70.6236 444.848 69.3858C444.848 68.7635 445.554 65.8804 446.417 62.9784C447.279 60.0764 447.768 57.1364 447.502 56.4441C447.236 55.7518 444.843 54.6529 442.183 54.0016C439.524 53.3503 436.588 52.591 435.659 52.3153C434.633 52.0096 433.552 52.5921 432.906 53.7978ZM449.348 87.8739C449.898 88.2995 453.048 89.2215 456.348 89.9208C459.648 90.6211 463.081 91.5571 463.977 92.0007C464.873 92.4442 469.373 93.7059 473.977 94.8048C478.581 95.9027 486.623 97.9696 491.848 99.3981C504.73 102.92 509.417 104.18 522.848 107.73C541.105 112.555 543.364 113.352 543.177 114.913C542.823 117.874 538.148 134.857 537.512 135.492C537.147 135.858 536.841 136.868 536.833 137.738C536.786 142.521 535.763 142.434 509.848 135.445C504.623 134.037 497.648 132.196 494.348 131.355C491.048 130.514 486.098 129.168 483.348 128.363C480.598 127.558 472.273 125.295 464.848 123.333C457.423 121.372 449.141 119.103 446.443 118.292C443.745 117.481 439.769 116.534 437.607 116.189C435.445 115.843 433.476 115.037 433.23 114.397C432.984 113.757 433.966 108.988 435.412 103.8C436.858 98.6109 438.529 92.4292 439.126 90.0627L440.211 85.7601L444.28 86.4294C446.517 86.798 448.798 87.4473 449.348 87.8739ZM439.848 132.585C442.323 133.409 447.611 134.925 451.598 135.953C465.872 139.631 473.519 141.665 484.848 144.799C500.671 149.174 510.111 151.706 518.348 153.778C528.195 156.258 530.848 157.478 530.848 159.523C530.848 160.498 529.691 165.343 528.277 170.287C523.408 187.311 522.018 192.292 519.492 201.755C518.098 206.975 516.809 212.145 516.626 213.243C516.192 215.848 513.977 215.712 501.348 212.306C495.848 210.823 488.198 208.771 484.348 207.747C480.498 206.724 473.073 204.713 467.848 203.28C462.623 201.846 455.198 199.823 451.348 198.784C447.498 197.745 440.073 195.718 434.848 194.28C429.623 192.841 422.536 190.966 419.098 190.112C412.058 188.362 412.016 188.268 414.442 179.778C415.305 176.756 416.848 171.137 417.871 167.291C418.894 163.444 420.872 156.252 422.266 151.307C423.66 146.362 425.544 139.497 426.452 136.052L428.102 129.786L431.725 130.435C433.718 130.793 437.373 131.76 439.848 132.585ZM401.063 201.194C403.42 201.984 408.048 203.295 411.348 204.107C417.908 205.721 431.044 209.227 445.848 213.314C464.484 218.459 468.529 219.535 482.848 223.153C499.487 227.358 510.848 230.685 510.848 231.353C510.848 233.743 507.377 244.711 506.621 244.711C506.08 244.711 502.892 244.001 499.538 243.133C492.408 241.287 491.491 241.874 490.307 249.049C489.276 255.297 488.622 255.725 482.559 254.113C473.6 251.73 473.153 251.91 471.811 258.447C470.267 265.965 469.561 266.766 465.546 265.555C463.787 265.024 458.298 263.522 453.348 262.215C448.398 260.91 436.698 257.746 427.348 255.186C417.998 252.626 407.198 249.701 403.348 248.687C395.432 246.603 383.055 243.261 368.348 239.236C362.848 237.731 357.111 236.274 355.598 235.997C352.473 235.425 352.294 234.405 353.958 226.653L355.068 221.482L360.208 222.227C371.473 223.861 371.136 224.002 372.663 216.99C374.193 209.956 374.237 209.936 382.848 212.244C385.873 213.056 388.641 213.725 388.998 213.731C389.356 213.738 390.203 211.382 390.88 208.498C393.093 199.08 393.623 198.699 401.063 201.194ZM178.842 304.483C178.295 304.667 177.848 308.15 177.848 312.225V319.634H147.348H116.848V327.127V334.619H109.374H101.9L101.624 349.853L101.348 365.088L86.098 365.364L70.848 365.639V373.106V380.572H62.848H54.848V388.064V395.557H47.455C41.636 395.557 39.933 395.893 39.455 397.137C39.121 398.006 38.848 404.974 38.848 412.621V426.525H46.276H53.704L54.284 431.77C54.603 434.655 54.747 437.913 54.606 439.012C54.36 440.917 55.071 441.033 69.848 441.51L85.348 442.009L85.64 449.751L85.932 457.493H93.346H100.76L101.054 464.736L101.348 471.978L109.098 472.27L116.848 472.562V465.069V457.577L109.098 457.285L101.348 456.994L100.848 449.501L100.348 442.009L93.098 441.715L85.848 441.422V433.973V426.525H70.322H54.796L55.072 411.291L55.348 396.056L63.098 395.764L70.848 395.473V388.022V380.572H85.848H100.848V376.202C100.848 373.798 101.129 370.426 101.473 368.709L102.098 365.587H109.473H116.848V350.603C116.848 337.04 117.014 335.608 118.598 335.509C119.56 335.449 133.173 335.336 148.848 335.259L177.348 335.119L177.848 327.626L178.348 320.134L207.848 320.408C224.073 320.558 237.911 320.67 238.598 320.657C239.489 320.64 239.848 322.785 239.848 328.126V335.618H255.348H270.848V328.233C270.848 322.42 270.511 320.718 269.266 320.241C268.396 319.907 261.421 319.634 253.766 319.634H239.848V312.171V304.707L209.842 304.429C193.339 304.275 179.389 304.3 178.842 304.483ZM178.258 351.066C178.059 351.636 177.772 355.023 177.622 358.595L177.348 365.088L162.598 365.365L147.848 365.64V373.107V380.572H162.804H177.76L178.054 373.329L178.348 366.087H208.848H239.348L239.642 373.329L239.936 380.572H247.392H254.848V373.08V365.587H247.348H239.848V358.095V350.603L218.598 350.477C206.911 350.408 193.134 350.28 187.984 350.192C182.284 350.094 178.479 350.437 178.258 351.066ZM516.848 359.068V366.534L532.098 366.81L547.348 367.086L547.642 374.328L547.936 381.571H562.85H577.764L578.056 389.313L578.348 397.055L585.848 397.555L593.348 398.054L593.641 405.254L593.934 412.453L601.141 412.746L608.348 413.039L608.636 426.025C609.039 444.149 609.325 443.508 600.829 443.508H593.848L593.837 447.254C593.831 449.315 593.547 452.686 593.206 454.746L592.586 458.492H577.761H562.936L562.642 465.735L562.348 472.977L555.098 473.271L547.848 473.565L547.834 478.765C547.81 488.121 547.627 488.338 539.492 488.669L532.348 488.961L532.054 496.204L531.76 503.446H537.722C547.558 503.446 546.848 501.615 546.848 526.987V549.315L539.098 549.607L531.348 549.899L531.056 557.641L530.764 565.383H515.306H499.848V572.901V580.419L484.598 580.144L469.348 579.868L469.054 572.625L468.76 565.383H430.804H392.848L392.833 571.626C392.824 575.061 392.455 578.44 392.011 579.139C391.391 580.115 386.152 580.345 369.277 580.138L347.348 579.868L347.056 572.723L346.764 565.58L334.556 564.883C327.842 564.501 320.998 564.344 319.348 564.536L316.348 564.883L316.056 572.599L315.765 580.314L331.056 580.591L346.348 580.867V587.86V594.853H369.348H392.348L392.642 587.61L392.936 580.367H430.892H468.848V587.86V595.352H484.304H499.76L500.054 588.109L500.348 580.867L515.598 580.591L530.848 580.315L531 574.597C531.084 571.453 531.197 568.205 531.25 567.381C531.325 566.239 533.132 565.763 538.848 565.383L546.348 564.883L546.848 557.391L547.348 549.899L555.098 549.607L562.848 549.315V526.381V503.446H555.461C548.141 503.446 548.071 503.421 547.665 500.657C547.44 499.124 547.436 495.977 547.657 493.664L548.058 489.46H555.453H562.848V481.495V473.529L578.098 473.253L593.348 472.977L593.642 465.735L593.936 458.492H601.392H608.848V451.044V443.595L616.098 443.302L623.348 443.008L623.624 427.774L623.9 412.539H616.374H608.848V405.047V397.555H601.39H593.932L593.64 389.813L593.348 382.07L585.598 381.779L577.848 381.487V374.037V366.586H562.848H547.848V359.094V351.602H532.348H516.848V359.068ZM132.515 396.223C132.148 396.589 131.848 400.185 131.848 404.215V411.54L138.098 411.655C141.536 411.719 145.023 411.831 145.848 411.905C147.059 412.014 147.295 413.436 147.075 419.282L146.803 426.525H161.825C173.071 426.525 176.898 426.839 177.046 427.774C177.155 428.461 177.267 438.687 177.296 450.5L177.348 471.978L184.848 472.478L192.348 472.977L192.624 488.212L192.9 503.446H200.374H207.848V510.938V518.431H246.348H284.848V525.904C284.848 532.825 285.014 533.418 287.098 533.929C288.335 534.233 298.798 534.354 310.348 534.198L331.348 533.915V526.423V518.93L308.598 518.662L285.848 518.393V510.92V503.446H247.415C209.136 503.446 208.98 503.438 208.31 501.328C207.94 500.164 207.797 493.308 207.993 486.094L208.348 472.977L200.848 472.478L193.348 471.978L193.312 450.5C193.292 438.687 193.179 428.461 193.062 427.774C192.913 426.905 190.567 426.525 185.348 426.525H177.848V419.033V411.54H162.848H147.848V404.747C147.848 400.795 147.346 397.453 146.648 396.755C145.391 395.5 133.68 395.058 132.515 396.223ZM531.848 420.006V427.472L516.598 427.748L501.348 428.023L501.055 435.24L500.761 442.457L485.555 442.732L470.348 443.008L470.054 450.251L469.76 457.493H462.304H454.848V465.326C454.848 469.635 454.553 479.974 454.192 488.303L453.536 503.446H446.692H439.848V495.954V488.462H416.973H394.098L393.473 491.583C392.681 495.539 392.673 499.831 393.455 501.866C393.983 503.241 396.958 503.446 416.455 503.446H438.848V510.938V518.431H446.848H454.848V510.938V503.446H462.348H469.848L469.947 488.711C470.001 480.608 470.143 473.077 470.262 471.978C470.381 470.879 470.562 467.408 470.663 464.263L470.848 458.545L485.598 458.269L500.348 457.993L500.641 450.776L500.935 443.559L516.141 443.284L531.348 443.008L531.64 435.266L531.932 427.524H547.39H562.848V420.032V412.539H547.348H531.848V420.006ZM223.848 433.931V441.422L231.098 441.715L238.348 442.009L238.64 449.733L238.931 457.456L262.14 457.725L285.348 457.993L285.642 465.235L285.936 472.478H301.392H316.848V480.496V488.513L332.098 488.238L347.348 487.962L347.64 480.22L347.932 472.478H362.89H377.848V464.986V457.493H362.848H347.848V464.986V472.478H332.348H316.848V464.986V457.493H301.348H285.848V450.001V442.509H262.89H239.932L239.64 434.767L239.348 427.024L231.598 426.733L223.848 426.441V433.931ZM131.346 476.488C130.973 478.694 130.76 483.302 130.873 486.727C130.986 490.154 131.026 495.073 130.963 497.658L130.848 502.359L123.598 502.653L116.348 502.947L116.079 525.673L115.81 548.4L121.579 548.578C124.752 548.676 128.136 548.753 129.098 548.749C130.606 548.742 130.848 549.753 130.848 556.063C130.848 560.09 130.961 563.479 131.098 563.593C131.235 563.706 148.448 564.044 169.348 564.342L207.348 564.883L207.642 572.126L207.936 579.368L222.642 579.452C230.73 579.497 244.323 579.61 252.848 579.702L268.348 579.868L268.64 572.126L268.932 564.384H238.432H207.932L207.64 556.642L207.348 548.9L169.348 548.4L131.348 547.901L131.379 541.158C131.396 537.449 131.509 527.467 131.629 518.974L131.848 503.534L139.098 503.24L146.348 502.947L146.624 487.712L146.9 472.478H139.462H132.024L131.346 476.488Z" fill="var(--card)"/>
-  </svg>
-        <div class="home-wordmark">SP<span class="n404">404</span> DROP</div>
-        <div class="home-tag">Sample Prep &middot; SP-404MKII</div>
+        <h1 class="home-title">SP404 DROP</h1>
+        <div class="tagline">Convert / Chop / Loop / Export</div>
       </div>
 
-      <div class="home-tiles">
-        <div class="nav-tile" id="tileConvert">
-          <svg class="tile-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M4 12h11M11 7l4 5-4 5" stroke="#0c0c0a" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter"/>
-            <path d="M20 5v14" stroke="#0c0c0a" stroke-width="2.4" stroke-linecap="square"/>
-          </svg>
-          <div>
-            <div class="tile-title">Convert</div>
-            <div class="tile-desc">Batch fix WAV/MP3/AIFF to 16-bit / 48kHz for the sampler.</div>
+      <div class="home-grid">
+        <div class="home-left">
+          <div class="sp-drop home-drop" id="homeDrop" role="button" tabindex="0" aria-label="Drop audio files here, or click to browse">
+            <svg class="sp-icon hero-arrow" aria-hidden="true"><use href="#i-arrow-down"/></svg>
+            <h2 class="hero-title">Drop audio files here</h2>
+            <div class="formats" aria-label="Supported formats"><span>WAV</span><span>MP3</span><span>AIFF</span><span>FLAC</span><span>M4A</span><span>OGG</span></div>
+            <div class="hero-sub">or click to browse &mdash; nothing leaves this device</div>
+          </div>
+          <input type="file" id="homeFileInput" multiple accept="audio/*,.wav,.mp3,.aif,.aiff,.flac,.ogg,.m4a,.wma,.au">
+
+          <div class="home-pending sp-panel plain" id="homePending" hidden>
+            <div class="sp-label" id="homePendingTitle"></div>
+            <ul class="files" id="homePendingList"></ul>
+            <p class="chop-hint" id="homePendingHint"></p>
+            <div class="row"><span class="grow"></span><button class="clear-link" type="button" id="homeClearBtn">Clear</button></div>
+          </div>
+          <div class="sp-alert error" id="homeAlert" role="alert" hidden></div>
+
+          <div class="quick">
+            <button class="sp-tile" type="button" id="tileChop">
+              <svg class="sp-icon lg" aria-hidden="true"><use href="#i-chop"/></svg>
+              <span class="t">Chop / Loop</span>
+              <span class="d">Slice one track into numbered samples, find loops, export.</span>
+              <svg class="sp-icon go" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </button>
+            <button class="sp-tile" type="button" id="tileConvert">
+              <svg class="sp-icon lg" aria-hidden="true"><use href="#i-file"/></svg>
+              <span class="t">Batch convert</span>
+              <span class="d">Batch-fix WAV/MP3/AIFF to 16-bit / 48kHz for the sampler.</span>
+              <svg class="sp-icon go" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </button>
           </div>
         </div>
-        <div class="nav-tile" id="tileChop">
-          <svg class="tile-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M3 12h3l2-7 3 14 3-11 2 4h5" stroke="#0c0c0a" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter"/>
-          </svg>
-          <div>
-            <div class="tile-title">Chop / Loop</div>
-            <div class="tile-desc">Slice one track into samples, find a loop, export.</div>
+
+        <aside class="home-right">
+          <div class="out-panel">
+            <h3 class="out-title">Output</h3>
+            <div class="out-row"><span class="k">Format</span><span class="v">WAV (PCM 16-bit)</span></div>
+            <div class="out-row"><span class="k">Sample rate</span><span class="v">48 kHz</span></div>
+            <div class="out-row"><span class="k">Channels</span><span class="v">Same as source</span></div>
+            <div class="out-row"><span class="k">Normalize</span><span class="v">Off &mdash; levels untouched</span></div>
+            <p class="out-note">Fixed on purpose: this is the format the SP-404 loads without conversion. Results are packed into one ZIP with a report.</p>
+            <button class="sp-btn primary go-btn block" type="button" id="homeConvertBtn"><span id="homeConvertLabel">Convert</span><svg class="sp-icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
           </div>
-        </div>
+        </aside>
       </div>
 
-      <div class="home-info">
-        <b>How it works:</b> CONVERT &rarr; CHOP &rarr; LOOP &rarr; EXPORT.<br>
-        Everything runs on this device &mdash; nothing is uploaded anywhere.
+      <div class="recent" id="homeRecent" hidden>
+        <h3>This session</h3>
+        <ul id="homeRecentList"></ul>
       </div>
-      <div class="home-foot">Unofficial &middot; not affiliated with Roland &middot; MIT &middot; v1.1.0</div>
+      <div class="home-foot">Unofficial &middot; not affiliated with Roland &middot; MIT &middot; v1.2.0</div>
     </section>
 
     <!-- ============ CONVERT ============ -->
-    <section class="screen" id="screenConvert">
-      <div class="topbar">
-        <button class="back-btn" data-nav="home" aria-label="Back">&#8592;</button>
-        <div>
-          <h2>Convert</h2>
-          <div class="sub">PCM WAV &middot; 16-bit &middot; 48kHz</div>
-        </div>
-      </div>
+    <section class="screen" id="screenConvert" aria-label="Convert">
+      <div class="screen-head"><h2>Convert</h2><span class="sub">PCM WAV &middot; 16-bit &middot; 48kHz</span></div>
 
       <div class="stat-row" id="statRow">
-        <div class="stat-tile"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Tracks</div></div>
-        <div class="stat-tile"><div class="stat-num" id="statOk">0</div><div class="stat-label">Good</div></div>
-        <div class="stat-tile"><div class="stat-num" id="statAsis">0</div><div class="stat-label">As-is</div></div>
-        <div class="stat-tile" id="statErrTile"><div class="stat-num" id="statErr">0</div><div class="stat-label">Err</div></div>
+        <div class="sp-stat"><div class="num" id="statTotal">0</div><div class="lbl">Tracks</div></div>
+        <div class="sp-stat"><div class="num" id="statOk">0</div><div class="lbl">Good</div></div>
+        <div class="sp-stat"><div class="num" id="statAsis">0</div><div class="lbl">As-is</div></div>
+        <div class="sp-stat" id="statErrTile"><div class="num" id="statErr">0</div><div class="lbl">Err</div></div>
       </div>
 
-      <div class="drop" id="screen" tabindex="0" role="button" aria-label="Drop audio files or folders here, or click to browse">
+      <div class="sp-drop conv-drop" id="screen" tabindex="0" role="button" aria-label="Drop audio files or folders here, or click to browse">
         <div class="drop-idle" id="screenIdle">
-          <div class="di">&#9662; &#9662; &#9662;</div>
+          <svg class="sp-icon lg" aria-hidden="true"><use href="#i-download"/></svg>
           <div class="dt">Drop samples or a folder</div>
           <div class="ds">or <span class="dl">click to browse</span> &mdash; analysis starts automatically</div>
         </div>
@@ -509,13 +142,15 @@
       </div>
 
       <div class="meter-row">
-        <div class="meter" id="meter"></div>
+        <div class="sp-meter" id="meter" role="progressbar" aria-label="Progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
         <div class="meter-pct" id="meterPct">0%</div>
       </div>
 
+      <div class="sp-alert error" id="convAlert" role="alert" hidden></div>
+
       <div class="controls-2">
-        <button class="pill" id="clearBtn" disabled>Clear</button>
-        <button class="pill solid download" id="downloadBtn">&#8681; Download ZIP</button>
+        <button class="sp-btn" type="button" id="clearBtn" disabled>Clear</button>
+        <button class="sp-btn primary download" type="button" id="downloadBtn"><svg class="sp-icon" aria-hidden="true"><use href="#i-download"/></svg>Download ZIP</button>
       </div>
 
       <input type="file" id="fileInput" multiple accept="audio/*,.wav,.mp3,.aif,.aiff,.flac,.ogg,.m4a,.wma,.au">
@@ -524,146 +159,191 @@
     </section>
 
     <!-- ============ CHOP / LOOP ============ -->
-    <section class="screen" id="screenChop">
-      <div class="topbar">
-        <button class="back-btn" data-nav="home" aria-label="Back">&#8592;</button>
-        <div>
-          <h2>Chop / Loop</h2>
-          <div class="sub" id="chopSub">No track loaded</div>
-        </div>
-      </div>
+    <section class="screen" id="screenChop" aria-label="Chop / Loop">
+      <div class="screen-head"><h2>Chop / Loop</h2><span class="sub" id="chopSub">No track loaded</span></div>
 
-      <div class="chop-drop" id="chopDrop">
-        <div class="dt">&#9662; Drop a track</div>
+      <div class="sp-drop chop-drop" id="chopDrop" role="button" tabindex="0" aria-label="Drop a track here, or click to browse">
+        <svg class="sp-icon lg" aria-hidden="true"><use href="#i-chop"/></svg>
+        <div class="dt">Drop a track</div>
         <div class="ds">or click to browse &mdash; one file at a time</div>
       </div>
+      <div class="sp-alert error" id="chopLoadAlert" role="alert" hidden></div>
       <input type="file" id="chopFileInput" accept="audio/*,.wav,.mp3,.aif,.aiff,.flac,.ogg,.m4a">
 
       <div id="chopWorkspace" hidden>
-        <button class="pill" id="chopAgainBtn" style="width:100%;margin-bottom:10px;">Load another track</button>
-        <div class="chop-toolbar">
-          <button class="icon-btn" id="playBtn" aria-label="Play/Pause" title="Play / pause the whole track">&#9654;</button>
-          <div class="zoom-group" title="Zoom the waveform — you can also scroll/pinch over it">
-            <button class="icon-btn" id="zoomOutBtn" aria-label="Zoom out">&minus;</button>
-            <div class="zoom-label" id="zoomLabel">1x</div>
-            <button class="icon-btn" id="zoomInBtn" aria-label="Zoom in">+</button>
-          </div>
-          <button class="icon-btn" id="markBtn" aria-label="Toggle add-marker mode" title="Add marker on click, in any mode">+M</button>
-          <button class="icon-btn active" id="snapBtn" aria-label="Toggle snap to zero crossing" title="Snap to zero crossing">0&#8942;</button>
-          <div class="chop-filename" id="chopFilename"></div>
-        </div>
+        <div class="chop-grid">
+          <div class="chop-col" id="chopMain">
+            <div class="chop-transport">
+              <button class="sp-btn solid icon" type="button" id="playBtn" aria-label="Play/Pause" title="Play / pause the whole track"><svg class="sp-icon fill" aria-hidden="true"><use href="#i-play"/></svg></button>
+              <div class="zoom-group" role="group" aria-label="Zoom" title="Zoom the waveform — you can also scroll/pinch over it">
+                <button class="sp-btn icon" type="button" id="zoomOutBtn" aria-label="Zoom out"><svg class="sp-icon" aria-hidden="true"><use href="#i-minus"/></svg></button>
+                <span class="zoom-label" id="zoomLabel">1x</span>
+                <button class="sp-btn icon" type="button" id="zoomInBtn" aria-label="Zoom in"><svg class="sp-icon" aria-hidden="true"><use href="#i-plus"/></svg></button>
+              </div>
+              <button class="sp-btn icon" type="button" id="markBtn" aria-label="Toggle add-marker mode" aria-pressed="false" title="Add marker on click, in any mode"><svg class="sp-icon" aria-hidden="true"><use href="#i-marker"/></svg></button>
+              <button class="sp-btn icon on" type="button" id="snapBtn" aria-label="Toggle snap to zero crossing" aria-pressed="true" title="Snap to zero crossing"><svg class="sp-icon" aria-hidden="true"><use href="#i-snap"/></svg></button>
+              <span class="bpm-readout" id="chopBpm" hidden><b id="chopBpmVal">120</b><small>BPM</small></span>
+              <span class="filename" id="chopFilename"></span>
+              <button class="sp-btn sm" type="button" id="chopAgainBtn"><svg class="sp-icon sm" aria-hidden="true"><use href="#i-folder"/></svg>Load another track</button>
+            </div>
 
-        <div class="wave-frame" id="waveFrame">
-          <div class="wave-wrap" id="waveWrap">
-            <div class="wave-stage" id="waveStage">
-              <canvas id="waveCanvas"></canvas>
-              <canvas id="overlayCanvas"></canvas>
+            <div class="wave-frame" id="waveFrame">
+              <div class="wave-wrap" id="waveWrap">
+                <div class="wave-stage" id="waveStage">
+                  <canvas id="waveCanvas"></canvas>
+                  <canvas id="overlayCanvas"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="wave-overview" id="waveOverview" title="Whole track — drag the box to move around"><canvas id="ovCanvas"></canvas></div>
+            <div class="view-panel">
+              <div class="knobs">
+                <div id="knobZoom"></div>
+                <div id="knobScrub"></div>
+                <div id="knobGain"></div>
+              </div>
+              <div class="view-btns">
+                <button class="sp-btn sm" type="button" id="fitBtn" title="Show the whole track"><svg class="sp-icon sm" aria-hidden="true"><use href="#i-fit"/></svg>Fit</button>
+                <button class="sp-btn sm on" type="button" id="selBtn" aria-pressed="true" title="Always zoom to the sample you pick">Zoom to sample</button>
+                <button class="sp-btn sm on" type="button" id="followBtn" aria-pressed="true" title="Keep the playhead in view while playing">Follow</button>
+                <button class="sp-btn sm" type="button" id="heightBtn" title="Make the waveform taller or shorter"><svg class="sp-icon sm" aria-hidden="true"><use href="#i-height"/></svg>Height</button>
+              </div>
+            </div>
+            <div class="chop-hint" id="chopHint">Click waveform to seek &middot; drag it to scroll &middot; drag a marker tab to move it &middot; double-click a marker to delete it</div>
+            <div class="chop-hint">Keys: Space play &middot; M marker at playhead &middot; Del remove nearest marker &middot; &larr; &rarr; scroll &middot; + &minus; zoom &middot; 0 fit &middot; , . pick sample &middot; Enter play sample &middot; L loop</div>
+
+            <h3 class="col-title">Mode</h3>
+            <div class="mode-row" id="modeRow" role="group" aria-label="Chop mode">
+              <button class="sp-tile active" type="button" data-mode="transient" aria-pressed="true">Transient</button>
+              <button class="sp-tile" type="button" data-mode="beats" aria-pressed="false">Beats</button>
+              <button class="sp-tile" type="button" data-mode="equal" aria-pressed="false">Equal</button>
+              <button class="sp-tile" type="button" data-mode="manual" aria-pressed="false">Manual</button>
+            </div>
+
+            <div class="mode-panel sp-panel" id="panelTransient">
+              <div class="sens-label"><span>Sensitivity</span><b id="sensVal">50</b></div>
+              <input type="range" class="sp-range" id="sensSlider" min="0" max="100" value="50" aria-label="Sensitivity">
+              <div class="row">
+                <button class="sp-btn solid" type="button" id="autoChopBtn">Auto Chop</button>
+                <button class="sp-btn" type="button" id="clearMarkersBtn1">Clear</button>
+              </div>
+            </div>
+
+            <div class="mode-panel sp-panel" id="panelEqual" hidden>
+              <div class="sens-label"><span>Split amount</span></div>
+              <div class="parts-row" id="partsRow">
+                <button class="sp-tile" type="button" data-parts="4" aria-pressed="false">4</button>
+                <button class="sp-tile active" type="button" data-parts="8" aria-pressed="true">8</button>
+                <button class="sp-tile" type="button" data-parts="16" aria-pressed="false">16</button>
+                <button class="sp-tile" type="button" data-parts="32" aria-pressed="false">32</button>
+              </div>
+              <div class="row">
+                <button class="sp-btn solid" type="button" id="splitBtn">Split</button>
+                <button class="sp-btn" type="button" id="clearMarkersBtn2">Clear</button>
+              </div>
+            </div>
+
+            <div class="mode-panel sp-panel" id="panelBeats" hidden>
+              <div class="row">
+                <input type="number" class="sp-input bpm-input" id="bpmInput" min="30" max="300" step="0.1" value="120" aria-label="BPM">
+                <span class="sens-label" style="margin:0;">BPM</span>
+                <button class="sp-btn sm" type="button" id="bpmHalfBtn" aria-label="Half tempo">&divide;2</button>
+                <button class="sp-btn sm" type="button" id="bpmDoubleBtn" aria-label="Double tempo">&times;2</button>
+                <button class="sp-btn sm" type="button" id="bpmDetectBtn">Detect</button>
+              </div>
+              <div class="row">
+                <button class="sp-btn sm block" type="button" id="beatOneBtn" title="Make the grid line up with the playhead">Beat 1 = playhead</button>
+              </div>
+              <div class="sens-label" style="margin-top:12px;"><span>Loop length</span></div>
+              <div class="parts-row" id="beatDivRow">
+                <button class="sp-tile" type="button" data-div="1" aria-pressed="false">1 beat</button>
+                <button class="sp-tile" type="button" data-div="2" aria-pressed="false">2 beats</button>
+                <button class="sp-tile active" type="button" data-div="4" aria-pressed="true">1 bar</button>
+                <button class="sp-tile" type="button" data-div="8" aria-pressed="false">2 bars</button>
+                <button class="sp-tile" type="button" data-div="16" aria-pressed="false">4 bars</button>
+              </div>
+              <div class="row">
+                <button class="sp-btn solid" type="button" id="beatMakeBtn">Make Loops</button>
+                <button class="sp-btn" type="button" id="clearMarkersBtn4">Clear</button>
+              </div>
+              <div class="chop-hint" id="beatStatus" role="status"></div>
+            </div>
+
+            <div class="mode-panel sp-panel" id="panelManual" hidden>
+              <b>Manual mode is on</b> &mdash; click anywhere on the waveform to drop a marker there. Drag a marker's tab to move it, double-click a tab to remove it.
+              <div class="row">
+                <button class="sp-btn" type="button" id="clearMarkersBtn3">Clear All Markers</button>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="wave-overview" id="waveOverview" title="Whole track — drag the box to move around"><canvas id="ovCanvas"></canvas></div>
-        <div class="view-panel">
-          <div class="knobs">
-            <div id="knobZoom"></div>
-            <div id="knobScrub"></div>
-            <div id="knobGain"></div>
-          </div>
-          <div class="view-btns">
-            <button class="pill" id="fitBtn" title="Show the whole track">Fit</button>
-            <button class="pill on" id="selBtn" title="Always zoom to the sample you pick">Zoom to sample</button>
-            <button class="pill on" id="followBtn" title="Keep the playhead in view while playing">Follow</button>
-            <button class="pill" id="heightBtn" title="Make the waveform taller or shorter">&#8597; Height</button>
-          </div>
-        </div>
-        <div class="chop-hint" id="chopHint">Click waveform to seek &middot; drag it to scroll &middot; drag a marker tab to move it &middot; double-click a marker to delete it</div>
-        <div class="chop-hint">Keys: Space play &middot; M marker at playhead &middot; Del remove nearest marker &middot; &larr; &rarr; scroll &middot; + &minus; zoom &middot; 0 fit &middot; , . pick sample &middot; Enter play sample &middot; L loop</div>
 
-        <div class="mode-row" id="modeRow">
-          <div class="mode-tile active" data-mode="transient">Transient</div>
-          <div class="mode-tile" data-mode="equal">Equal</div>
-          <div class="mode-tile" data-mode="manual">Manual</div>
-          <div class="mode-tile" data-mode="beats">Beats</div>
-        </div>
-
-        <div class="mode-panel" id="panelTransient">
-          <div class="sens-label"><span>Sensitivity</span><span id="sensVal">50</span></div>
-          <input type="range" id="sensSlider" min="0" max="100" value="50">
-          <div class="row" style="margin-top:10px;">
-            <button class="pill solid" id="autoChopBtn" style="flex:1;">Auto Chop</button>
-            <button class="pill" id="clearMarkersBtn1">Clear</button>
-          </div>
-        </div>
-
-        <div class="mode-panel" id="panelEqual" hidden>
-          <div class="row">
-            <div class="parts-row" id="partsRow">
-              <div class="part-chip" data-parts="4">4</div>
-              <div class="part-chip active" data-parts="8">8</div>
-              <div class="part-chip" data-parts="16">16</div>
-              <div class="part-chip" data-parts="32">32</div>
+          <div class="chop-col" id="chopSide">
+            <h3 class="col-title"><span id="samplesCount">0 Samples</span><small id="bankInfo"></small></h3>
+            <div class="bank-row">
+              <button class="sp-btn icon sm" type="button" id="bankPrev" aria-label="Previous bank"><svg class="sp-icon sm" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
+              <span class="bank-label" id="bankLabel">Bank A</span>
+              <button class="sp-btn icon sm" type="button" id="bankNext" aria-label="Next bank"><svg class="sp-icon sm" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
             </div>
-          </div>
-          <div class="row" style="margin-top:10px;">
-            <button class="pill solid" id="splitBtn" style="flex:1;">Split</button>
-            <button class="pill" id="clearMarkersBtn2">Clear</button>
-          </div>
-        </div>
-
-        <div class="mode-panel" id="panelBeats" hidden>
-          <div class="row">
-            <input type="number" class="bpm-input" id="bpmInput" min="30" max="300" step="0.1" value="120" aria-label="BPM">
-            <span class="sens-label" style="margin:0;">BPM</span>
-            <button class="pill mini" id="bpmHalfBtn">&divide;2</button>
-            <button class="pill mini" id="bpmDoubleBtn">&times;2</button>
-            <button class="pill mini" id="bpmDetectBtn">Detect</button>
-          </div>
-          <div class="row">
-            <button class="pill mini" id="beatOneBtn" style="flex:1;" title="Make the grid line up with the playhead">Beat 1 = playhead</button>
-          </div>
-          <div class="sens-label" style="margin-top:10px;"><span>Loop length</span></div>
-          <div class="parts-row" id="beatDivRow">
-            <div class="part-chip" data-div="1">1 beat</div>
-            <div class="part-chip" data-div="2">2 beats</div>
-            <div class="part-chip active" data-div="4">1 bar</div>
-            <div class="part-chip" data-div="8">2 bars</div>
-            <div class="part-chip" data-div="16">4 bars</div>
-          </div>
-          <div class="row" style="margin-top:10px;">
-            <button class="pill solid" id="beatMakeBtn" style="flex:1;">Make Loops</button>
-            <button class="pill" id="clearMarkersBtn4">Clear</button>
-          </div>
-          <div class="chop-hint" id="beatStatus" style="text-align:left;"></div>
-        </div>
-
-        <div class="mode-panel" id="panelManual" hidden>
-          <b>Manual mode is on</b> &mdash; click anywhere on the waveform to drop a marker there. Drag a marker's tab to move it, double-click a tab to remove it.
-          <div class="row" style="margin-top:10px;">
-            <button class="pill" id="clearMarkersBtn3" style="flex:1;">Clear All Markers</button>
+            <div class="sp-pad-grid" id="padGrid" role="group" aria-label="Slice pads, 4 by 4"></div>
+            <div class="chop-hint">Tap a pad to hear its slice &middot; tap it again to stop. Loop repeats the selected one.</div>
+            <div class="pad-actions">
+              <button class="sp-btn" type="button" id="playSampleBtn" disabled><svg class="sp-icon fill" aria-hidden="true"><use href="#i-play"/></svg><span id="playSampleLabel">Play Sample</span></button>
+              <button class="sp-btn" type="button" id="loopBtn" aria-pressed="false" disabled><svg class="sp-icon" aria-hidden="true"><use href="#i-loop"/></svg>Loop</button>
+            </div>
+            <div class="export-actions">
+              <button class="sp-btn" type="button" id="exportSelectedBtn" disabled>Export Selected</button>
+              <button class="sp-btn primary" type="button" id="exportAllBtn" disabled>Export All</button>
+            </div>
+            <div class="export-actions">
+              <button class="sp-btn" type="button" id="openLearnBtn" disabled>Open in LEARN</button>
+            </div>
+            <p class="export-hint" id="exportHint"></p>
+            <div id="chopAlert" class="sp-alert" role="status" hidden></div>
+            <section class="learn-panel" id="learnPanel" hidden aria-label="SP SYSTEM project">
+              <div class="learn-head"><strong id="learnTitle"></strong><span id="learnMeta" class="learn-meta"></span></div>
+              <div id="learnSuggest" hidden>
+                <h4>Suggestions from LEARN</h4>
+                <ul class="learn-list" id="learnSuggestList"></ul>
+                <p class="chop-hint">Suggestions are not chops until you accept them. The analysis stays untouched.</p>
+              </div>
+              <div id="learnReq" hidden>
+                <h4>For the lesson</h4>
+                <ul class="learn-list" id="learnReqList"></ul>
+              </div>
+              <button class="sp-btn" type="button" id="saveProjectBtn" disabled>Save project</button>
+            </section>
+            <div class="chop-hint">Export Selected saves just the picked slice as one WAV. Export All saves every slice as a ZIP. Both render fresh from the source &mdash; 16-bit / 48kHz, no normalization. This pad view is a preview of your slices, not a connection to the sampler.</div>
           </div>
         </div>
-
-        <div class="samples-head">
-          <h3 id="samplesCount">0 Samples</h3>
-        </div>
-        <div class="samples-row" id="samplesRow"></div>
-
-        <div class="chop-hint">Tap a sample to hear it &middot; tap it again to stop. Loop repeats the selected one:</div>
-        <div class="sample-actions">
-          <button class="pill" id="playSampleBtn" disabled>&#9654; Play Sample</button>
-          <button class="pill" id="loopBtn" disabled>&#8635; Loop</button>
-        </div>
-
-        <div class="export-actions">
-          <button class="pill" id="exportSelectedBtn" disabled>Export Selected</button>
-          <button class="pill solid" id="exportAllBtn" disabled>Export All</button>
-        </div>
-        <div class="chop-hint">Export Selected saves just the sample picked above as one WAV. Export All saves every sample as a ZIP (sample_01.wav, sample_02.wav, &hellip;). Both render fresh from the source &mdash; 16-bit / 48kHz, no normalization.</div>
       </div>
     </section>
 
+    <!-- ============ ABOUT ============ -->
+    <section class="screen" id="screenAbout" aria-label="About">
+      <div class="screen-head"><h2>About</h2><span class="sub">SP404 DROP &middot; v1.2.0</span></div>
+      <div class="about">
+        <svg class="mark" viewBox="0 0 947 1072" aria-hidden="true" focusable="false"><use href="#sp-brand"/></svg>
+        <p>SP404 DROP is a fast sample-preparation utility for the Roland SP-404 family: convert audio to 16-bit / 48kHz WAV, chop it into slices or loops, export.</p>
+        <p>Everything runs on this device. Nothing is uploaded and the app makes no network requests.</p>
+        <dl>
+          <dt>Version</dt><dd>1.2.0</dd>
+          <dt>Licence</dt><dd>MIT</dd>
+          <dt>Source</dt><dd><a href="https://github.com/PUNKPOZER/SP404-DROP" target="_blank" rel="noopener noreferrer">github.com/PUNKPOZER/SP404-DROP</a></dd>
+          <dt>Design</dt><dd>SP SYSTEM</dd>
+        </dl>
+        <p class="chop-hint">Unofficial &middot; not affiliated with Roland.</p>
+      </div>
+    </section>
+    </main>
   </div>
 </div>
 
+<script src="sp-core.js"></script>
+<script src="sp-schemas.js"></script>
+<script src="sp-validate.js"></script>
+<script src="sp-package.js"></script>
+<script src="sp-project.js"></script>
+<script src="sp-bridge.js"></script>
 <script>
 (function(){
   "use strict";
@@ -685,7 +365,6 @@
     "Fit": "Вся дорожка",
     "Zoom to sample": "К сэмплу",
     "Follow": "Следить",
-    "↕ Height": "↕ Высота",
     "Show the whole track": "Показать всю дорожку",
     "Always zoom to the sample you pick": "Всегда приближать выбранный сэмпл",
     "Keep the playhead in view while playing": "Держать курсор в кадре при воспроизведении",
@@ -713,15 +392,9 @@
     "Detecting tempo…": "Определяю темп…",
     "Could not find a steady tempo — type the BPM, then press Beat 1 = playhead on a downbeat.": "Не удалось найти ровный темп — введи BPM и нажми «Доля 1 = курсор» на сильной доле.",
     "That would make over 500 loops — pick a longer loop length.": "Получилось бы больше 500 лупов — выбери длиннее.",
-    "Everything runs on this device — nothing is uploaded anywhere.": "Всё работает на этом устройстве — ничего никуда не загружается.",
-    "Sample Prep · SP-404MKII": "Подготовка сэмплов · SP-404MKII",
     "Convert": "Конвертер",
-    "Batch fix WAV/MP3/AIFF to 16-bit / 48kHz for the sampler.": "Пакетно приводит WAV/MP3/AIFF к 16 бит / 48 кГц для сэмплера.",
     "Chop / Loop": "Нарезка / Луп",
-    "Slice one track into samples, find a loop, export.": "Режем трек на сэмплы, ищем луп, экспортируем.",
-    "How it works:": "Как это работает:",
-    "CONVERT → CHOP → LOOP → EXPORT.": "КОНВЕРТ → НАРЕЗКА → ЛУП → ЭКСПОРТ.",
-    "Unofficial · not affiliated with Roland · MIT · v1.1.0": "Неофициально · не связано с Roland · MIT · v1.1.0",
+    "Unofficial · not affiliated with Roland · MIT · v1.2.0": "Неофициально · не связано с Roland · MIT · v1.2.0",
     "PCM WAV · 16-bit · 48kHz": "PCM WAV · 16 бит · 48 кГц",
     "Tracks": "Треки",
     "Good": "Ок",
@@ -732,7 +405,6 @@
     "click to browse": "выбери файлы",
     "— analysis starts automatically": "— анализ начнётся сам",
     "Clear": "Очистить",
-    "⇩ Download ZIP": "⇩ Скачать ZIP",
     "Filenames and folders preserved in the ZIP. No loudness/level changes applied.": "Имена файлов и папок сохраняются в ZIP. Громкость не меняется.",
     "Drop audio files or folders here, or click to browse": "Перетащи сюда аудиофайлы или папки, либо нажми для выбора",
     "file queued|files queued": "файл в очереди|файла в очереди|файлов в очереди",
@@ -747,7 +419,6 @@
     "could not decode": "не удалось декодировать",
     "unreadable": "нечитаемый файл",
     "No track loaded": "Трек не загружен",
-    "▾ Drop a track": "▾ Перетащи трек",
     "or click to browse — one file at a time": "или нажми для выбора — по одному файлу",
     "Could not load:": "Не удалось загрузить:",
     "unreadable file": "нечитаемый файл",
@@ -760,8 +431,6 @@
     "Add marker on click, in any mode": "Ставить маркер по клику в любом режиме",
     "Toggle snap to zero crossing": "Привязка к нулевому пересечению",
     "Snap to zero crossing": "Привязка к нулевому пересечению",
-    "Back": "Назад",
-    "Click waveform to seek · drag a marker tab to move it · double-click a marker to delete it": "Клик по волне — перемотка · тяни вкладку маркера, чтобы сдвинуть · двойной клик по маркеру — удалить",
     "Click waveform to seek": "Клик по волне — перемотка",
     "drag a marker tab to move it": "тяни вкладку маркера, чтобы сдвинуть",
     "double-click a marker to delete it": "двойной клик по маркеру — удалить",
@@ -780,16 +449,118 @@
     "{n} Sample|{n} Samples": "{n} сэмпл|{n} сэмпла|{n} сэмплов",
     "0 Samples": "0 сэмплов",
     "Load another track": "Загрузить другой трек",
-    "Tap a sample to hear it · tap it again to stop. Loop repeats the selected one:": "Нажми на сэмпл — он сразу заиграет · нажми ещё раз — остановится. «Луп» повторяет выбранный:",
-    "▶ Play Sample": "▶ Играть сэмпл",
     "Play Sample": "Играть сэмпл",
     "Stop": "Стоп",
-    "↻ Loop": "↻ Луп",
     "Export Selected": "Экспорт выбранного",
     "Export Sample": "Экспорт сэмпла",
     "Export All": "Экспорт всех",
-    "Export Selected saves just the sample picked above as one WAV. Export All saves every sample as a ZIP (sample_01.wav, sample_02.wav, …). Both render fresh from the source — 16-bit / 48kHz, no normalization.": "Экспорт выбранного сохраняет один сэмпл как WAV. Экспорт всех — все сэмплы в ZIP (sample_01.wav, sample_02.wav, …). Оба рендерятся заново из исходника — 16 бит / 48 кГц, без нормализации."
+    "SP SYSTEM project": "Проект SP SYSTEM",
+    "Suggestions from LEARN": "Подсказки от LEARN",
+    "Suggestions are not chops until you accept them. The analysis stays untouched.": "Подсказки — это ещё не слайсы, пока вы их не примете. Анализ не меняется.",
+    "For the lesson": "Для урока",
+    "Save project": "Сохранить проект",
+    "Show": "Показать",
+    "Accept": "Принять",
+    "Accepted": "Принято",
+    "loop": "луп",
+    "revision": "ревизия",
+    "unsaved changes": "есть несохранённые изменения",
+    "saved": "сохранено",
+    "Marker tools are off: this project has its own regions (accepted LEARN suggestions). Nothing was changed.": "Инструменты маркеров выключены: в проекте свои регионы (принятые подсказки LEARN). Ничего не изменено.",
+    "Save the project first: accepting a suggestion switches it to its own regions.": "Сначала сохраните проект: принятие подсказки переключает его на собственные регионы.",
+    "Could not accept:": "Не удалось принять:",
+    "Suggestion accepted. Save the project to keep it.": "Подсказка принята. Сохраните проект, чтобы она осталась.",
+    "Could not save the project:": "Не удалось сохранить проект:",
+    "Project saved (revision {r}): {f}": "Проект сохранён (ревизия {r}): {f}",
+    "Sent to SP-404 LEARN without changes (revision {r}): {f}": "Отправлено в SP-404 LEARN без изменений (ревизия {r}): {f}",
+    "Could not open the project:": "Не удалось открыть проект:",
+    "This project has no source audio (it only contains samples).": "В проекте нет исходного аудио (только сэмплы).",
+    "The source file changed since the project was made. Load the original track to relink: {n}": "Исходный файл изменился с момента создания проекта. Загрузите оригинальный трек, чтобы привязать заново: {n}",
+    "Could not read the source audio:": "Не удалось прочитать исходное аудио:",
+    "Source audio not found ({p}). Load the original track to relink it: {n}": "Исходное аудио не найдено ({p}). Загрузите оригинальный трек, чтобы привязать его: {n}",
+    "embedded file missing": "встроенный файл отсутствует",
+    "This is not the track the project was made from. Choose the original file to relink: {n}": "Это не тот трек, из которого сделан проект. Выберите исходный файл: {n}",
+    "Open in LEARN": "Открыть в LEARN",
+    "Project saved (revision {r}) and sent to SP-404 LEARN: {f}": "Проект сохранён (ревизия {r}) и отправлен в SP-404 LEARN: {f}",
+    "Project saved (revision {r}): {f}. SP-404 LEARN was not found — the file is shown in Finder.": "Проект сохранён (ревизия {r}): {f}. SP-404 LEARN не найден — файл показан в Finder.",
+    "The project file was changed by another app (LEARN). Nothing was overwritten. Open it in LEARN, or reload the track in DROP to start a new project file.": "Файл проекта изменён другим приложением (LEARN). Ничего не перезаписано. Открой его в LEARN или загрузи трек в DROP заново, чтобы начать новый файл проекта.",
+    "Could not open in LEARN:": "Не удалось открыть в LEARN:",
+    "Saving the project…": "Сохраняю проект…",
+    "Downloaded {f} — open it in SP-404 LEARN.": "Скачан {f} — открой его в SP-404 LEARN.",
+    "A conversion is already running — wait for it to finish.": "Конвертация уже идёт — дождись окончания.",
+    "Bank": "Банк",
+    "Bank A": "Банк A",
+    "Batch-fix WAV/MP3/AIFF to 16-bit / 48kHz for the sampler.": "Пакетно приводит WAV/MP3/AIFF к 16 бит / 48 кГц для сэмплера.",
+    "Chop mode": "Режим нарезки",
+    "Could not build the ZIP:": "Не удалось собрать ZIP:",
+    "Double tempo": "Удвоить темп",
+    "Half tempo": "Уменьшить темп вдвое",
+    "Download ZIP": "Скачать ZIP",
+    "Drop a track": "Перетащи трек",
+    "Drop a track here, or click to browse": "Перетащи трек сюда или нажми для выбора",
+    "Drop audio files here": "Перетащи аудиофайлы сюда",
+    "Drop audio files here, or click to browse": "Перетащи сюда аудиофайлы или нажми для выбора",
+    "Export Selected saves just the picked slice as one WAV. Export All saves every slice as a ZIP. Both render fresh from the source — 16-bit / 48kHz, no normalization. This pad view is a preview of your slices, not a connection to the sampler.": "«Экспорт выбранного» сохраняет один слайс как WAV. «Экспорт всех» — все слайсы в ZIP. Оба рендерятся заново из исходника — 16 бит / 48 кГц, без нормализации. Сетка пэдов — предпросмотр слайсов, а не соединение с сэмплером.",
+    "Export failed:": "Ошибка экспорта:",
+    "Exported {f}": "Экспортировано: {f}",
+    "Exported {n} files → {z}": "Экспортировано файлов: {n} → {z}",
+    "Home": "Главная",
+    "Language": "Язык",
+    "Loop": "Луп",
+    "Main": "Основное",
+    "Mode": "Режим",
+    "Next bank": "Следующий банк",
+    "Previous bank": "Предыдущий банк",
+    "No supported audio files in that drop. Supported: WAV, MP3, AIFF, FLAC, OGG, M4A.": "В этом наборе нет поддерживаемых аудиофайлов. Подходят: WAV, MP3, AIFF, FLAC, OGG, M4A.",
+    "Output": "Выход",
+    "Pad {p}, empty": "Пэд {p}, пусто",
+    "Progress": "Прогресс",
+    "Rendering {f}…": "Рендерю {f}…",
+    "Rendering {i} of {n}…": "Рендерю {i} из {n}…",
+    "SP404 DROP — home": "SP404 DROP — главная",
+    "Slice one track into numbered samples, find loops, export.": "Режем трек на нумерованные сэмплы, ищем лупы, экспортируем.",
+    "Slice pads, 4 by 4": "Пэды слайсов, 4 на 4",
+    "Slice {i}, pad {p}, {d} seconds": "Слайс {i}, пэд {p}, {d} с",
+    "Split amount": "На сколько частей",
+    "Supported formats": "Поддерживаемые форматы",
+    "Tap a pad to hear its slice · tap it again to stop. Loop repeats the selected one.": "Нажми на пэд — слайс сразу заиграет · нажми ещё раз — остановится. «Луп» повторяет выбранный.",
+    "or click to browse — nothing leaves this device": "или нажми для выбора — ничего не покидает это устройство",
+    "unknown error": "неизвестная ошибка",
+    "{n} file ready|{n} files ready": "{n} файл готов|{n} файла готово|{n} файлов готово",
+    "… and {n} more": "… и ещё {n}",
+    "48 kHz": "48 кГц",
+    "About": "О программе",
+    "Batch convert": "Пакетная конвертация",
+    "Channels": "Каналы",
+    "Choose what to do: Chop / Loop (works on one track — the first file is used) or Convert.": "Выбери действие: «Нарезка / Луп» (работает с одним треком — берётся первый файл) или «Конвертер».",
+    "Convert / Chop / Loop / Export": "Конвертер / Нарезка / Луп / Экспорт",
+    "Design": "Дизайн",
+    "Drop": "Дроп",
+    "Everything runs on this device. Nothing is uploaded and the app makes no network requests.": "Всё работает на этом устройстве. Ничего не загружается, приложение не делает сетевых запросов.",
+    "Fixed on purpose: this is the format the SP-404 loads without conversion. Results are packed into one ZIP with a report.": "Зафиксировано намеренно: этот формат SP-404 загружает без конвертации. Результат упаковывается в один ZIP с отчётом.",
+    "Format": "Формат",
+    "Licence": "Лицензия",
+    "MIT": "MIT",
+    "Normalize": "Нормализация",
+    "Off — levels untouched": "Выкл. — громкость не трогаем",
+    "Open": "Открыть",
+    "SP SYSTEM": "SP SYSTEM",
+    "SP SYSTEM / DROP": "SP SYSTEM / DROP",
+    "SP404 DROP": "SP404 DROP",
+    "SP404 DROP is a fast sample-preparation utility for the Roland SP-404 family: convert audio to 16-bit / 48kHz WAV, chop it into slices or loops, export.": "SP404 DROP — быстрая утилита подготовки сэмплов для семейства Roland SP-404: конвертация аудио в WAV 16 бит / 48 кГц, нарезка на слайсы и лупы, экспорт.",
+    "SP404 DROP · v1.2.0": "SP404 DROP · v1.2.0",
+    "Same as source": "Как в исходнике",
+    "Sample preparation": "Подготовка сэмплов",
+    "Sample rate": "Частота",
+    "Source": "Исходники",
+    "This session": "В этой сессии",
+    "Unofficial · not affiliated with Roland.": "Неофициально · не связано с Roland.",
+    "Version": "Версия",
+    "WAV (PCM 16-bit)": "WAV (PCM 16 бит)",
+    "github.com/PUNKPOZER/SP404-DROP": "github.com/PUNKPOZER/SP404-DROP"
   };
+
+
 
   var I18N = (function(){
     var lang = 'en', listeners = [], tracked = [];
@@ -817,7 +588,7 @@
     }
     function norm(t){ return t.replace(/\s+/g, ' ').trim(); }
     function collect(){
-      var w = document.createTreeWalker(document.querySelector('.page'), NodeFilter.SHOW_TEXT, null), n;
+      var w = document.createTreeWalker(document.querySelector('.sp-app'), NodeFilter.SHOW_TEXT, null), n;
       while ((n = w.nextNode())){
         var key = norm(n.nodeValue);
         if (key && RU[key]) tracked.push({ node: n, key: key, lead: /^\s/.test(n.nodeValue), trail: /\s$/.test(n.nodeValue) });
@@ -860,16 +631,24 @@
   var screens = {
     home: document.getElementById('screenHome'),
     convert: document.getElementById('screenConvert'),
-    chop: document.getElementById('screenChop')
+    chop: document.getElementById('screenChop'),
+    about: document.getElementById('screenAbout')
   };
   function showScreen(name){
     Object.keys(screens).forEach(function(k){
       screens[k].classList.toggle('active', k === name);
     });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-screen]'), function(b){
+      var on = b.getAttribute('data-screen') === name;
+      b.classList.toggle('on', on);
+      if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
     if (name !== 'chop') Chop.stopAll();
+    window.scrollTo(0, 0);
   }
-  document.getElementById('tileConvert').addEventListener('click', function(){ showScreen('convert'); });
-  document.getElementById('tileChop').addEventListener('click', function(){ showScreen('chop'); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-screen]'), function(btn){
+    btn.addEventListener('click', function(){ showScreen(btn.getAttribute('data-screen')); });
+  });
   Array.prototype.forEach.call(document.querySelectorAll('[data-nav="home"]'), function(btn){
     btn.addEventListener('click', function(){ showScreen('home'); });
   });
@@ -896,116 +675,70 @@
       return c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;';
     });
   }
-  function writeStr(dv, off, str) {
-    for (var i = 0; i < str.length; i++) dv.setUint8(off + i, str.charCodeAt(i));
+  // WAV encoder, CRC32, ZIP writer, export names and pad mapping live in sp-core.js (also unit-tested in Node).
+  var encodeWav16 = SPCore.encodeWav16, MiniZip = SPCore.MiniZip, padNum = SPCore.padNum;
+
+  /* ---- SVG icons: symbols come from the inline sprite (assets/icons.svg, synced into this file) ---- */
+  function ico(name, cls) {
+    return '<svg class="sp-icon' + (cls ? ' ' + cls : '') + '" aria-hidden="true" focusable="false"><use href="#i-' + name + '"/></svg>';
   }
-  function encodeWav16(audioBuffer) {
-    var numCh = audioBuffer.numberOfChannels;
-    var rate = audioBuffer.sampleRate;
-    var frames = audioBuffer.length;
-    var blockAlign = numCh * 2;
-    var dataSize = frames * blockAlign;
-    var buf = new ArrayBuffer(44 + dataSize);
-    var dv = new DataView(buf);
-    writeStr(dv, 0, 'RIFF');
-    dv.setUint32(4, 36 + dataSize, true);
-    writeStr(dv, 8, 'WAVE');
-    writeStr(dv, 12, 'fmt ');
-    dv.setUint32(16, 16, true);
-    dv.setUint16(20, 1, true);
-    dv.setUint16(22, numCh, true);
-    dv.setUint32(24, rate, true);
-    dv.setUint32(28, rate * blockAlign, true);
-    dv.setUint16(32, blockAlign, true);
-    dv.setUint16(34, 16, true);
-    writeStr(dv, 36, 'data');
-    dv.setUint32(40, dataSize, true);
-    var channels = [];
-    for (var c = 0; c < numCh; c++) channels.push(audioBuffer.getChannelData(c));
-    var off = 44;
-    for (var i = 0; i < frames; i++) {
-      for (var ch = 0; ch < numCh; ch++) {
-        var s = channels[ch][i];
-        s = s < -1 ? -1 : s > 1 ? 1 : s;
-        dv.setInt16(off, s < 0 ? s * 32768 : s * 32767, true);
-        off += 2;
-      }
-    }
-    return new Uint8Array(buf);
+  function setPressed(btn, on) {
+    btn.classList.toggle('on', !!on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  function setActive(el, on) {
+    el.classList.toggle('active', !!on);
+    el.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  function showAlert(box, kind, text) {
+    if (!text) { box.hidden = true; box.textContent = ''; return; }
+    box.hidden = false;
+    box.className = 'sp-alert ' + kind;
+    box.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+    box.textContent = text;
   }
 
-  var CRC_TABLE = (function () {
-    var table = new Uint32Array(256);
-    for (var n = 0; n < 256; n++) {
-      var c = n;
-      for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-      table[n] = c >>> 0;
-    }
-    return table;
+  /* ---- design tokens for canvas drawing: read once from the CSS custom properties (sp-system.css) ---- */
+  var COL = {};
+  (function readTokens() {
+    var cs = getComputedStyle(document.documentElement);
+    function v(n, fb) { return cs.getPropertyValue(n).trim() || fb; }
+    COL.paper = v('--sp-paper', '#F2F1EC'); COL.white = v('--sp-white', '#FBFAF7'); COL.paper2 = v('--sp-paper-2', '#E8E6DE');
+    COL.rule = v('--sp-rule', '#C4C1B4'); COL.ink = v('--sp-ink', '#191918'); COL.ink2 = v('--sp-ink-2', '#4A4944'); COL.ink3 = v('--sp-ink-3', '#66645D');
+    COL.red = v('--sp-red', '#FF2A1A'); COL.blue = v('--sp-blue', '#1265F5'); COL.green = v('--sp-green', '#718A35');
+    COL.inkTint = 'rgba(25,25,24,0.10)'; COL.redTint = 'rgba(255,42,26,0.30)'; COL.blueTint = 'rgba(18,101,245,0.14)';
   })();
-  function crc32(bytes) {
-    var crc = 0xFFFFFFFF;
-    for (var i = 0; i < bytes.length; i++) crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
-    return (crc ^ 0xFFFFFFFF) >>> 0;
-  }
-  function MiniZip() { this.entries = []; }
-  MiniZip.prototype.addFile = function (path, bytes) {
-    this.entries.push({ path: path.replace(/\\/g, '/'), bytes: bytes });
-  };
-  MiniZip.prototype.generate = function () {
-    var parts = [], central = [], offset = 0;
-    var encoder = new TextEncoder();
-    this.entries.forEach(function (entry) {
-      var nameBytes = encoder.encode(entry.path);
-      var bytes = entry.bytes;
-      var crc = crc32(bytes);
-      var lh = new ArrayBuffer(30), dv = new DataView(lh);
-      dv.setUint32(0, 0x04034b50, true); dv.setUint16(4, 20, true); dv.setUint16(6, 0, true);
-      dv.setUint16(8, 0, true); dv.setUint16(10, 0, true); dv.setUint16(12, 0, true);
-      dv.setUint32(14, crc, true); dv.setUint32(18, bytes.length, true); dv.setUint32(22, bytes.length, true);
-      dv.setUint16(26, nameBytes.length, true); dv.setUint16(28, 0, true);
-      parts.push(new Uint8Array(lh), nameBytes, bytes);
-
-      var ch = new ArrayBuffer(46), cdv = new DataView(ch);
-      cdv.setUint32(0, 0x02014b50, true); cdv.setUint16(4, 20, true); cdv.setUint16(6, 20, true);
-      cdv.setUint16(8, 0, true); cdv.setUint16(10, 0, true); cdv.setUint16(12, 0, true); cdv.setUint16(14, 0, true);
-      cdv.setUint32(16, crc, true); cdv.setUint32(20, bytes.length, true); cdv.setUint32(24, bytes.length, true);
-      cdv.setUint16(28, nameBytes.length, true); cdv.setUint16(30, 0, true); cdv.setUint16(32, 0, true);
-      cdv.setUint16(34, 0, true); cdv.setUint16(36, 0, true); cdv.setUint32(38, 0, true); cdv.setUint32(42, offset, true);
-      central.push(new Uint8Array(ch), nameBytes);
-      offset += lh.byteLength + nameBytes.length + bytes.length;
-    });
-    var centralStart = offset, centralSize = 0;
-    central.forEach(function (p) { centralSize += p.length; });
-    var eocd = new ArrayBuffer(22), edv = new DataView(eocd);
-    edv.setUint32(0, 0x06054b50, true); edv.setUint16(4, 0, true); edv.setUint16(6, 0, true);
-    edv.setUint16(8, this.entries.length, true); edv.setUint16(10, this.entries.length, true);
-    edv.setUint32(12, centralSize, true); edv.setUint32(16, centralStart, true); edv.setUint16(20, 0, true);
-    return new Blob(parts.concat(central, [new Uint8Array(eocd)]), { type: 'application/zip' });
-  };
 
   function downloadFile(blob, filename) {
-    if (window.claude && typeof window.claude.use === 'function') {
-      window.claude.use('downloads').then(function (downloads) {
-        if (!downloads) { fallbackDownload(blob, filename); return; }
-        downloads.save({ filename: filename, data: blob })['catch'](function () {});
-      })['catch'](function () { fallbackDownload(blob, filename); });
-    } else {
-      fallbackDownload(blob, filename);
-    }
-  }
-  function fallbackDownload(blob, filename) {
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url; a.download = filename;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   }
+  // A drop that misses every drop zone must not make the browser open the file.
+  window.addEventListener('dragover', function (e) { e.preventDefault(); });
+  window.addEventListener('drop', function (e) { e.preventDefault(); });
+
+  /* ---- Session: files handled since the app opened (memory only; nothing is persisted or faked) ---- */
+  var Session = (function(){
+    var items = [], listeners = [];
+    return {
+      add: function(it){
+        items = items.filter(function(x){ return !(x.kind === it.kind && x.name === it.name); });
+        items.unshift(it);
+        if (items.length > 8) items.length = 8;
+        listeners.forEach(function(fn){ fn(); });
+      },
+      list: function(){ return items; },
+      onChange: function(fn){ listeners.push(fn); }
+    };
+  })();
 
   /* =========================================================
      CONVERT screen
      ========================================================= */
-  (function ConvertModule(){
+  var Convert = (function ConvertModule(){
     var els = {
       screen: document.getElementById('screen'),
       screenIdle: document.getElementById('screenIdle'),
@@ -1019,7 +752,8 @@
       statOk: document.getElementById('statOk'),
       statAsis: document.getElementById('statAsis'),
       statErr: document.getElementById('statErr'),
-      statErrTile: document.getElementById('statErrTile')
+      statErrTile: document.getElementById('statErrTile'),
+      alert: document.getElementById('convAlert')
     };
     var METER_SEGMENTS = 26;
     var meterSegs = [];
@@ -1032,13 +766,14 @@
       var lit = Math.round((pct / 100) * METER_SEGMENTS);
       for (var i = 0; i < meterSegs.length; i++) meterSegs[i].classList.toggle('on', i < lit);
       els.meterPct.textContent = Math.round(pct) + '%';
+      els.meter.setAttribute('aria-valuenow', String(Math.round(pct)));
     }
     function setStats(counts) {
       els.statTotal.textContent = counts.total;
       els.statOk.textContent = counts.converted;
       els.statAsis.textContent = counts.skipped;
       els.statErr.textContent = counts.failed;
-      els.statErrTile.classList.toggle('hot', counts.failed > 0);
+      els.statErrTile.classList.toggle('alert', counts.failed > 0);
     }
 
     var queue = [], zipBlobCache = null, processing = false;
@@ -1067,6 +802,7 @@
       els.screenIdle.hidden = false;
       els.screenBody.hidden = true;
       els.screenBody.innerHTML = '';
+      showAlert(els.alert, 'error', '');
     }
     function renderIdleOrSummary() {
       if (queue.length === 0) { els.screenIdle.hidden = false; els.screenBody.hidden = true; return; }
@@ -1198,6 +934,7 @@
       els.clearBtn.disabled = true;
       els.downloadBtn.classList.remove('show');
       els.screenBody.innerHTML = '';
+      showAlert(els.alert, 'error', '');
       setMeter(0);
       var total = queue.length, done = 0;
       var counts = { total: total, converted: 0, skipped: 0, failed: 0 };
@@ -1207,9 +944,10 @@
         if (i >= queue.length) return finish();
         return processOne(queue[i]).then(function (res) {
           done++; setMeter((done / total) * 100);
-          if (res.status === 'converted') { counts.converted++; zip.addFile(res.outPath, res.bytes); appendLogLine('ok', '✓', res.outPath, res.note); }
-          else if (res.status === 'skipped') { counts.skipped++; zip.addFile(res.outPath, res.bytes); appendLogLine('skip', '•', res.outPath, res.note); }
-          else { counts.failed++; appendLogLine('fail', '✕', res.outPath, res.note); }
+          if (res.status !== 'failed') Session.add({ kind: 'convert', name: res.outPath, meta: res.note });
+          if (res.status === 'converted') { counts.converted++; zip.addFile(res.outPath, res.bytes); appendLogLine('ok', ico('check', 'sm'), res.outPath, res.note); }
+          else if (res.status === 'skipped') { counts.skipped++; zip.addFile(res.outPath, res.bytes); appendLogLine('skip', ico('minus', 'sm'), res.outPath, res.note); }
+          else { counts.failed++; appendLogLine('fail', ico('alert', 'sm'), res.outPath, res.note); }
           setStats(counts);
           reportLines.push(res.status.toUpperCase() + '  ' + res.outPath + '  (' + res.note + ')');
           return next(i + 1);
@@ -1220,14 +958,20 @@
           ' converted, ' + counts.skipped + ' already OK, ' + counts.failed + ' failed.\n\n' + reportLines.join('\n') + '\n';
         zip.addFile('CONVERSION_REPORT.txt', new TextEncoder().encode(reportText));
         renderSummary(counts);
-        zipBlobCache = zip.generate();
+        try {
+          zipBlobCache = zip.generate();
+        } catch (err) {
+          zipBlobCache = null;
+          showAlert(els.alert, 'error', tr('Could not build the ZIP:') + ' ' + (err && err.message ? err.message : tr('unknown error')));
+        }
         processing = false;
         els.clearBtn.disabled = false;
-        if (counts.converted + counts.skipped > 0) els.downloadBtn.classList.add('show');
+        if (zipBlobCache && counts.converted + counts.skipped > 0) els.downloadBtn.classList.add('show');
       }
       next(0);
     }
     clearAll();
+    return { addFiles: addFiles, handleDataTransfer: handleDataTransfer, isAcceptable: isAcceptable, isBusy: function () { return processing; } };
   })();
 
   /* =========================================================
@@ -1271,20 +1015,39 @@
       clearMarkersBtn2: document.getElementById('clearMarkersBtn2'),
       clearMarkersBtn3: document.getElementById('clearMarkersBtn3'),
       samplesCount: document.getElementById('samplesCount'),
-      samplesRow: document.getElementById('samplesRow'),
+      padGrid: document.getElementById('padGrid'),
+      bankPrev: document.getElementById('bankPrev'),
+      bankNext: document.getElementById('bankNext'),
+      bankLabel: document.getElementById('bankLabel'),
+      bankInfo: document.getElementById('bankInfo'),
+      exportHint: document.getElementById('exportHint'),
+      alert: document.getElementById('chopAlert'),
+      loadAlert: document.getElementById('chopLoadAlert'),
+      bpmReadout: document.getElementById('chopBpm'),
+      bpmReadoutVal: document.getElementById('chopBpmVal'),
+      playSampleLabel: document.getElementById('playSampleLabel'),
       playSampleBtn: document.getElementById('playSampleBtn'),
       loopBtn: document.getElementById('loopBtn'),
       exportSelectedBtn: document.getElementById('exportSelectedBtn'),
-      exportAllBtn: document.getElementById('exportAllBtn')
+      exportAllBtn: document.getElementById('exportAllBtn'),
+      openLearnBtn: document.getElementById('openLearnBtn'),
+      learnPanel: document.getElementById('learnPanel'), learnTitle: document.getElementById('learnTitle'), learnMeta: document.getElementById('learnMeta'),
+      learnSuggest: document.getElementById('learnSuggest'), learnSuggestList: document.getElementById('learnSuggestList'),
+      learnReq: document.getElementById('learnReq'), learnReqList: document.getElementById('learnReqList'), saveProjectBtn: document.getElementById('saveProjectBtn')
     };
 
-    var PX_PER_SEC_MIN = 70; // floor so very short clips still get a workable click target
     var CHUNK = 512;
     var MIN_GAP = 0.03; // seconds, min spacing between markers / file edges
 
     var state = {
       audioBuffer: null,
       fileName: '',
+      sourceFile: null,     // the File as loaded (bytes go into a .spsystem project)
+      sessionKey: '',       // one project per loaded track
+      spProject: null,      // browser-only: project kept between downloads (same UUID)
+      regions: null,        // null = slices come from markers; else [{id,start,end,name}] independent chops (accepted suggestions, imported sets)
+      suggestions: [],      // LEARN candidates (read-only view): [{id,kind,label,startSeconds,endSeconds,accepted,loop}]
+      project: null,        // an opened .spsystem: {key,path,id,revision,title,requirements,baseSig,acceptedDirty}
       peaksMin: null,
       peaksMax: null,
       grid: { bpm: 0, offset: 0, div: 4, show: false, detected: false },
@@ -1296,6 +1059,9 @@
       snap: true,
       markMode: false,
       selected: 0,
+      bank: 0,              // which 16 slices the pad grid shows
+      bankPinned: false,    // user paged the banks by hand: stop following the selection
+      exporting: false,
       cursorTime: 0,
       playKind: null,       // null | 'transport' | 'sample' | 'loop'
       playing: false,
@@ -1321,6 +1087,8 @@
       state.fileName = '';
       state.peaksMin = null; state.peaksMax = null;
       state.markers = [];
+      state.regions = null; state.suggestions = []; state.project = null; pendingRelink = null;
+      els.learnPanel.hidden = true;
       state.selected = 0;
       state.cursorTime = 0;
       state.transientChopped = false;
@@ -1329,30 +1097,44 @@
       els.sub.textContent = tr('No track loaded');
     }
 
-    function loadFile(file){
+    var pendingRelink = null;   // an opened project whose source audio was not found: waits for the original track
+    function loadFile(file, proj){
+      if (!proj && pendingRelink) return relinkWith(file);
       var ctx = getActx();
       file.arrayBuffer().then(function(buf){
         return ctx.decodeAudioData(buf);
       }).then(function(audioBuffer){
         state.audioBuffer = audioBuffer;
         state.fileName = file.name;
+        state.sourceFile = file; state.spProject = null;
+        state.sessionKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random();
+        state.regions = null; state.suggestions = []; state.project = null; pendingRelink = null;
         state.markers = [];
         state.selected = 0;
         state.cursorTime = 0;
         state.grid = { bpm: 0, offset: 0, div: 4, show: false, detected: false };
         viewCfg.gain = 1; view.start = 0; view.pps = 0;
         els.beatStatus.textContent = '';
+        els.bpmReadout.hidden = true;
+        state.bank = 0; state.bankPinned = false;
+        showAlert(els.loadAlert, 'error', '');
+        showAlert(els.alert, 'ok', '');
         state.transientChopped = false;
         computePeaks();
         els.drop.hidden = true;
         els.workspace.hidden = false;
         els.filename.textContent = file.name;
         els.sub.textContent = fmtTime(audioBuffer.duration) + ' · ' + audioBuffer.numberOfChannels + 'ch · ' + audioBuffer.sampleRate + 'Hz';
+        Session.add({ kind: 'chop', name: file.name, meta: els.sub.textContent, file: file });
+        if (proj) applyProject(proj.info);
         layoutStage();
         drawOverlay();
         renderSamples();
+        if (proj && state.project) { state.sessionKey = proj.info.key; showSelectionAfterOpen(); }
       })['catch'](function(err){
-        els.sub.textContent = tr('Could not load:') + ' ' + (err && err.message ? err.message : tr('unreadable file'));
+        var msg = tr('Could not load:') + ' ' + (err && err.message ? err.message : tr('unreadable file'));
+        els.sub.textContent = msg;
+        showAlert(els.loadAlert, 'error', file.name + ' — ' + msg);
       });
     }
 
@@ -1515,14 +1297,14 @@
       return m + ':' + (parseFloat(ss) < 10 ? '0' : '') + ss;
     }
     function drawRuler(ctx, w){
-      ctx.fillStyle = '#e4e2d6';
+      ctx.fillStyle = COL.paper2;
       ctx.fillRect(0, 0, w, RULER_H);
-      ctx.fillStyle = '#0c0c0a';
+      ctx.fillStyle = COL.ink;
       ctx.fillRect(0, RULER_H - 1, w, 1);
       var step = niceStep(88 / view.pps), minor = step / 4;
-      ctx.font = '9px Silkscreen, monospace';
+      ctx.font = '600 10px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
       ctx.textBaseline = 'middle';
-      ctx.strokeStyle = '#8b8778'; ctx.lineWidth = 1; ctx.beginPath();
+      ctx.strokeStyle = COL.ink3; ctx.lineWidth = 1; ctx.beginPath();
       for (var t = Math.floor(view.start / minor) * minor; t <= view.start + w / view.pps; t += minor){
         var x = Math.round(timeToX(t)) + 0.5;
         if (x < 0 || x > w) continue;
@@ -1530,22 +1312,22 @@
         ctx.moveTo(x, RULER_H - 1); ctx.lineTo(x, RULER_H - (isMajor ? 9 : 5));
       }
       ctx.stroke();
-      ctx.fillStyle = '#55524a';
+      ctx.fillStyle = COL.ink2;
       for (t = Math.ceil(view.start / step) * step; t <= view.start + w / view.pps; t += step){
         var lx = timeToX(t);
         if (lx < 0 || lx > w) continue;
-        ctx.fillText(rulerLabel(t, step), lx + 3, RULER_H - 14);
+        ctx.fillText(rulerLabel(t, step), lx + 4, RULER_H - 8);  // below the marker tabs, which sit in the top 16px
       }
     }
     function drawWave(){
       var cv = els.waveCanvas, ctx = cv.getContext('2d'), r = dpr();
       var w = cv.width / r, h = cv.height / r, g = waveGeom(h);
       ctx.setTransform(r, 0, 0, r, 0, 0);
-      ctx.fillStyle = '#f6f5ef';
+      ctx.fillStyle = COL.white;
       ctx.fillRect(0, 0, w, h);
-      ctx.strokeStyle = '#c9c7ba'; ctx.lineWidth = 1;
+      ctx.strokeStyle = COL.rule; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(0, Math.round(g.mid) + 0.5); ctx.lineTo(w, Math.round(g.mid) + 0.5); ctx.stroke();
-      ctx.strokeStyle = '#0c0c0a'; ctx.lineWidth = 1;
+      ctx.strokeStyle = COL.ink; ctx.lineWidth = 1;
       ctx.beginPath();
       tracePath(ctx, 0, w, g.mid, g.amp);
       ctx.stroke();
@@ -1559,7 +1341,7 @@
       var w = cv.width / r, h = cv.height / r;
       if (!w) return;
       ctx.setTransform(r, 0, 0, r, 0, 0);
-      ctx.fillStyle = '#e4e2d6'; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = COL.paper2; ctx.fillRect(0, 0, w, h);
       var d = trackDur(), mid = h / 2, amp = h / 2 - 3;
       if (!ovCache || ovCache.w !== w){
         var mins = state.peaksMin, maxs = state.peaksMax, tc = mins.length, cols = [];
@@ -1574,10 +1356,10 @@
       var segs = segments();
       var sel = segs.length > 1 ? segs[state.selected] : null;
       if (sel){
-        ctx.fillStyle = '#c9c7ba';
+        ctx.fillStyle = COL.redTint;
         ctx.fillRect(sel.start / d * w, 0, Math.max(2, (sel.end - sel.start) / d * w), h);
       }
-      ctx.strokeStyle = '#0c0c0a'; ctx.lineWidth = 1; ctx.beginPath();
+      ctx.strokeStyle = COL.ink; ctx.lineWidth = 1; ctx.beginPath();
       for (var xx = 0; xx < w; xx++){
         var cc = ovCache.cols[xx];
         var y0 = mid - cc[1] * amp, y1 = mid - cc[0] * amp;
@@ -1585,19 +1367,19 @@
         ctx.moveTo(xx + 0.5, y0); ctx.lineTo(xx + 0.5, y1);
       }
       ctx.stroke();
-      ctx.strokeStyle = '#0c0c0a'; ctx.lineWidth = 1;
+      ctx.strokeStyle = COL.ink2; ctx.lineWidth = 1;
       state.markers.forEach(function(m){
         var mx2 = Math.round(m.time / d * w) + 0.5;
         ctx.beginPath(); ctx.moveTo(mx2, 0); ctx.lineTo(mx2, h); ctx.stroke();
       });
       // viewport box
       var vx = view.start / d * w, vw = Math.max(6, viewSpan() / d * w);
-      ctx.fillStyle = 'rgba(12,12,10,0.14)'; ctx.fillRect(vx, 0, vw, h);
-      ctx.strokeStyle = '#0c0c0a'; ctx.lineWidth = 2.5;
+      ctx.fillStyle = COL.blueTint; ctx.fillRect(vx, 0, vw, h);
+      ctx.strokeStyle = COL.blue; ctx.lineWidth = 2.5;
       ctx.strokeRect(vx + 1.25, 1.25, Math.max(4, vw - 2.5), h - 2.5);
       // playhead
       var px = Math.round(state.cursorTime / d * w) + 0.5;
-      ctx.strokeStyle = '#0c0c0a'; ctx.lineWidth = 2;
+      ctx.strokeStyle = COL.ink; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, h); ctx.stroke();
     }
     var ovDrag = null;
@@ -1621,6 +1403,7 @@
     });
 
     function segments(){
+      if (state.regions) return state.regions.map(function(r, i){ return { start: r.start, end: r.end, index: i, id: r.id }; });
       var d = state.audioBuffer.duration;
       var times = [0].concat(state.markers.map(function(m){return m.time;}).sort(function(a,b){return a-b;})).concat([d]);
       var segs = [];
@@ -1638,7 +1421,7 @@
         var isBar = ((k % 4) + 4) % 4 === 0;
         if (!isBar && px < 10) continue;
         var x = Math.round(timeToX(gr.offset + k * beat)) + 0.5;
-        ctx.strokeStyle = isBar ? '#55524a' : '#c9c7ba';
+        ctx.strokeStyle = isBar ? COL.ink3 : COL.rule;
         ctx.lineWidth = isBar ? 1.5 : 1;
         ctx.beginPath(); ctx.moveTo(x, RULER_H); ctx.lineTo(x, h); ctx.stroke();
       }
@@ -1654,43 +1437,66 @@
       if (state.grid.show && state.grid.bpm > 0) drawGrid(ctx, w, h);
       // Selected sample: the app's usual hard ink/card inversion, with the
       // waveform redrawn in card colour on top so it reads as a cutout.
-      var selX0 = null, selX1 = null, seg = segs.length > 1 ? segs[state.selected] : null;
+      var selX0 = null, selX1 = null, seg = (segs.length > 1 || state.regions) ? segs[state.selected] : null;
       if (seg){
         selX0 = timeToX(seg.start); selX1 = timeToX(seg.end);
         var cx0 = Math.max(0, selX0), cx1 = Math.min(w, selX1);
         if (cx1 > cx0){
-          ctx.fillStyle = '#0c0c0a';
+          ctx.fillStyle = COL.red;
           ctx.fillRect(cx0, RULER_H, Math.max(1, cx1 - cx0), h - RULER_H);
-          ctx.strokeStyle = '#f0efe8'; ctx.lineWidth = 1;
+          ctx.strokeStyle = COL.ink; ctx.lineWidth = 1;
           ctx.beginPath(); tracePath(ctx, cx0, cx1, g.mid, g.amp); ctx.stroke();
         }
       }
-      ctx.strokeStyle = '#0c0c0a'; ctx.lineWidth = 2;
+      ctx.strokeStyle = COL.ink; ctx.lineWidth = 2;
       ctx.setLineDash([4, 3]);
       state.markers.forEach(function(m){
         var x = timeToX(m.time);
         if (x < -2 || x > w + 2) return;
         ctx.beginPath(); ctx.moveTo(x + 0.5, RULER_H); ctx.lineTo(x + 0.5, h); ctx.stroke();
       });
+      // independent regions (accepted LEARN suggestions / imported chops): their edges drawn like markers
+      if (state.regions) state.regions.forEach(function(rg){
+        [rg.start, rg.end].forEach(function(t){
+          var x = timeToX(t); if (x < -2 || x > w + 2) return;
+          ctx.beginPath(); ctx.moveTo(x + 0.5, RULER_H); ctx.lineTo(x + 0.5, h); ctx.stroke();
+        });
+      });
       ctx.setLineDash([]);
+      // LEARN suggestions: a different treatment from confirmed chops — translucent blue band, dashed blue outline, "S<n>" tab
+      var sn = 0;
+      state.suggestions.forEach(function(sg){
+        sn++;
+        if (sg.accepted) return;
+        var x0 = timeToX(sg.startSeconds), x1 = timeToX(sg.endSeconds);
+        if (x1 < 0 || x0 > w) return;
+        var cx0 = Math.max(-2, x0), cx1 = Math.min(w + 2, x1);
+        ctx.fillStyle = COL.blueTint; ctx.fillRect(cx0, RULER_H, cx1 - cx0, h - RULER_H);
+        ctx.strokeStyle = COL.blue; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+        ctx.strokeRect(cx0 + 1, RULER_H + 1, Math.max(1, cx1 - cx0 - 2), h - RULER_H - 2);
+        ctx.setLineDash([]);
+        if (x1 - x0 >= 26){ ctx.fillStyle = COL.blue; ctx.fillRect(Math.max(x0, 0) + 1, RULER_H + 1, 26, 15); ctx.fillStyle = COL.white; ctx.font = '700 10px ui-monospace, "SF Mono", Menlo, Consolas, monospace'; ctx.textBaseline = 'middle'; ctx.fillText('S' + sn, Math.max(x0, 0) + 5, RULER_H + 9); }
+      });
       // sample numbers, bottom-left of each visible region
-      ctx.font = 'bold 11px Silkscreen, monospace'; ctx.textBaseline = 'middle';
+      ctx.font = '700 11px ui-monospace, "SF Mono", Menlo, Consolas, monospace'; ctx.textBaseline = 'middle';
       segs.forEach(function(sg, i){
         var x0 = timeToX(sg.start), x1 = timeToX(sg.end);
         if (x1 < 0 || x0 > w || x1 - x0 < 30) return;
         var label = (i + 1 < 10 ? '0' : '') + (i + 1), lx = Math.max(x0, 0) + 5, ly = h - 11;
         var inSel = (i === state.selected);
-        ctx.fillStyle = inSel ? '#f0efe8' : '#0c0c0a';
+        ctx.fillStyle = inSel ? COL.white : COL.ink;
         ctx.fillRect(lx - 3, ly - 8, 25, 16);
-        ctx.fillStyle = inSel ? '#0c0c0a' : '#f0efe8';
+        if (inSel){ ctx.strokeStyle = COL.ink; ctx.lineWidth = 1.5; ctx.strokeRect(lx - 2.25, ly - 7.25, 23.5, 14.5); }
+        ctx.fillStyle = inSel ? COL.ink : COL.paper;
         ctx.fillText(label, lx, ly + 1);
       });
       // playhead — card colour while crossing the inverted selection
       var cx = timeToX(state.cursorTime);
       if (cx >= -6 && cx <= w + 6){
-        var over = selX0 != null && cx >= selX0 && cx <= selX1;
-        ctx.strokeStyle = ctx.fillStyle = over ? '#f0efe8' : '#0c0c0a';
-        ctx.lineWidth = 2.5;
+        // ink playhead with a paper halo, so it reads on the white field, the red selection and the grid alike
+        ctx.strokeStyle = COL.white; ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(cx + 0.5, RULER_H); ctx.lineTo(cx + 0.5, h); ctx.stroke();
+        ctx.strokeStyle = ctx.fillStyle = COL.ink; ctx.lineWidth = 2.5;
         ctx.beginPath(); ctx.moveTo(cx + 0.5, RULER_H); ctx.lineTo(cx + 0.5, h); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(cx - 5, RULER_H); ctx.lineTo(cx + 5, RULER_H); ctx.lineTo(cx, RULER_H + 7); ctx.closePath(); ctx.fill();
       }
@@ -1810,8 +1616,13 @@
       drawOverlay();
     }
 
+    function regionsLocked(){
+      if (!state.regions) return false;
+      showAlert(els.alert, 'error', tr('Marker tools are off: this project has its own regions (accepted LEARN suggestions). Nothing was changed.'));
+      return true;
+    }
     function addMarkerAt(t){
-      if (!state.audioBuffer) return;
+      if (!state.audioBuffer || regionsLocked()) return;
       var d = state.audioBuffer.duration;
       if (t < MIN_GAP || t > d - MIN_GAP) return;
       // enforce min gap from existing markers
@@ -1831,6 +1642,7 @@
       layoutStage(); drawOverlay(); renderSamples();
     }
     function clearMarkers(){
+      if (regionsLocked()) return;
       state.markers = [];
       state.selected = 0;
       layoutStage(); drawOverlay(); renderSamples();
@@ -1844,7 +1656,7 @@
        added by hand while in Transient/Equal, on top of an auto-chop. */
     function setMarkMode(on){
       state.markMode = on;
-      els.markBtn.classList.toggle('active', on);
+      setPressed(els.markBtn, on);
       els.waveFrame.classList.toggle('add-mode', on);
       els.waveStage.classList.toggle('add-mode', on);
       els.chopHint.innerHTML = on
@@ -1856,7 +1668,7 @@
     Array.prototype.forEach.call(els.modeRow.children, function(tile){
       tile.addEventListener('click', function(){
         state.mode = tile.dataset.mode;
-        Array.prototype.forEach.call(els.modeRow.children, function(t2){ t2.classList.toggle('active', t2===tile); });
+        Array.prototype.forEach.call(els.modeRow.children, function(t2){ setActive(t2, t2===tile); });
         els.panelTransient.hidden = state.mode !== 'transient';
         els.panelEqual.hidden = state.mode !== 'equal';
         els.panelManual.hidden = state.mode !== 'manual';
@@ -1882,7 +1694,7 @@
     Array.prototype.forEach.call(els.partsRow.children, function(chip){
       chip.addEventListener('click', function(){
         state.equalParts = Number(chip.dataset.parts);
-        Array.prototype.forEach.call(els.partsRow.children, function(c2){ c2.classList.toggle('active', c2===chip); });
+        Array.prototype.forEach.call(els.partsRow.children, function(c2){ setActive(c2, c2===chip); });
       });
     });
     [els.clearMarkersBtn1, els.clearMarkersBtn2, els.clearMarkersBtn3, els.clearMarkersBtn4].forEach(function(btn){
@@ -1891,6 +1703,7 @@
 
     /* ---- auto chop: transient detection ---- */
     function autoChopTransient(){
+      if (regionsLocked()) return;
       var buf = state.audioBuffer.getChannelData(0);
       var sr = state.audioBuffer.sampleRate;
       var frame = 1024, hop = 512;
@@ -1955,6 +1768,7 @@
       layoutStage(); drawOverlay(); renderSamples();
     }
     function autoChopEqual(){
+      if (regionsLocked()) return;
       var n = state.equalParts, d = state.audioBuffer.duration;
       state.markers = [];
       for (var i=1;i<n;i++){
@@ -1978,6 +1792,7 @@
       if (audition && i === state.selected && state.playKind === 'sample'){ stopAll(); return; }
       if (state.playKind) stopAll();
       state.selected = i;
+      state.bankPinned = false;
       renderSamples();
       if (viewCfg.zoomSel) zoomToSelection();
       else {
@@ -1987,29 +1802,68 @@
       if (audition) playSegment(seg);
       else { state.cursorTime = seg.start; drawOverlay(); }
     }
-    function renderSamples(){
-      var segs = segments();
-      els.samplesCount.textContent = tr('{n} Sample|{n} Samples', { n: segs.length });
-      els.samplesRow.innerHTML = '';
-      if (state.selected >= segs.length) state.selected = segs.length-1;
-      segs.forEach(function(seg, i){
-        var chip = document.createElement('div');
-        chip.className = 'sample-chip' + (i===state.selected?' active':'');
-        var num = (i+1) < 10 ? '0'+(i+1) : String(i+1);
-        chip.innerHTML = '<div class="sc-num">'+num+'</div><div class="sc-len">'+(seg.end-seg.start).toFixed(2)+'s</div>';
-        chip.addEventListener('click', function(){ selectSample(i, true); });
-        els.samplesRow.appendChild(chip);
+    /* ---- 4x4 pad preview over the slices (same pad component as SP-404 LEARN) ----
+       Slice i lives on bank floor(i/16), pad (i%16)+1 (pad 1 = bottom-left, like the hardware).
+       This is a visual/control layer over the existing slice regions; it does not talk to the sampler. */
+    var padBtns = {};
+    SPCore.PAD_ROWS.forEach(function(row){
+      row.forEach(function(n){
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'sp-pad'; b.dataset.pad = String(n);
+        b.innerHTML = '<span class="p"></span><span class="n"></span><span class="m"></span>';
+        b.addEventListener('click', function(){ selectSample(SPCore.sliceAt(state.bank, n), true); });
+        els.padGrid.appendChild(b);
+        padBtns[n] = b;
       });
-      var hasSel = segs.length > 0;
+    });
+    function updatePads(){
+      if (!state.audioBuffer) return;
+      var segs = segments(), letter = SPCore.bankLetter(state.bank);
+      for (var n = 1; n <= SPCore.PAD_COUNT; n++){
+        var i = SPCore.sliceAt(state.bank, n), seg = segs[i], b = padBtns[n];
+        b.querySelector('.p').textContent = seg ? letter + n : '';
+        b.querySelector('.n').textContent = seg ? padNum(i + 1) : '';
+        b.querySelector('.m').textContent = seg ? (seg.end - seg.start).toFixed(2) + 's' : '';
+        b.disabled = !seg;
+        b.setAttribute('aria-pressed', seg && i === state.selected ? 'true' : 'false');
+        b.classList.toggle('playing', !!seg && i === state.selected && (state.playKind === 'sample' || state.playKind === 'loop'));
+        b.setAttribute('aria-label', seg ? tr('Slice {i}, pad {p}, {d} seconds', { i: i + 1, p: letter + n, d: (seg.end - seg.start).toFixed(2) }) : tr('Pad {p}, empty', { p: letter + n }));
+      }
+    }
+    function gotoBank(bank, pinned){
+      var banks = SPCore.bankCount(segments().length);
+      state.bank = Math.max(0, Math.min(banks - 1, bank));
+      state.bankPinned = !!pinned;
+      renderSamples();
+    }
+    els.bankPrev.addEventListener('click', function(){ gotoBank(state.bank - 1, true); });
+    els.bankNext.addEventListener('click', function(){ gotoBank(state.bank + 1, true); });
+
+    function renderSamples(){
+      var segs = segments(), total = segs.length;
+      els.samplesCount.textContent = tr('{n} Sample|{n} Samples', { n: total });
+      if (state.selected >= total) state.selected = total - 1;
+      var banks = SPCore.bankCount(total);
+      if (!state.bankPinned) state.bank = SPCore.padOf(Math.max(0, state.selected)).bank;
+      state.bank = Math.max(0, Math.min(banks - 1, state.bank));
+      els.bankLabel.textContent = tr('Bank') + ' ' + SPCore.bankLetter(state.bank);
+      var first = state.bank * SPCore.PAD_COUNT + 1, last = Math.min(total, first + SPCore.PAD_COUNT - 1);
+      els.bankInfo.textContent = first + '–' + last + ' / ' + total;
+      els.bankPrev.disabled = state.bank === 0;
+      els.bankNext.disabled = state.bank >= banks - 1;
+      els.bankPrev.hidden = els.bankNext.hidden = banks < 2;
+      var hasSel = total > 0;
       els.playSampleBtn.disabled = !hasSel;
       els.loopBtn.disabled = !hasSel;
-      els.exportSelectedBtn.disabled = !hasSel;
-      els.exportAllBtn.disabled = !hasSel;
-      // Spell out exactly what each export button will do instead of a generic
-      // "Selected" / "All" label, so it's clear one saves a single file and the
-      // other saves a ZIP of everything.
-      els.exportSelectedBtn.textContent = hasSel ? (tr('Export Sample') + ' ' + padNum(state.selected+1)) : tr('Export Selected');
-      els.exportAllBtn.textContent = hasSel ? (tr('Export All') + ' (' + segs.length + ')') : tr('Export All');
+      els.exportSelectedBtn.disabled = !hasSel || state.exporting;
+      els.exportAllBtn.disabled = !hasSel || state.exporting;
+      els.openLearnBtn.disabled = !hasSel || state.exporting;
+      els.exportSelectedBtn.textContent = hasSel ? (tr('Export Sample') + ' ' + padNum(state.selected + 1)) : tr('Export Selected');
+      els.exportAllBtn.textContent = hasSel ? (tr('Export All') + ' (' + total + ')') : tr('Export All');
+      els.exportHint.textContent = hasSel ? SPCore.sampleFileName(state.fileName, state.selected + 1) + '  ·  ' + SPCore.zipFileName(state.fileName) : '';
+      if (els.alert.classList.contains('ok')) showAlert(els.alert, 'ok', '');   // a finished export message is stale once slices change
+      renderLearnPanel();
+      updatePads();
       drawOverlay();
     }
 
@@ -2027,9 +1881,14 @@
       }
     }
     function updatePlaybackUI(){
-      if (els.playBtn) els.playBtn.innerHTML = (state.playKind === 'transport') ? '&#10074;&#10074;' : '&#9654;';
-      if (els.playSampleBtn) els.playSampleBtn.innerHTML = (state.playKind === 'sample') ? '&#9632; ' + tr('Stop') : '&#9654; ' + tr('Play Sample');
-      if (els.loopBtn) els.loopBtn.classList.toggle('active', state.playKind === 'loop');
+      if (els.playBtn) els.playBtn.innerHTML = ico(state.playKind === 'transport' ? 'pause' : 'play', 'fill');
+      if (els.playSampleBtn){
+        var playing = state.playKind === 'sample';
+        els.playSampleBtn.firstElementChild.outerHTML = ico(playing ? 'stop' : 'play', 'fill');
+        els.playSampleLabel.textContent = playing ? tr('Stop') : tr('Play Sample');
+      }
+      if (els.loopBtn) setPressed(els.loopBtn, state.playKind === 'loop');
+      updatePads();
     }
     function stopAll(){
       stopSource();
@@ -2193,9 +2052,10 @@
     }, { passive: false });
 
     /* ---- knobs ---- */
-    var KNOB_SVG = '<svg viewBox="0 0 56 56" aria-hidden="true"><circle class="body" cx="28" cy="28" r="23" fill="#f0efe8" stroke="#0c0c0a" stroke-width="3"/>' +
-      '<g class="needle"><line x1="28" y1="28" x2="28" y2="9" stroke="#0c0c0a" stroke-width="4" stroke-linecap="square"/></g>' +
-      '<circle cx="28" cy="28" r="4" fill="#0c0c0a"/></svg>';
+    var KNOB_SVG = '<svg viewBox="0 0 56 56" aria-hidden="true" focusable="false">' +
+      '<circle class="body" cx="28" cy="28" r="23" style="fill:var(--sp-white);stroke:var(--sp-ink);stroke-width:3"/>' +
+      '<g class="needle"><line x1="28" y1="28" x2="28" y2="8" style="stroke:var(--sp-red);stroke-width:4" stroke-linecap="square"/></g>' +
+      '<circle cx="28" cy="28" r="4" style="fill:var(--sp-ink)"/></svg>';
     // bounded knob: value in 0..1 (270deg sweep). endless knob: reports turn deltas.
     function makeKnob(host, o){
       host.className = 'knob'; host.tabIndex = 0;
@@ -2269,12 +2129,12 @@
     document.getElementById('fitBtn').addEventListener('click', fitView);
     document.getElementById('selBtn').addEventListener('click', function(){
       viewCfg.zoomSel = !viewCfg.zoomSel;
-      this.classList.toggle('on', viewCfg.zoomSel);
+      setPressed(this, viewCfg.zoomSel);
       if (viewCfg.zoomSel) zoomToSelection();
     });
     document.getElementById('followBtn').addEventListener('click', function(){
       viewCfg.follow = !viewCfg.follow;
-      this.classList.toggle('on', viewCfg.follow);
+      setPressed(this, viewCfg.follow);
     });
     document.getElementById('heightBtn').addEventListener('click', function(){
       viewCfg.height = HEIGHTS[(HEIGHTS.indexOf(viewCfg.height) + 1) % HEIGHTS.length];
@@ -2364,6 +2224,8 @@
       v = Math.max(30, Math.min(300, v));
       state.grid.bpm = v;
       els.bpmInput.value = (Math.round(v * 10) / 10).toString();
+      els.bpmReadoutVal.textContent = (Math.round(v * 10) / 10).toString();
+      els.bpmReadout.hidden = false;
       if (!keepOffset) state.grid.offset = state.grid.offset % (60 / v);
       state.grid.show = state.mode === 'beats';
       drawOverlay();
@@ -2385,6 +2247,7 @@
       }, 20);
     }
     function makeBeatLoops(){
+      if (regionsLocked()) return;
       var gr = state.grid; if (!state.audioBuffer || !(gr.bpm > 0)) return;
       var L = gr.div * 60 / gr.bpm, d = state.audioBuffer.duration;
       var k0 = Math.ceil((MIN_GAP - gr.offset) / L), times = [];
@@ -2408,7 +2271,7 @@
     Array.prototype.forEach.call(document.getElementById('beatDivRow').children, function(chip){
       chip.addEventListener('click', function(){
         state.grid.div = Number(chip.dataset.div);
-        Array.prototype.forEach.call(chip.parentNode.children, function(c){ c.classList.toggle('active', c === chip); });
+        Array.prototype.forEach.call(chip.parentNode.children, function(c){ setActive(c, c === chip); });
         updateBeatStatus();
       });
     });
@@ -2418,11 +2281,12 @@
     });
     els.snapBtn.addEventListener('click', function(){
       state.snap = !state.snap;
-      els.snapBtn.classList.toggle('active', state.snap);
+      setPressed(els.snapBtn, state.snap);
     });
 
     /* ---- drop / browse ---- */
     els.drop.addEventListener('click', function(){ els.fileInput.click(); });
+    els.drop.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); els.fileInput.click(); } });
     document.getElementById('chopAgainBtn').addEventListener('click', function(){ stopAll(); els.fileInput.click(); });
     els.fileInput.addEventListener('change', function(){
       if (els.fileInput.files[0]) loadFile(els.fileInput.files[0]);
@@ -2435,6 +2299,12 @@
       e.preventDefault();
       var f = e.dataTransfer.files && e.dataTransfer.files[0];
       if (f) loadFile(f);
+    });
+    // dropping a track anywhere on the loaded workspace replaces it
+    els.workspace.addEventListener('drop', function(e){
+      e.preventDefault();
+      var f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) { stopAll(); loadFile(f); }
     });
 
     /* ---- export ---- */
@@ -2452,32 +2322,231 @@
         return encodeWav16(rendered);
       });
     }
-    function padNum(n){ return n<10 ? '0'+n : String(n); }
+    function exportError(err){
+      showAlert(els.alert, 'error', tr('Export failed:') + ' ' + (err && err.message ? err.message : tr('unknown error')));
+    }
+    function setExporting(on){
+      state.exporting = on;
+      els.exportSelectedBtn.disabled = on || !segments().length;
+      els.exportAllBtn.disabled = on || !segments().length;
+      els.openLearnBtn.disabled = on || !segments().length;
+      els.saveProjectBtn.disabled = on || !isDirty();
+    }
 
     els.exportSelectedBtn.addEventListener('click', function(){
-      var segs = segments();
-      var seg = segs[state.selected];
-      if (!seg) return;
+      var seg = segments()[state.selected];
+      if (!seg || state.exporting) return;
+      var name = SPCore.sampleFileName(state.fileName, state.selected + 1);
+      setExporting(true);
+      showAlert(els.alert, 'busy', tr('Rendering {f}…', { f: name }));
       renderSegmentTo48k(seg).then(function(bytes){
-        var blob = new Blob([bytes], { type: 'audio/wav' });
-        downloadFile(blob, 'sample_' + padNum(state.selected+1) + '.wav');
-      });
+        downloadFile(new Blob([bytes], { type: 'audio/wav' }), name);
+        showAlert(els.alert, 'ok', tr('Exported {f}', { f: name }));
+      })['catch'](exportError).then(function(){ setExporting(false); });
     });
     els.exportAllBtn.addEventListener('click', function(){
       var segs = segments();
-      if (!segs.length) return;
-      var zip = new MiniZip();
-      var chain = Promise.resolve();
+      if (!segs.length || state.exporting) return;
+      var zip = new MiniZip(), chain = Promise.resolve(), zipName = SPCore.zipFileName(state.fileName);
+      setExporting(true);
       segs.forEach(function(seg, i){
         chain = chain.then(function(){
+          showAlert(els.alert, 'busy', tr('Rendering {i} of {n}…', { i: i + 1, n: segs.length }));
           return renderSegmentTo48k(seg).then(function(bytes){
-            zip.addFile('sample_' + padNum(i+1) + '.wav', bytes);
+            zip.addFile(SPCore.sampleFileName(state.fileName, i + 1), bytes);
           });
         });
       });
       chain.then(function(){
-        downloadFile(zip.generate(), 'SP404-DROP-samples.zip');
+        downloadFile(zip.generate(), zipName);
+        showAlert(els.alert, 'ok', tr('Exported {n} files → {z}', { n: segs.length, z: zipName }));
+      })['catch'](exportError).then(function(){ setExporting(false); });
+    });
+
+
+    /* ---- an opened .spsystem project (from LEARN / macOS open) ---- */
+    function sig(){
+      return JSON.stringify([state.markers.map(function(m){ return Math.round(m.time * 1e6); }), state.regions ? state.regions.map(function(r){ return r.id; }) : null]);
+    }
+    function isDirty(){ return !!(state.project && (state.project.acceptedDirty || sig() !== state.project.baseSig)); }
+    function markSaved(rev){
+      if (!state.project) return;
+      if (rev != null) state.project.revision = rev;
+      state.project.baseSig = sig(); state.project.acceptedDirty = false; renderLearnPanel();
+    }
+    function regionsFromInfoChops(list){ return list.map(function(c){ return { id: c.id, start: c.start, end: c.end, name: c.name }; }); }
+    function applyProject(info){
+      state.project = { key: info.key, path: info.path, id: info.id, revision: info.revision, title: info.title, requirements: info.requirements, baseSig: null, acceptedDirty: false };
+      var t = info.tempo;
+      if (t && t.bpm > 0){
+        state.grid = { bpm: t.bpm, offset: typeof t.beatOffsetSeconds === 'number' ? t.beatOffsetSeconds : 0, div: state.grid.div, show: false, detected: true };
+        setBpm(t.bpm, true); state.grid.show = false; state.grid.detected = true;
+      }
+      if (info.chops.length && !info.chopsPartition){ state.regions = regionsFromInfoChops(info.chops); state.markers = []; }
+      else { state.regions = null; state.markers = info.markers.map(function(tm){ return { id: state.nextMarkerId++, time: tm }; }); }
+      state.suggestions = info.candidates.chops.map(function(c){ var o = Object.assign({}, c); o.loop = false; return o; })
+        .concat(info.candidates.loops.map(function(c){ var o = Object.assign({}, c); o.loop = true; return o; }));
+      state.selected = 0;
+      state.project.baseSig = sig();
+    }
+    function showSelectionAfterOpen(){ if (state.suggestions.length) renderLearnPanel(); }
+    function fmtRange(a, b){ return fmtTime(a) + '–' + fmtTime(b); }
+    function relinkWith(file){
+      var info = pendingRelink, want = info.source.sha256;
+      return file.arrayBuffer().then(function(buf){ return crypto.subtle.digest('SHA-256', buf); }).then(function(d){
+        var h = Array.prototype.map.call(new Uint8Array(d), function(x){ return ('0' + x.toString(16)).slice(-2); }).join('');
+        var n = want ? Math.min(h.length, want.length) : 0;
+        if (want && h.slice(0, n) !== want.slice(0, n)){
+          showAlert(els.loadAlert, 'error', tr('This is not the track the project was made from. Choose the original file to relink: {n}', { n: info.source.name || '' }));
+          return;
+        }
+        var keep = pendingRelink; pendingRelink = null; loadFile(file, { info: keep });
       });
+    }
+    function openProject(res){
+      if (!res || !res.ok){
+        showAlert(els.loadAlert, 'error', tr('Could not open the project:') + ' ' + ((res && res.message) || tr('unknown error')));
+        return;
+      }
+      var info = res.info; stopAll();
+      if (res.sourceBytes){
+        var nm = info.source.name || 'track'; if (!/\.[A-Za-z0-9]+$/.test(nm)) nm += '.' + (res.sourceExt || 'wav');
+        loadFile(new File([res.sourceBytes], nm), { info: info });
+        return;
+      }
+      // no usable audio: keep the project, say why, and let the user relink by loading the original file
+      state.audioBuffer = null; els.workspace.hidden = true; els.drop.hidden = false; els.learnPanel.hidden = true;
+      var st = info.source.state;
+      if (st === 'none') showAlert(els.loadAlert, 'error', tr('This project has no source audio (it only contains samples).'));
+      else if (st === 'mismatch') { pendingRelink = info; showAlert(els.loadAlert, 'error', tr('The source file changed since the project was made. Load the original track to relink: {n}', { n: info.source.name || '' })); }
+      else if (st === 'error') showAlert(els.loadAlert, 'error', tr('Could not read the source audio:') + ' ' + (info.source.message || ''));
+      else { pendingRelink = info; showAlert(els.loadAlert, 'error', tr('Source audio not found ({p}). Load the original track to relink it: {n}', { p: info.source.path || tr('embedded file missing'), n: info.source.name || '' })); }
+    }
+    function renderLearnPanel(){
+      var p = state.project;
+      els.learnPanel.hidden = !p;
+      if (!p) return;
+      els.learnTitle.textContent = p.title || state.fileName;
+      var dirty = isDirty();
+      els.learnMeta.textContent = (p.revision != null ? tr('revision') + ' ' + p.revision + ' · ' : '') + (dirty ? tr('unsaved changes') : tr('saved'));
+      els.saveProjectBtn.disabled = !dirty || state.exporting;
+      els.learnSuggest.hidden = !state.suggestions.length;
+      els.learnSuggestList.textContent = '';
+      var n = 0;
+      state.suggestions.forEach(function(sg){
+        n++;
+        var li = document.createElement('li'), txt = document.createElement('span'), lbl = (sg.label || sg.kind || 'region');
+        txt.textContent = 'S' + n + ' · ' + lbl + ' · ' + fmtRange(sg.startSeconds, sg.endSeconds) + (sg.loop ? ' · ' + tr('loop') : '');
+        li.appendChild(txt);
+        var show = document.createElement('button'); show.type = 'button'; show.className = 'sp-btn sm'; show.textContent = tr('Show');
+        show.addEventListener('click', function(){
+          var len = Math.max(0.02, sg.endSeconds - sg.startSeconds), pad = len * 0.08;
+          setView(sg.startSeconds - pad, containerWidth() / (len + 2 * pad));
+        });
+        li.appendChild(show);
+        if (sg.accepted){ var done = document.createElement('span'); done.className = 'learn-done'; done.textContent = tr('Accepted'); li.appendChild(done); }
+        else { var acc = document.createElement('button'); acc.type = 'button'; acc.className = 'sp-btn sm solid'; acc.textContent = tr('Accept'); acc.addEventListener('click', function(){ acceptSuggestion(sg); }); li.appendChild(acc); }
+        els.learnSuggestList.appendChild(li);
+      });
+      var rq = p.requirements;
+      els.learnReq.hidden = !(rq && rq.needs && rq.needs.length);
+      els.learnReqList.textContent = '';
+      if (rq && rq.needs) rq.needs.forEach(function(nd){
+        var li = document.createElement('li'), a = document.createElement('span'), b = document.createElement('strong');
+        a.textContent = nd.type + (nd.note ? ' — ' + nd.note : ''); b.textContent = Math.min(nd.have, nd.count) + ' / ' + nd.count; if (nd.have >= nd.count) li.className = 'met';
+        li.appendChild(a); li.appendChild(b); els.learnReqList.appendChild(li);
+      });
+    }
+    function acceptSuggestion(sg){
+      var p = state.project; if (!p || !window.spBridge) return;
+      if (!state.regions && !sg.loop){
+        // markers must be exactly the saved ones: accepting switches the project to independent regions (kept as they are)
+        if (sig() !== p.baseSig && state.markers.length){ showAlert(els.alert, 'error', tr('Save the project first: accepting a suggestion switches it to its own regions.')); return; }
+      }
+      window.spBridge.acceptSuggestion(p.key, sg.id, sg.loop ? 'loop' : 'chop').then(function(res){
+        if (!res.ok){ showAlert(els.alert, 'error', tr('Could not accept:') + ' ' + (res.message || res.code)); return; }
+        var st = res.state;
+        state.suggestions = st.candidates.chops.map(function(c){ var o = Object.assign({}, c); o.loop = false; return o; })
+          .concat(st.candidates.loops.map(function(c){ var o = Object.assign({}, c); o.loop = true; return o; }));
+        p.requirements = st.requirements; p.acceptedDirty = true;
+        if (!sg.loop){
+          state.regions = regionsFromInfoChops(st.chops); state.markers = [];
+          state.selected = Math.max(0, state.regions.findIndex(function(r){ return r.id === res.chopId; }));
+          layoutStage(); drawOverlay(); renderSamples(); zoomToSelection();
+        } else { renderLearnPanel(); drawOverlay(); }
+        showAlert(els.alert, 'ok', tr('Suggestion accepted. Save the project to keep it.'));
+      });
+    }
+    els.saveProjectBtn.addEventListener('click', function(){
+      if (!state.project || state.exporting || !window.spBridge) return;
+      setExporting(true);
+      learnPayload().then(function(payload){
+        payload.unchanged = false;
+        showAlert(els.alert, 'busy', tr('Saving the project…'));
+        return window.spBridge.saveProject(payload);
+      }).then(function(res){
+        if (res.ok){ markSaved(res.revision); if (res.state) { state.project.requirements = res.state.requirements; } showAlert(els.alert, 'ok', tr('Project saved (revision {r}): {f}', { r: res.revision, f: res.file })); }
+        else learnMessage(res);
+      })['catch'](function(err){ showAlert(els.alert, 'error', tr('Could not save the project:') + ' ' + (err && err.message ? err.message : tr('unknown error'))); })
+        .then(function(){ setExporting(false); renderLearnPanel(); });
+    });
+
+    /* ---- Open in LEARN: the current chops become a .spsystem project (see DROP_SPSYSTEM_HANDOFF.md) ---- */
+    function learnPayload(){
+      var d = state.audioBuffer.duration, segs = segments().filter(function(sg){ return sg.end - sg.start > 1e-6; }), ext = (/\.([A-Za-z0-9]+)$/.exec(state.fileName) || [0, 'wav'])[1].toLowerCase();
+      return state.sourceFile.arrayBuffer().then(function(buf){
+        var chain = Promise.resolve(), slices = [];
+        segs.forEach(function(seg, i){
+          chain = chain.then(function(){
+            showAlert(els.alert, 'busy', tr('Rendering {i} of {n}…', { i: i + 1, n: segs.length }));
+            return renderSegmentTo48k(seg).then(function(bytes){ slices.push({ start: seg.start, end: seg.end, wav: bytes }); });
+          });
+        });
+        return chain.then(function(){
+          return { sessionKey: state.sessionKey, fileName: state.fileName, mode: state.mode, duration: d, sampleRate: state.audioBuffer.sampleRate,
+            channels: state.audioBuffer.numberOfChannels, markers: state.markers.map(function(m){ return { time: m.time }; }),
+            grid: { bpm: state.grid.bpm, offset: state.grid.offset, div: state.grid.div, show: state.grid.show, detected: state.grid.detected },
+            sourceBytes: new Uint8Array(buf), sourceExt: ext, slices: slices, renderKey: '48k16', version: '1.2.0', now: Date.now(),
+            regionsMode: !!state.regions, unchanged: !!(state.project && !isDirty()) };
+        });
+      });
+    }
+    function learnMessage(res){
+      if (res.ok && state.project) markSaved(res.revision);
+      if (res.ok && res.saved === false) {
+        showAlert(els.alert, 'ok', tr('Sent to SP-404 LEARN without changes (revision {r}): {f}', { r: res.revision, f: res.file }));
+      } else if (res.ok) {
+        if (res.launched === 'learn') showAlert(els.alert, 'ok', tr('Project saved (revision {r}) and sent to SP-404 LEARN: {f}', { r: res.revision, f: res.file }));
+        else showAlert(els.alert, 'ok', tr('Project saved (revision {r}): {f}. SP-404 LEARN was not found — the file is shown in Finder.', { r: res.revision, f: res.file }));
+      } else if (res.conflict) showAlert(els.alert, 'error', tr('The project file was changed by another app (LEARN). Nothing was overwritten. Open it in LEARN, or reload the track in DROP to start a new project file.'));
+      else showAlert(els.alert, 'error', tr('Could not open in LEARN:') + ' ' + (res.message || res.code || tr('unknown error')));
+    }
+    els.openLearnBtn.addEventListener('click', function(){
+      if (!state.audioBuffer || !state.sourceFile || state.exporting || !segments().length) return;
+      setExporting(true);
+      learnPayload().then(function(payload){
+        if (window.spBridge && window.spBridge.openInLearn) {
+          showAlert(els.alert, 'busy', tr('Saving the project…'));
+          return window.spBridge.openInLearn(payload).then(learnMessage);
+        }
+        // browser: no file system access — build the package and download it
+        var P = window.SPProject, B = window.SPBridge, SPk = window.SPPackage;
+        var chain = state.spProject ? Promise.resolve(state.spProject) : B.create(payload);
+        return chain.then(function(project){
+          state.spProject = project;
+          return Promise.resolve(B.sync(project, payload)).then(function(r){
+            if (!r.ok) throw new Error(r.code);
+            var prep = project.prepareSave({ now: payload.now, version: payload.version }), sink = SPk.memorySink();
+            return SPk.assemble(null, prep.plan, sink, { now: payload.now, deflate: true }).then(function(){
+              project.baseRevision = prep.nextRevision; project.manifest.revision = prep.nextRevision;
+              var name = B.titleOf(state.fileName).replace(/[\\\/:*?"<>|]/g, '_') + '.spsystem';
+              downloadFile(new Blob([sink.bytes()], { type: 'application/octet-stream' }), name);
+              showAlert(els.alert, 'ok', tr('Downloaded {f} — open it in SP-404 LEARN.', { f: name }));
+            });
+          });
+        });
+      })['catch'](function(err){ showAlert(els.alert, 'error', tr('Could not open in LEARN:') + ' ' + (err && err.message ? err.message : tr('unknown error'))); })
+        .then(function(){ setExporting(false); });
     });
 
     I18N.onChange(function(){
@@ -2488,11 +2557,99 @@
       if (state.audioBuffer) renderSamples(); else els.sub.textContent = tr('No track loaded');
     });
 
-    return { reset: reset, stopAll: stopAll };
+    return { reset: reset, stopAll: stopAll, loadFile: loadFile, openProject: openProject };
+  })();
+  /* A project handed to DROP from outside (LEARN / macOS "open"): same path for cold and warm start. */
+  if (window.spBridge && window.spBridge.onProjectOpened) {
+    window.spBridge.onProjectOpened(function (res) { showScreen('chop'); Chop.openProject(res); });
+    window.spBridge.ready();
+  }
+  /* =========================================================
+     HOME — the drop area. Files dropped here wait (in memory only) until the user picks Chop / Loop or Convert.
+     ========================================================= */
+  var Home = (function HomeModule(){
+    var els = {
+      drop: document.getElementById('homeDrop'), input: document.getElementById('homeFileInput'),
+      pending: document.getElementById('homePending'), title: document.getElementById('homePendingTitle'),
+      list: document.getElementById('homePendingList'), chopTile: document.getElementById('tileChop'),
+      convTile: document.getElementById('tileConvert'), conv: document.getElementById('homeConvertBtn'),
+      convLabel: document.getElementById('homeConvertLabel'), clear: document.getElementById('homeClearBtn'),
+      hint: document.getElementById('homePendingHint'), alert: document.getElementById('homeAlert'),
+      recent: document.getElementById('homeRecent'), recentList: document.getElementById('homeRecentList')
+    };
+    var pending = [];
+    function render(){
+      els.pending.hidden = pending.length === 0;
+      els.convLabel.textContent = tr('Convert') + (pending.length ? ' (' + pending.length + ')' : '');
+      if (pending.length){
+        var total = pending.reduce(function(s, e){ return s + (e.file.size || 0); }, 0);
+        els.title.textContent = tr('{n} file ready|{n} files ready', { n: pending.length }) + ' · ' + fmtBytes(total);
+        els.list.innerHTML = '';
+        pending.slice(0, 6).forEach(function(e){ var li = document.createElement('li'); li.textContent = e.relPath; els.list.appendChild(li); });
+        if (pending.length > 6){ var more = document.createElement('li'); more.textContent = tr('… and {n} more', { n: pending.length - 6 }); els.list.appendChild(more); }
+        els.hint.textContent = tr('Choose what to do: Chop / Loop (works on one track — the first file is used) or Convert.');
+      }
+      renderRecent();
+    }
+    function renderRecent(){
+      var items = Session.list();
+      els.recent.hidden = items.length === 0;
+      els.recentList.innerHTML = '';
+      items.forEach(function(it){
+        var li = document.createElement('li');
+        var ic = document.createElement('span'); ic.className = 'ic'; ic.innerHTML = ico(it.kind === 'chop' ? 'chop' : 'file');
+        var nm = document.createElement('span'); nm.className = 'nm';
+        var b = document.createElement('b'); b.textContent = it.name; b.title = it.name;
+        var m = document.createElement('span'); m.textContent = (it.kind === 'chop' ? tr('Chop / Loop') : tr('Convert')) + ' · ' + it.meta;
+        nm.appendChild(b); nm.appendChild(m);
+        li.appendChild(ic); li.appendChild(nm);
+        if (it.kind === 'chop' && it.file){
+          var open = document.createElement('button'); open.type = 'button'; open.className = 'sp-btn sm'; open.textContent = tr('Open');
+          open.addEventListener('click', function(){ Chop.loadFile(it.file); showScreen('chop'); });
+          li.appendChild(open);
+        }
+        els.recentList.appendChild(li);
+      });
+    }
+    function setPending(entries){
+      var ok = entries.filter(function(e){ return Convert.isAcceptable(e.relPath); });
+      showAlert(els.alert, 'error', ok.length || !entries.length ? '' : tr('No supported audio files in that drop. Supported: WAV, MP3, AIFF, FLAC, OGG, M4A.'));
+      if (ok.length) pending = ok;
+      render();
+    }
+    function clear(){ pending = []; render(); }
+    function activate(){ els.input.click(); }
+    function goChop(){
+      if (pending.length){ Chop.loadFile(pending[0].file); clear(); }
+      showScreen('chop');
+    }
+    function goConvert(){
+      if (!pending.length){ showScreen('convert'); return; }
+      if (Convert.isBusy()){ showAlert(els.alert, 'error', tr('A conversion is already running — wait for it to finish.')); return; }
+      var entries = pending; clear(); showScreen('convert'); Convert.addFiles(entries);
+    }
+    els.drop.addEventListener('click', activate);
+    els.drop.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); activate(); } });
+    els.input.addEventListener('change', function(){
+      var flat = [];
+      for (var i = 0; i < els.input.files.length; i++) flat.push({ file: els.input.files[i], relPath: els.input.files[i].name });
+      els.input.value = '';
+      setPending(flat);
+    });
+    ['dragenter', 'dragover'].forEach(function(evt){ els.drop.addEventListener(evt, function(e){ e.preventDefault(); els.drop.classList.add('drag-over'); }); });
+    ['dragleave', 'drop'].forEach(function(evt){ els.drop.addEventListener(evt, function(e){ e.preventDefault(); els.drop.classList.remove('drag-over'); }); });
+    els.drop.addEventListener('drop', function(e){ Convert.handleDataTransfer(e.dataTransfer).then(setPending); });
+    els.chopTile.addEventListener('click', goChop);
+    els.convTile.addEventListener('click', goConvert);
+    els.conv.addEventListener('click', goConvert);
+    els.clear.addEventListener('click', clear);
+    Session.onChange(renderRecent);
+    I18N.onChange(render);
+    render();
+    return { setPending: setPending };
   })();
   I18N.apply();
 })();
 </script>
-
 </body>
 </html>

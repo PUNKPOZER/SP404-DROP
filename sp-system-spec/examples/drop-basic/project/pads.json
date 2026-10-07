@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "assignments": [
+    {
+      "bank": "A",
+      "pad": 1,
+      "sampleId": "sample-01"
+    },
+    {
+      "bank": "A",
+      "pad": 2,
+      "sampleId": "sample-02"
+    },
+    {
+      "bank": "A",
+      "pad": 3,
+      "sampleId": "sample-03"
+    },
+    {
+      "bank": "A",
+      "pad": 4,
+      "sampleId": "sample-04"
+    }
+  ]
+}

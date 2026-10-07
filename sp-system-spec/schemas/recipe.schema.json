@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sp-system/recipe.schema.json",
+  "title": "Educational recipe (learn/recipe.json)",
+  "description": "LEARN-owned plan ('how could I build something like this / with this pack'). References library content by id; the library itself is not stored here.",
+  "type": "object",
+  "properties": {
+    "recipeVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "kind": {
+      "enum": [
+        "track",
+        "pack"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "genre": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "generatedFrom": {
+      "type": "object",
+      "properties": {
+        "analysisVersion": {
+          "type": "integer"
+        },
+        "packSampleCount": {
+          "type": "integer"
+        },
+        "libraryVersion": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/stableId"
+          },
+          "title": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "enum": [
+                    "lesson",
+                    "trick",
+                    "fx",
+                    "exercise",
+                    "reference"
+                  ]
+                },
+                "id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "id"
+              ]
+            }
+          },
+          "pads": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "bank": {
+                  "$ref": "common.schema.json#/$defs/bank"
+                },
+                "pad": {
+                  "$ref": "common.schema.json#/$defs/pad"
+                },
+                "sampleId": {
+                  "$ref": "common.schema.json#/$defs/stableId"
+                }
+              },
+              "required": [
+                "bank",
+                "pad"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": [
+    "recipeVersion",
+    "steps"
+  ],
+  "additionalProperties": true
+}

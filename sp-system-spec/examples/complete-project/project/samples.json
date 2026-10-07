@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "samples": [
+    {
+      "id": "sample-01",
+      "file": "samples/pad-01.wav",
+      "name": "Break 1",
+      "sourceChopId": "chop-01",
+      "durationSeconds": 1.259,
+      "sampleRate": 48000,
+      "bitDepth": 16,
+      "channels": 1,
+      "category": "drum"
+    },
+    {
+      "id": "sample-02",
+      "file": "samples/pad-02.wav",
+      "name": "Break 2",
+      "sourceChopId": "chop-02",
+      "durationSeconds": 0.459,
+      "sampleRate": 48000,
+      "bitDepth": 16,
+      "channels": 1,
+      "category": "drum"
+    },
+    {
+      "id": "sample-03",
+      "file": "samples/pad-03.wav",
+      "name": "Break 3",
+      "sourceChopId": "chop-03",
+      "durationSeconds": 0.7,
+      "sampleRate": 48000,
+      "bitDepth": 16,
+      "channels": 1,
+      "category": "drum"
+    },
+    {
+      "id": "sample-04",
+      "file": "samples/pad-04.wav",
+      "name": "Break 4",
+      "sourceChopId": "chop-04",
+      "durationSeconds": 0.6,
+      "sampleRate": 48000,
+      "bitDepth": 16,
+      "channels": 1,
+      "category": "unknown"
+    },
+    {
+      "id": "sample-05",
+      "file": "samples/pad-05.wav",
+      "name": "Drum break",
+      "sourceChopId": "chop-05",
+      "durationSeconds": 4.0,
+      "sampleRate": 48000,
+      "bitDepth": 16,
+      "channels": 1,
+      "category": "drum"
+    }
+  ]
+}

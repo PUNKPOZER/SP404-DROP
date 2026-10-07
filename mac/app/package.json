@@ -1,7 +1,7 @@
 {
   "name": "sp404-drop",
   "productName": "SP404 DROP",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "main": "main.js",
   "license": "MIT"
 }

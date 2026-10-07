@@ -1,0 +1,6 @@
+SP SYSTEM interchange specification — draft v1 (formatVersion 1)
+source: sp404-learn @ a582be3
+snapshot taken: 2026-10-07
+contents: schemas/, examples/, migrations/, README.md, validate_examples.py, SP_SYSTEM_INTERCHANGE.md (normative text)
+READ-ONLY SNAPSHOT. Do not edit. The canonical specification is owned by the SP SYSTEM spec (LEARN repo); update this folder only with
+`node scripts/sync-spec.js <learn-repo>` after an agreed specification update. SPEC_HASH is verified by the tests.

@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sp-system/analysis.schema.json",
+  "title": "TrackUnderstanding (analysis/track.json)",
+  "description": "LEARN-owned. DROP may ignore the whole file but must preserve it. Every inferred property is {raw, userOverride, confidence?}. Unknown properties are allowed everywhere.",
+  "type": "object",
+  "properties": {
+    "analysisVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "producedBy": {
+      "$ref": "common.schema.json#/$defs/producer"
+    },
+    "producedAt": {
+      "$ref": "common.schema.json#/$defs/isoTime"
+    },
+    "audioSha256": {
+      "$ref": "common.schema.json#/$defs/sha256",
+      "description": "Hash of the audio this analysis describes. If the source changes, the analysis is stale (kept, but flagged)."
+    },
+    "tempo": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/overridable"
+        }
+      ],
+      "description": "raw: {bpm, beatOffsetSeconds, confidence, alternatives[]}"
+    },
+    "meter": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/overridable"
+        }
+      ],
+      "description": "raw: {beatsPerBar, confidence}"
+    },
+    "key": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/overridable"
+        }
+      ],
+      "description": "raw: {tonic, mode, confidence}"
+    },
+    "genre": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/overridable"
+        }
+      ],
+      "description": "raw: {status, primary, subgenre, candidates[{genre, confidence}]}; userOverride: {genre}"
+    },
+    "groove": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/overridable"
+        }
+      ],
+      "description": "raw: {swing, density, ...} (experimental measurements)"
+    },
+    "drums": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/overridable"
+        }
+      ],
+      "description": "raw: {events[], patterns[]}"
+    },
+    "bass": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/overridable"
+        }
+      ],
+      "description": "raw: {notes[], range}"
+    },
+    "structure": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/overridable"
+        }
+      ],
+      "description": "raw: {sections[{label,startSeconds,endSeconds,startBar,endBar}]}"
+    },
+    "phrases": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/overridable"
+        }
+      ],
+      "description": "raw: {phrases[]}"
+    },
+    "vocals": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/overridable"
+        }
+      ],
+      "description": "raw: {regions[]}"
+    },
+    "chopCandidates": {
+      "type": "array",
+      "description": "SUGGESTIONS. Never shown as confirmed chops.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/stableId"
+          },
+          "kind": {
+            "enum": [
+              "drum-break",
+              "vocal",
+              "melodic-loop",
+              "texture",
+              "bass",
+              "other"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "startSeconds": {
+            "$ref": "common.schema.json#/$defs/seconds"
+          },
+          "endSeconds": {
+            "$ref": "common.schema.json#/$defs/seconds"
+          },
+          "confidence": {
+            "$ref": "common.schema.json#/$defs/confidence"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "suggested",
+              "accepted",
+              "dismissed"
+            ],
+            "default": "suggested"
+          },
+          "acceptedChopId": {
+            "$ref": "common.schema.json#/$defs/stableId"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "startSeconds",
+          "endSeconds"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "loopCandidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/stableId"
+          },
+          "startSeconds": {
+            "$ref": "common.schema.json#/$defs/seconds"
+          },
+          "endSeconds": {
+            "$ref": "common.schema.json#/$defs/seconds"
+          },
+          "bars": {
+            "type": "number"
+          },
+          "confidence": {
+            "$ref": "common.schema.json#/$defs/confidence"
+          },
+          "loopability": {
+            "$ref": "common.schema.json#/$defs/confidence"
+          },
+          "state": {
+            "enum": [
+              "suggested",
+              "accepted",
+              "dismissed"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "startSeconds",
+          "endSeconds"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": [
+    "analysisVersion"
+  ],
+  "additionalProperties": true
+}

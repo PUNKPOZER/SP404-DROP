@@ -1,10 +1,18 @@
 # SP404 DROP (web)
 
-A single self-contained HTML page — no install, no build, no server. Everything
-runs client-side (decoding, resampling, re-encoding, waveform analysis, zipping).
-Nothing is ever uploaded; the only network use is loading the fonts.
+A small static web app — no install, no build, no server, no dependencies. It is
+`index.html` plus a few files next to it (`sp-system.css`, `drop.css`, `sp-core.js`,
+`assets/`); keep them together. Everything runs client-side (decoding,
+resampling, re-encoding, waveform analysis, zipping). Nothing is ever uploaded and
+nothing is fetched from the network — fonts are the system's own.
 
-Open the app and you get two choices: **CONVERT** or **CHOP / LOOP**.
+The look is the **SP SYSTEM** design language — see
+[`../DESIGN_SYSTEM.md`](../DESIGN_SYSTEM.md).
+
+The app has an ink sidebar (**Drop**, **Convert**, **Chop / Loop**, language, **About**). The first screen is one big drop area: **drop audio files here**. Dropped files
+wait (in memory only) until you choose **Chop / Loop** (uses the first file) or
+**Convert** (all of them). You can also open either tool from the header or the
+two big tiles.
 
 ## CONVERT
 
@@ -79,11 +87,18 @@ Load one track at a time and slice it into numbered samples:
     playing so you can cut it off, rather than only being able to restart it.
   - **Loop** loops the selected region; drag its start/end markers while it's
     playing to dial in a clean loop point by ear.
+- **4×4 pad view.** The slices are also shown on a 4×4 pad grid (pad 1 bottom-left,
+  like the hardware): tap a pad to select and audition its slice, tap again to
+  stop. More than 16 slices are paged in **banks** (A, B, C…) — nothing is lost, and
+  picking a slice by any other route (keys, markers) switches to its bank. It is a
+  visual/control layer over your slices; it does not talk to the sampler.
 - **Export Sample NN** saves just the selected sample as one WAV file.
-  **Export All (N)** saves every sample as a ZIP, named `sample_01.wav`,
-  `sample_02.wav`, … in order — the button labels spell out exactly what each
-  one is about to do. Exports are rendered fresh from the source audio at
-  16-bit/48kHz — no normalization or other processing.
+  **Export All (N)** saves every sample as a ZIP. Files are named after the source
+  track: `My_Loop_01.wav`, `My_Loop_02.wav`, … and `SP404-DROP-My_Loop.zip` (the name
+  is cleaned and capped at 24 characters so it stays readable on the sampler's
+  screen). A status bar shows progress ("Rendering 3 of 21…"), success, or the
+  error if something fails — exports no longer fail silently. Exports are rendered
+  fresh from the source audio at 16-bit/48kHz — no normalization or other processing.
 
 ## Language
 

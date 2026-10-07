@@ -1,0 +1,82 @@
+{
+  "format": "sp-system",
+  "formatVersion": 1,
+  "id": "6f1c2b9e-3a44-4d0a-9b1e-2c7d5a8f0e11",
+  "createdBy": "sp404-drop",
+  "createdByVersion": "1.2.0",
+  "createdAt": "2026-10-07T09:00:00Z",
+  "modifiedAt": "2026-10-07T09:10:00Z",
+  "modifiedBy": "sp404-learn",
+  "modifiedByVersion": "0.4.0",
+  "revision": 7,
+  "title": "Jungle break",
+  "source": {
+    "title": "Jungle break",
+    "originalFilename": "break_loop.wav",
+    "durationSeconds": 38.4,
+    "sampleRate": 44100,
+    "channels": 2,
+    "mode": "portable",
+    "audio": "audio/source.wav",
+    "sha256": "12e3a1c0d54b77f2a8c19e03bb64d5f1"
+  },
+  "tempo": {
+    "bpm": 172.0,
+    "confidence": 0.8,
+    "beatOffsetSeconds": 0.42,
+    "origin": "user",
+    "setBy": "sp404-learn",
+    "setAt": "2026-10-07T09:30:00Z"
+  },
+  "meter": {
+    "beatsPerBar": 4,
+    "confidence": null
+  },
+  "modules": {
+    "chops": {
+      "path": "project/chops.json",
+      "schemaVersion": 1,
+      "owner": "sp404-drop"
+    },
+    "pads": {
+      "path": "project/pads.json",
+      "schemaVersion": 1,
+      "owner": "sp404-drop"
+    },
+    "samples": {
+      "path": "project/samples.json",
+      "schemaVersion": 1,
+      "owner": "sp404-drop"
+    },
+    "loops": {
+      "path": "project/loops.json",
+      "schemaVersion": 1,
+      "owner": "sp404-drop"
+    },
+    "analysis": {
+      "path": "analysis/track.json",
+      "schemaVersion": 1,
+      "owner": "sp404-learn"
+    },
+    "recipe": {
+      "path": "learn/recipe.json",
+      "schemaVersion": 1,
+      "owner": "sp404-learn"
+    },
+    "progress": {
+      "path": "learn/progress.json",
+      "schemaVersion": 1,
+      "owner": "sp404-learn"
+    },
+    "requirements": {
+      "path": "learn/requirements.json",
+      "schemaVersion": 1,
+      "owner": "sp404-learn"
+    }
+  },
+  "extensions": {
+    "x-sp404-drop": {
+      "lastExportPreset": "sp404mk2-48k-16bit"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sp-system/requirements.schema.json",
+  "title": "Lesson requirements (learn/requirements.json)",
+  "description": "LEARN-owned request to DROP: which kinds of samples a lesson needs. DROP shows progress by counting samples/chops by category; it never edits this file.",
+  "type": "object",
+  "properties": {
+    "requirementsVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "lesson": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "needs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "drum-chop",
+              "break-chop",
+              "kick",
+              "snare",
+              "hat",
+              "perc",
+              "bass",
+              "vocal-chop",
+              "melodic",
+              "texture",
+              "loop",
+              "any"
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "count"
+        ]
+      }
+    }
+  },
+  "required": [
+    "requirementsVersion",
+    "lesson",
+    "needs"
+  ],
+  "additionalProperties": true
+}

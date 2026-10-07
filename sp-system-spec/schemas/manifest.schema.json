@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sp-system/manifest.schema.json",
+  "title": "SP SYSTEM manifest (manifest.json)",
+  "description": "Required at the package root. Small, always parseable by every SP SYSTEM application; contains only what DROP can reliably produce.",
+  "type": "object",
+  "properties": {
+    "format": {
+      "const": "sp-system"
+    },
+    "formatVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "createdBy": {
+      "type": "string"
+    },
+    "createdByVersion": {
+      "type": "string"
+    },
+    "createdAt": {
+      "$ref": "common.schema.json#/$defs/isoTime"
+    },
+    "modifiedAt": {
+      "$ref": "common.schema.json#/$defs/isoTime"
+    },
+    "modifiedBy": {
+      "type": "string"
+    },
+    "modifiedByVersion": {
+      "type": "string"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Incremented on every successful save by any application; used to detect that the package changed on disk since it was loaded."
+    },
+    "title": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "originalFilename": {
+          "type": "string"
+        },
+        "durationSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "sampleRate": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "channels": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "mode": {
+          "enum": [
+            "portable",
+            "lightweight",
+            "none"
+          ],
+          "description": "portable = audio/source.* inside the package; lightweight = referenced by externalSource; none = the project has samples only."
+        },
+        "audio": {
+          "$ref": "common.schema.json#/$defs/relPath"
+        },
+        "sha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "externalSource": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "hash": {
+              "$ref": "common.schema.json#/$defs/sha256"
+            },
+            "sizeBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lastSeenAt": {
+              "$ref": "common.schema.json#/$defs/isoTime"
+            }
+          },
+          "required": [
+            "path",
+            "hash"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "tempo": {
+      "type": "object",
+      "description": "Working tempo (effective value). LEARN additionally keeps raw/userOverride in analysis/track.json.",
+      "properties": {
+        "bpm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "confidence": {
+          "$ref": "common.schema.json#/$defs/confidence"
+        },
+        "beatOffsetSeconds": {
+          "type": "number"
+        },
+        "origin": {
+          "enum": [
+            "detected",
+            "user",
+            "imported"
+          ]
+        },
+        "setBy": {
+          "type": "string"
+        },
+        "setAt": {
+          "$ref": "common.schema.json#/$defs/isoTime"
+        }
+      },
+      "required": [
+        "bpm"
+      ],
+      "additionalProperties": true
+    },
+    "meter": {
+      "type": "object",
+      "properties": {
+        "beatsPerBar": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "confidence": {
+          "$ref": "common.schema.json#/$defs/confidence"
+        }
+      },
+      "required": [
+        "beatsPerBar"
+      ],
+      "additionalProperties": true
+    },
+    "modules": {
+      "type": "object",
+      "description": "Which optional parts the package contains and their own schema versions. Informational: readers must still look at the files.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "$ref": "common.schema.json#/$defs/relPath"
+          },
+          "schemaVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "owner": {
+            "type": "string"
+          },
+          "sha256": {
+            "$ref": "common.schema.json#/$defs/sha256"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Namespaced vendor data, e.g. {\"x-sp404-drop\": {...}}. Preserved by everyone."
+    }
+  },
+  "required": [
+    "format",
+    "formatVersion",
+    "id",
+    "createdBy",
+    "createdAt"
+  ],
+  "additionalProperties": true
+}

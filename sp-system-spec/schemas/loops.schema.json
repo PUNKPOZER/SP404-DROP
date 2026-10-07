@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sp-system/loops.schema.json",
+  "title": "Loops (project/loops.json)",
+  "description": "Explicit loop regions.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "loops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/stableId"
+          },
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "common.schema.json#/$defs/relPath"
+          },
+          "startSeconds": {
+            "$ref": "common.schema.json#/$defs/seconds"
+          },
+          "endSeconds": {
+            "$ref": "common.schema.json#/$defs/seconds"
+          },
+          "bars": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "bpm": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "confidence": {
+            "$ref": "common.schema.json#/$defs/confidence"
+          },
+          "loopability": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/confidence"
+              }
+            ],
+            "description": "Future: how seamlessly the loop repeats (0..1). Optional."
+          }
+        },
+        "required": [
+          "id",
+          "startSeconds",
+          "endSeconds"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "loops"
+  ],
+  "additionalProperties": true
+}
