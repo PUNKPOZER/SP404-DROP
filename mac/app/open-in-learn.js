@@ -4,7 +4,7 @@
    (same UUID, revision +1 on every later call) and then opens it with SP-404 LEARN (falls back to revealing it in Finder). */
 'use strict';
 var fs = require('fs'), os = require('os'), path = require('path'), cp = require('child_process');
-function shared(name) { try { return require('./' + name); } catch (e) { if (e.code !== 'MODULE_NOT_FOUND') throw e; return require('../../web/' + name); } }
+function shared(name) { try { return require('../../web/' + name); } catch (e) { if (e.code !== 'MODULE_NOT_FOUND') throw e; return require('./' + name); } }
 var Bridge = shared('sp-bridge.js'), FS = require('./spsystem-fs.js');
 
 var sessions = new Map();     /* sessionKey -> {project, file} */
@@ -32,7 +32,10 @@ function defaultLaunch(file) {
 function run(payload, opts) {
   opts = opts || {};
   var launch = opts.launch || defaultLaunch, dir = opts.dir || projectsDir(), key = payload.sessionKey, entry = sessions.get(key), now = payload.now;
-  return fs.promises.mkdir(dir, { recursive: true }).then(function () {
+  if (entry && payload.unchanged) {                    /* nothing to save (e.g. a just-opened project): only hand the existing file over */
+    return launch(entry.file).then(function (l) { return { ok: true, file: entry.file, revision: entry.project.manifest.revision, id: entry.project.manifest.id, launched: l.launched, launchError: l.error || null, fresh: false, saved: false }; });
+  }
+  return (entry ? Promise.resolve() : fs.promises.mkdir(dir, { recursive: true })).then(function () {
     return entry ? { project: entry.project, file: entry.file, fresh: false } : Bridge.create(payload).then(function (p) { return { project: p, file: uniquePath(dir, safeBase(payload.fileName)), fresh: true }; });
   }).then(function (e) {
     return Promise.resolve(Bridge.sync(e.project, payload)).then(function (r) {

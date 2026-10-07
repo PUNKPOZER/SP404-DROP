@@ -148,7 +148,8 @@
   /* ---- helpers on modules ---------------------------------------------------- */
   Project.prototype.isReadOnly = function (name) {
     var m = this.modules[name];
-    return !m || (m.status !== 'ok' && m.status !== 'absent');
+    /* LEARN-owned modules (analysis, recipe, progress, requirements) are never edited by DROP, whatever their state */
+    return !m || m.owner !== APP || (m.status !== 'ok' && m.status !== 'absent');
   };
   Project.prototype._mod = function (name) {
     var m = this.modules[name];
@@ -284,7 +285,7 @@
     if (!s) return true;
     var rf = s[EXT_KEY] && s[EXT_KEY].renderedFrom;
     if (!rf || !same(rf.startSeconds, chop.startSeconds) || !same(rf.endSeconds, chop.endSeconds)) return true;
-    if (renderKey !== undefined && rf.key !== renderKey) return true;
+    if (renderKey !== undefined && rf.key !== undefined && rf.key !== renderKey) return true;   /* a sample rendered without a key is accepted as is */
     var present = this.newFiles[s.file] || (this.pkg && this.pkg.has(s.file) && this.removeFiles.indexOf(s.file) < 0);
     return !present;
   };
@@ -387,6 +388,7 @@
     var cur = this.manifest.tempo, now = iso(t.now);
     if (cur && cur.origin === 'user' && !t.userSet) return { ok: true, kept: true };
     if (cur && cur.origin === 'imported' && !t.userSet) return { ok: true, kept: true };
+    if (cur && !t.userSet && cur.bpm === t.bpm && (typeof t.beatOffsetSeconds !== 'number' || cur.beatOffsetSeconds === t.beatOffsetSeconds)) return { ok: true, kept: true };   /* nothing new: no noise */
     var n = cur && typeof cur === 'object' ? cur : {};
     n.bpm = t.bpm;
     if (typeof t.beatOffsetSeconds === 'number') n.beatOffsetSeconds = t.beatOffsetSeconds;
@@ -399,26 +401,86 @@
   Project.prototype.setGrid = function (g) { var e = this._ext(); e.grid = { div: g.div, show: !!g.show }; };
 
   /* ---- candidates (read-only view; analysis is never rewritten by DROP) ---------------------------------------------------- */
+  /* A candidate is "accepted" when DROP's own data says so: a chop with fromCandidateId (chops, schema field),
+     or a loop with the same region (loops have no candidate link in v1, S7). analysis/track.json is LEARN-owned and not touched. */
   Project.prototype.candidates = function () {
     var a = this.modules.analysis && this.modules.analysis.status === 'ok' ? this.modules.analysis.data : null;
-    var accepted = {};
+    var accepted = {}, loops = this.list('loops');
     this.list('chops').forEach(function (c) { if (c.fromCandidateId) accepted[c.fromCandidateId] = c.id; });
-    var map = function (c, kind) { return { id: c.id, kind: kind, label: c.label || null, startSeconds: c.startSeconds, endSeconds: c.endSeconds, confidence: c.confidence === undefined ? null : c.confidence,
-                                            state: c.state || 'suggested', acceptedChopId: accepted[c.id] || c.acceptedChopId || null }; };
-    return { chops: ((a && a.chopCandidates) || []).map(function (c) { return map(c, c.kind); }), loops: ((a && a.loopCandidates) || []).map(function (c) { return map(c, 'loop'); }) };
+    var mapC = function (c, kind) { return { id: c.id, kind: kind, label: c.label || null, startSeconds: c.startSeconds, endSeconds: c.endSeconds, confidence: c.confidence === undefined ? null : c.confidence,
+                                             reason: c.reason || null, state: c.state || 'suggested', acceptedChopId: accepted[c.id] || c.acceptedChopId || null, accepted: !!accepted[c.id] }; };
+    var mapL = function (c) {
+      var o = mapC(c, 'loop'); o.bars = c.bars === undefined ? null : c.bars;
+      o.accepted = loops.some(function (l) { return same(l.startSeconds, c.startSeconds) && same(l.endSeconds, c.endSeconds); });
+      return o;
+    };
+    return { chops: ((a && a.chopCandidates) || []).map(function (c) { return mapC(c, c.kind); }), loops: ((a && a.loopCandidates) || []).map(mapL) };
   };
   /* acceptCandidate(id) creates a confirmed chop (type analysis-suggestion, fromCandidateId) — never edits analysis. */
   Project.prototype.acceptCandidate = function (id, o) {
     var cand = this.candidates().chops.filter(function (c) { return c.id === id; })[0];
     if (!cand) return { ok: false, code: 'E_NO_CANDIDATE' };
     if (this.list('chops').some(function (c) { return c.fromCandidateId === id; })) return { ok: false, code: 'E_ALREADY_ACCEPTED' };
+    if (this.isReadOnly('chops')) return { ok: false, code: 'E_READONLY_MODULE' };
     var mod = this._mod('chops'), c = { id: this.allocId('chop') };
     if (cand.label) c.name = cand.label;
     if (this._sourceRef()) c.source = this._sourceRef();
+    if (this.manifest.source && this.manifest.source.sha256) c.sourceSha256 = this.manifest.source.sha256;
     c.startSeconds = cand.startSeconds; c.endSeconds = cand.endSeconds; c.type = 'analysis-suggestion'; c.fromCandidateId = id;
     c.confidence = cand.confidence; c.createdBy = APP; c.createdAt = iso(o && o.now);
     mod.data.chops.push(c);
     return { ok: true, chop: c };
+  };
+  /* Loop candidates become loops.json entries (no link field exists in v1; the region identifies the candidate). */
+  Project.prototype.acceptLoopCandidate = function (id, o) {
+    var cand = this.candidates().loops.filter(function (c) { return c.id === id; })[0];
+    if (!cand) return { ok: false, code: 'E_NO_CANDIDATE' };
+    if (cand.accepted) return { ok: false, code: 'E_ALREADY_ACCEPTED' };
+    if (this.isReadOnly('loops')) return { ok: false, code: 'E_READONLY_MODULE' };
+    var mod = this._mod('loops'), l = { id: this.allocId('loop') };
+    if (cand.label) l.name = cand.label;
+    if (this._sourceRef()) l.source = this._sourceRef();
+    l.startSeconds = cand.startSeconds; l.endSeconds = cand.endSeconds;
+    if (typeof cand.bars === 'number' && cand.bars > 0) l.bars = cand.bars;
+    var t = this.manifest.tempo; if (t && t.bpm > 0) l.bpm = t.bpm;
+    l.confidence = cand.confidence;
+    mod.data.loops.push(l);
+    return { ok: true, loop: l };
+  };
+
+  /* ---- lesson requirements (learn/requirements.json is read-only for DROP) ---------------------------------------------------- */
+  var CAND_CATEGORY = { 'drum-break': 'drum', vocal: 'vocal', 'melodic-loop': 'melodic', texture: 'texture', bass: 'bass' };
+  /* requirement type -> sample categories that satisfy it (prose-only in the spec, S15; this is DROP's reading) */
+  var NEED_CATEGORIES = { 'drum-chop': ['drum'], 'break-chop': ['drum'], kick: ['kick'], snare: ['snare'], hat: ['hat'], perc: ['perc'], bass: ['bass'],
+                          'vocal-chop': ['vocal'], melodic: ['melodic'], texture: ['texture'], loop: ['loop'] };
+  /* category of a confirmed chop: its sample's category, else the kind of the candidate it was accepted from */
+  Project.prototype.categoryForChop = function (chop) {
+    var s = this.sampleForChop(chop.id);
+    if (s && s.category && s.category !== 'unknown') return s.category;
+    if (chop.fromCandidateId) {
+      var k = this.candidates().chops.filter(function (c) { return c.id === chop.fromCandidateId; })[0];
+      if (k && CAND_CATEGORY[k.kind]) return CAND_CATEGORY[k.kind];
+    }
+    return null;
+  };
+  Project.prototype.requirementsProgress = function () {
+    var m = this.modules.requirements;
+    if (!m || m.status !== 'ok' || !m.data) return null;
+    var self = this, items = [], chopIds = {};
+    this.list('chops').forEach(function (c) { chopIds[c.id] = 1; items.push(self.categoryForChop(c)); });
+    this.list('samples').forEach(function (s) { if (!s.sourceChopId || !chopIds[s.sourceChopId]) items.push(s.category && s.category !== 'unknown' ? s.category : null); });
+    this.list('loops').forEach(function () { items.push('loop'); });
+    return { lesson: m.data.lesson, title: m.data.title || null, needs: m.data.needs.map(function (n) {
+      var cats = NEED_CATEGORIES[n.type], have = items.filter(function (c) { return n.type === 'any' ? true : (c && cats && cats.indexOf(c) >= 0); }).length;
+      return { type: n.type, count: n.count, have: have, note: n.note || null };
+    }) };
+  };
+
+  /* ---- dirty state: opening never makes a project dirty ---------------------------------------------------- */
+  Project.prototype.isDirty = function () {
+    var self = this;
+    return this.manifestDirty || Object.keys(this.newFiles).length > 0 || this.removeFiles.length > 0 ||
+      Object.keys(this.modules).some(function (n) { return self.modules[n].dirty; });
   };
 
   /* ---- from an opened package ---------------------------------------------------- */
@@ -482,6 +544,6 @@
 
   return {
     APP: APP, EXT_KEY: EXT_KEY, create: create, fromOpen: fromOpen, wavInfo: wavInfo, sha256: sha256, uuid4: uuid4,
-    regionsFromMarkers: regionsFromMarkers, typeFor: typeFor, Project: Project
+    regionsFromMarkers: regionsFromMarkers, typeFor: typeFor, Project: Project, CAND_CATEGORY: CAND_CATEGORY, NEED_CATEGORIES: NEED_CATEGORIES
   };
 });

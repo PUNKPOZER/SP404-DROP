@@ -2,6 +2,13 @@
 
 ## Unreleased — SP SYSTEM redesign
 
+- **LEARN → DROP:** DROP opens `.spsystem` handed over by macOS / LEARN (`open -a "SP404 DROP" file.spsystem`; cold start and warm start,
+  one `openExternalProject` pipeline, read-only open, nothing rewritten, not dirty). The source audio comes from the package (or the external
+  file for lightweight projects, with a relink state if it is missing/changed). LEARN's chop/loop *suggestions* are drawn on the waveform
+  as dashed blue bands and listed with **Accept**; accepting creates a confirmed chop (`fromCandidateId`) / loop, the analysis is never edited.
+  A "For the lesson" panel counts progress against `learn/requirements.json` (read-only). **Save project** = revision +1 with conflict
+  detection. Registered as an *Alternate* handler for `.spsystem` (does not take over LEARN's default).
+
 - **Open in LEARN (Chop / Loop):** new button saves the current chops, rendered samples, pad layout, tempo and the source audio as a `.spsystem` project
   (`~/Documents/SP404 DROP/Projects/<track>.spsystem`, same UUID and revision +1 on every later click) and opens it in SP-404 LEARN; if LEARN is
   not installed the file is revealed in Finder. In a browser it downloads the `.spsystem`. If LEARN changed the file meanwhile, DROP reports a conflict

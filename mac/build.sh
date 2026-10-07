@@ -12,8 +12,8 @@ cp ../web/index.html ../web/sp-system.css ../web/drop.css ../web/sp-core.js ../w
 # .spsystem interchange modules (index.html, spsystem-fs.js, open-in-learn.js)
 cp ../web/sp-schemas.js ../web/sp-validate.js ../web/sp-package.js ../web/sp-project.js ../web/sp-bridge.js app/
 rm -rf app/assets && cp -R ../web/assets app/assets
-ICON_ARGS=()
-if [ -f icon.icns ]; then ICON_ARGS=(--icon=icon.icns); fi
+ICON_ARGS=(--extend-info=Info.extra.plist)
+if [ -f icon.icns ]; then ICON_ARGS+=(--icon=icon.icns); fi
 npx @electron/packager app "SP404 DROP" --platform=darwin --arch="$ARCH" --out=dist --overwrite \
   --app-bundle-id=com.sp404drop.app --app-copyright="MIT" "${ICON_ARGS[@]}"
 echo "Built into dist/ ($ARCH)"

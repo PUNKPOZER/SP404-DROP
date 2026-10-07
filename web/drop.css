@@ -204,3 +204,14 @@ input[type=file] { display: none; }
 .mode-panel .sp-btn.block { width: 100%; }
 .chop-col > .sp-alert { margin: 0; }
 .hero-mark, .sp-brand-mark { fill: currentColor; }
+
+/* ---- opened SP SYSTEM project (LEARN suggestions, lesson requirements) ---- */
+.learn-panel { border: 1.5px solid var(--sp-ink); background: var(--sp-white); padding: var(--sp-space-3); display: grid; gap: var(--sp-space-2); margin-top: var(--sp-space-2); }
+.learn-head { display: flex; justify-content: space-between; gap: var(--sp-space-2); align-items: baseline; flex-wrap: wrap; }
+.learn-meta { font-family: var(--sp-font-mono); font-size: var(--sp-text-2xs); color: var(--sp-ink-3); }
+.learn-panel h4 { margin: 0; font-size: var(--sp-text-xs); letter-spacing: .08em; text-transform: uppercase; color: var(--sp-blue); }
+.learn-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.learn-list li { display: flex; gap: 6px; align-items: center; justify-content: space-between; font-size: var(--sp-text-xs); border-top: 1px dashed var(--sp-rule); padding-top: 6px; }
+.learn-list li > span:first-child { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.learn-list .met strong { color: var(--sp-green); }
+.learn-done { font-family: var(--sp-font-mono); font-size: var(--sp-text-2xs); color: var(--sp-green); text-transform: uppercase; }

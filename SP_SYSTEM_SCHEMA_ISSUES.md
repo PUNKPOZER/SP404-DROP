@@ -167,3 +167,10 @@ Each entry: **Scenario** (what happens in practice) · **1a** (can Phase 1a work
 
 ## Other deviations from the canonical spec
 None in data or schemas. Implementation-level notes: DROP's reader additionally rejects ZIP64/encrypted/multi-disk archives (the spec does not need them), refuses to overwrite on conflict instead of merging (spec asks for detection only), and treats `date-time` as an assertion.
+
+
+## Addendum — LEARN → DROP integration (suggestions, requirements)
+- **S7 (loops):** a loop accepted from `loopCandidates` has no link field in v1. DROP marks a loop candidate "accepted" when `loops.json` contains the same region (±1 µs); chop candidates use `fromCandidateId`. Proposal unchanged: add `fromCandidateId` to loops.
+- **Candidate `state` / `acceptedChopId` / dismiss:** these live in `analysis/track.json`, which is LEARN-owned and must stay byte-identical, so DROP does **not** write `accepted`/`dismissed` there; acceptance is derived from DROP's own chops. A *dismiss* action is therefore not implemented (it would need either editing LEARN's file or a DROP-side list). Proposal: a DROP-owned `project/decisions.json` (or a `dismissedCandidates` list in the DROP extension) so both apps can show the same state.
+- **S15 (requirements → categories):** DROP counts a requirement from each confirmed chop's category (its sample's `category`, else the accepted candidate's `kind`: drum-break→drum, vocal→vocal, melodic-loop→melodic, texture, bass; `other` has no category) and each loop in `loops.json` as `loop`; `any` counts everything; `drum-chop` and `break-chop` both map to `drum`. Samples DROP renders itself carry no category unless they come from a candidate. Proposal: put this mapping table in the spec.
+- **Custom regions vs the marker editor (S2):** after accepting a suggestion the project's chops are no longer a partition of the track, so DROP shows them as independent regions and switches the marker tools (auto-chop, manual markers, beat loops) off for that project instead of normalising the regions.

@@ -74,3 +74,10 @@ node scripts/gen-schemas.js --check   # web/sp-schemas.js matches the snapshot
 npm run build-fixtures                # regenerate the two fixtures
 ```
 API entry points: `web/sp-package.js` (`open`, `assemble`), `web/sp-project.js` (`create`, `fromOpen`, `prepareSave`), `mac/app/spsystem-fs.js` (`open`, `saveFile`, `recover`, `extractToDir`). Known spec findings: `SP_SYSTEM_SCHEMA_ISSUES.md` (S1–S24, 0 blockers).
+
+
+## LEARN → DROP (native open) — for LEARN's "Prepare in DROP"
+- Hand a project to DROP with `open -a "SP404 DROP" /path/project.spsystem` (cold or warm start; DROP is registered as an *Alternate* `.spsystem` handler only).
+- DROP opens it read-only (no revision bump, no rewrite), uses the embedded `audio/source.*` (or `externalSource` for lightweight), shows `chopCandidates`/`loopCandidates` as suggestions and counts `learn/requirements.json` progress. Suggestions never become chops until the user accepts; the analysis file is never modified.
+- On Save DROP writes revision+1 with `modifiedBy: sp404-drop`, refusing with a conflict if the file's revision/fingerprint changed since it was opened.
+- Real LEARN fixtures used: `learn-prepared.spsystem`, `learn-prepared-lightweight.spsystem` (LEARN's `export_for_drop`), `learn-mutated.spsystem`. Tests: `web/test/spsystem/native-open.test.js`.

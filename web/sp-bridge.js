@@ -29,7 +29,9 @@
       project.applyTempo({ bpm: g.bpm, beatOffsetSeconds: g.offset || 0, userSet: !g.detected, now: payload.now });
       project.setGrid({ div: g.div, show: g.show });
     }
-    var r = project.syncChopsFromMarkers(payload.markers, payload.duration, { mode: MODE[payload.mode] || 'manual', now: payload.now });
+    /* regionsMode: the chops are independent regions (accepted LEARN suggestions, imported sets): never derived from markers */
+    var r = payload.regionsMode ? { ok: true, added: 0, removed: 0 }
+      : project.syncChopsFromMarkers(payload.markers, payload.duration, { mode: MODE[payload.mode] || 'manual', now: payload.now });
     if (!r.ok) return r;
     var chops = project.list('chops'), chain = Promise.resolve();
     if (chops.length !== payload.slices.length) return { ok: false, code: 'E_SLICE_MISMATCH' };
@@ -37,7 +39,7 @@
       var sl = payload.slices[i];
       if (!project.needsRender(chop, payload.renderKey)) return;
       chain = chain.then(function () {
-        return project.putSample({ chop: chop, wav: sl.wav, name: chop.name || (titleOf(payload.fileName) + ' ' + (i + 1)), renderKey: payload.renderKey });
+        return project.putSample({ chop: chop, wav: sl.wav, name: chop.name || (titleOf(payload.fileName) + ' ' + (i + 1)), renderKey: payload.renderKey, category: project.categoryForChop(chop) || undefined });
       });
     });
     return chain.then(function () {

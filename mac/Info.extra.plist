@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- DROP can open .spsystem (SP SYSTEM project) files, e.g. `open -a "SP404 DROP" file.spsystem`.
+       Rank "Alternate": DROP is offered under "Open With" but does not take over the default app (LEARN reads the format too). -->
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key><string>SP SYSTEM project</string>
+      <key>CFBundleTypeExtensions</key><array><string>spsystem</string></array>
+      <key>CFBundleTypeRole</key><string>Editor</string>
+      <key>LSHandlerRank</key><string>Alternate</string>
+    </dict>
+  </array>
+</dict>
+</plist>

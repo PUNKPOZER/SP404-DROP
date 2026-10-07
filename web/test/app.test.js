@@ -86,3 +86,15 @@ test('shell: top strip, ink sidebar with Drop / Convert / Chop nav and About, re
   }
   assert.ok(!/Settings|Batch<|>Export</.test(html.replace(/<script[\s\S]*$/, '').replace(/Export (Selected|All)/g, '')));   // no nav items for features that do not exist
 });
+
+test('mac shell: native .spsystem open (open-file before ready, single instance + second-instance, one pipeline, preload door)', () => {
+  const main = fs.readFileSync(path.join(__dirname, '..', '..', 'mac', 'app', 'main.js'), 'utf8');
+  assert.match(main, /app\.on\('open-file'/); assert.match(main, /requestSingleInstanceLock/); assert.match(main, /second-instance/);
+  assert.match(main, /openExternalProject/); assert.match(main, /spsystem:ready/);
+  assert.ok(main.indexOf("app.on('open-file'") < main.indexOf('app.whenReady()'), 'open-file listener is registered before ready (cold start)');
+  const pre = fs.readFileSync(path.join(__dirname, '..', '..', 'mac', 'app', 'preload.js'), 'utf8');
+  assert.match(pre, /onProjectOpened/); assert.match(pre, /acceptSuggestion/); assert.match(pre, /saveProject/);
+  const plist = fs.readFileSync(path.join(__dirname, '..', '..', 'mac', 'Info.extra.plist'), 'utf8');
+  assert.match(plist, /<string>spsystem<\/string>/); assert.match(plist, /Alternate/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', '..', 'mac', 'build.sh'), 'utf8'), /--extend-info=Info\.extra\.plist/);
+});

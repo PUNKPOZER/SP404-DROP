@@ -299,6 +299,19 @@
             </div>
             <p class="export-hint" id="exportHint"></p>
             <div id="chopAlert" class="sp-alert" role="status" hidden></div>
+            <section class="learn-panel" id="learnPanel" hidden aria-label="SP SYSTEM project">
+              <div class="learn-head"><strong id="learnTitle"></strong><span id="learnMeta" class="learn-meta"></span></div>
+              <div id="learnSuggest" hidden>
+                <h4>Suggestions from LEARN</h4>
+                <ul class="learn-list" id="learnSuggestList"></ul>
+                <p class="chop-hint">Suggestions are not chops until you accept them. The analysis stays untouched.</p>
+              </div>
+              <div id="learnReq" hidden>
+                <h4>For the lesson</h4>
+                <ul class="learn-list" id="learnReqList"></ul>
+              </div>
+              <button class="sp-btn" type="button" id="saveProjectBtn" disabled>Save project</button>
+            </section>
             <div class="chop-hint">Export Selected saves just the picked slice as one WAV. Export All saves every slice as a ZIP. Both render fresh from the source &mdash; 16-bit / 48kHz, no normalization. This pad view is a preview of your slices, not a connection to the sampler.</div>
           </div>
         </div>
@@ -441,6 +454,32 @@
     "Export Selected": "Экспорт выбранного",
     "Export Sample": "Экспорт сэмпла",
     "Export All": "Экспорт всех",
+    "SP SYSTEM project": "Проект SP SYSTEM",
+    "Suggestions from LEARN": "Подсказки от LEARN",
+    "Suggestions are not chops until you accept them. The analysis stays untouched.": "Подсказки — это ещё не слайсы, пока вы их не примете. Анализ не меняется.",
+    "For the lesson": "Для урока",
+    "Save project": "Сохранить проект",
+    "Show": "Показать",
+    "Accept": "Принять",
+    "Accepted": "Принято",
+    "loop": "луп",
+    "revision": "ревизия",
+    "unsaved changes": "есть несохранённые изменения",
+    "saved": "сохранено",
+    "Marker tools are off: this project has its own regions (accepted LEARN suggestions). Nothing was changed.": "Инструменты маркеров выключены: в проекте свои регионы (принятые подсказки LEARN). Ничего не изменено.",
+    "Save the project first: accepting a suggestion switches it to its own regions.": "Сначала сохраните проект: принятие подсказки переключает его на собственные регионы.",
+    "Could not accept:": "Не удалось принять:",
+    "Suggestion accepted. Save the project to keep it.": "Подсказка принята. Сохраните проект, чтобы она осталась.",
+    "Could not save the project:": "Не удалось сохранить проект:",
+    "Project saved (revision {r}): {f}": "Проект сохранён (ревизия {r}): {f}",
+    "Sent to SP-404 LEARN without changes (revision {r}): {f}": "Отправлено в SP-404 LEARN без изменений (ревизия {r}): {f}",
+    "Could not open the project:": "Не удалось открыть проект:",
+    "This project has no source audio (it only contains samples).": "В проекте нет исходного аудио (только сэмплы).",
+    "The source file changed since the project was made. Load the original track to relink: {n}": "Исходный файл изменился с момента создания проекта. Загрузите оригинальный трек, чтобы привязать заново: {n}",
+    "Could not read the source audio:": "Не удалось прочитать исходное аудио:",
+    "Source audio not found ({p}). Load the original track to relink it: {n}": "Исходное аудио не найдено ({p}). Загрузите оригинальный трек, чтобы привязать его: {n}",
+    "embedded file missing": "встроенный файл отсутствует",
+    "This is not the track the project was made from. Choose the original file to relink: {n}": "Это не тот трек, из которого сделан проект. Выберите исходный файл: {n}",
     "Open in LEARN": "Открыть в LEARN",
     "Project saved (revision {r}) and sent to SP-404 LEARN: {f}": "Проект сохранён (ревизия {r}) и отправлен в SP-404 LEARN: {f}",
     "Project saved (revision {r}): {f}. SP-404 LEARN was not found — the file is shown in Finder.": "Проект сохранён (ревизия {r}): {f}. SP-404 LEARN не найден — файл показан в Finder.",
@@ -991,7 +1030,10 @@
       loopBtn: document.getElementById('loopBtn'),
       exportSelectedBtn: document.getElementById('exportSelectedBtn'),
       exportAllBtn: document.getElementById('exportAllBtn'),
-      openLearnBtn: document.getElementById('openLearnBtn')
+      openLearnBtn: document.getElementById('openLearnBtn'),
+      learnPanel: document.getElementById('learnPanel'), learnTitle: document.getElementById('learnTitle'), learnMeta: document.getElementById('learnMeta'),
+      learnSuggest: document.getElementById('learnSuggest'), learnSuggestList: document.getElementById('learnSuggestList'),
+      learnReq: document.getElementById('learnReq'), learnReqList: document.getElementById('learnReqList'), saveProjectBtn: document.getElementById('saveProjectBtn')
     };
 
     var CHUNK = 512;
@@ -1003,6 +1045,9 @@
       sourceFile: null,     // the File as loaded (bytes go into a .spsystem project)
       sessionKey: '',       // one project per loaded track
       spProject: null,      // browser-only: project kept between downloads (same UUID)
+      regions: null,        // null = slices come from markers; else [{id,start,end,name}] independent chops (accepted suggestions, imported sets)
+      suggestions: [],      // LEARN candidates (read-only view): [{id,kind,label,startSeconds,endSeconds,accepted,loop}]
+      project: null,        // an opened .spsystem: {key,path,id,revision,title,requirements,baseSig,acceptedDirty}
       peaksMin: null,
       peaksMax: null,
       grid: { bpm: 0, offset: 0, div: 4, show: false, detected: false },
@@ -1042,6 +1087,8 @@
       state.fileName = '';
       state.peaksMin = null; state.peaksMax = null;
       state.markers = [];
+      state.regions = null; state.suggestions = []; state.project = null; pendingRelink = null;
+      els.learnPanel.hidden = true;
       state.selected = 0;
       state.cursorTime = 0;
       state.transientChopped = false;
@@ -1050,7 +1097,9 @@
       els.sub.textContent = tr('No track loaded');
     }
 
-    function loadFile(file){
+    var pendingRelink = null;   // an opened project whose source audio was not found: waits for the original track
+    function loadFile(file, proj){
+      if (!proj && pendingRelink) return relinkWith(file);
       var ctx = getActx();
       file.arrayBuffer().then(function(buf){
         return ctx.decodeAudioData(buf);
@@ -1059,6 +1108,7 @@
         state.fileName = file.name;
         state.sourceFile = file; state.spProject = null;
         state.sessionKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random();
+        state.regions = null; state.suggestions = []; state.project = null; pendingRelink = null;
         state.markers = [];
         state.selected = 0;
         state.cursorTime = 0;
@@ -1076,9 +1126,11 @@
         els.filename.textContent = file.name;
         els.sub.textContent = fmtTime(audioBuffer.duration) + ' · ' + audioBuffer.numberOfChannels + 'ch · ' + audioBuffer.sampleRate + 'Hz';
         Session.add({ kind: 'chop', name: file.name, meta: els.sub.textContent, file: file });
+        if (proj) applyProject(proj.info);
         layoutStage();
         drawOverlay();
         renderSamples();
+        if (proj && state.project) { state.sessionKey = proj.info.key; showSelectionAfterOpen(); }
       })['catch'](function(err){
         var msg = tr('Could not load:') + ' ' + (err && err.message ? err.message : tr('unreadable file'));
         els.sub.textContent = msg;
@@ -1351,6 +1403,7 @@
     });
 
     function segments(){
+      if (state.regions) return state.regions.map(function(r, i){ return { start: r.start, end: r.end, index: i, id: r.id }; });
       var d = state.audioBuffer.duration;
       var times = [0].concat(state.markers.map(function(m){return m.time;}).sort(function(a,b){return a-b;})).concat([d]);
       var segs = [];
@@ -1384,7 +1437,7 @@
       if (state.grid.show && state.grid.bpm > 0) drawGrid(ctx, w, h);
       // Selected sample: the app's usual hard ink/card inversion, with the
       // waveform redrawn in card colour on top so it reads as a cutout.
-      var selX0 = null, selX1 = null, seg = segs.length > 1 ? segs[state.selected] : null;
+      var selX0 = null, selX1 = null, seg = (segs.length > 1 || state.regions) ? segs[state.selected] : null;
       if (seg){
         selX0 = timeToX(seg.start); selX1 = timeToX(seg.end);
         var cx0 = Math.max(0, selX0), cx1 = Math.min(w, selX1);
@@ -1402,7 +1455,28 @@
         if (x < -2 || x > w + 2) return;
         ctx.beginPath(); ctx.moveTo(x + 0.5, RULER_H); ctx.lineTo(x + 0.5, h); ctx.stroke();
       });
+      // independent regions (accepted LEARN suggestions / imported chops): their edges drawn like markers
+      if (state.regions) state.regions.forEach(function(rg){
+        [rg.start, rg.end].forEach(function(t){
+          var x = timeToX(t); if (x < -2 || x > w + 2) return;
+          ctx.beginPath(); ctx.moveTo(x + 0.5, RULER_H); ctx.lineTo(x + 0.5, h); ctx.stroke();
+        });
+      });
       ctx.setLineDash([]);
+      // LEARN suggestions: a different treatment from confirmed chops — translucent blue band, dashed blue outline, "S<n>" tab
+      var sn = 0;
+      state.suggestions.forEach(function(sg){
+        sn++;
+        if (sg.accepted) return;
+        var x0 = timeToX(sg.startSeconds), x1 = timeToX(sg.endSeconds);
+        if (x1 < 0 || x0 > w) return;
+        var cx0 = Math.max(-2, x0), cx1 = Math.min(w + 2, x1);
+        ctx.fillStyle = COL.blueTint; ctx.fillRect(cx0, RULER_H, cx1 - cx0, h - RULER_H);
+        ctx.strokeStyle = COL.blue; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+        ctx.strokeRect(cx0 + 1, RULER_H + 1, Math.max(1, cx1 - cx0 - 2), h - RULER_H - 2);
+        ctx.setLineDash([]);
+        if (x1 - x0 >= 26){ ctx.fillStyle = COL.blue; ctx.fillRect(Math.max(x0, 0) + 1, RULER_H + 1, 26, 15); ctx.fillStyle = COL.white; ctx.font = '700 10px ui-monospace, "SF Mono", Menlo, Consolas, monospace'; ctx.textBaseline = 'middle'; ctx.fillText('S' + sn, Math.max(x0, 0) + 5, RULER_H + 9); }
+      });
       // sample numbers, bottom-left of each visible region
       ctx.font = '700 11px ui-monospace, "SF Mono", Menlo, Consolas, monospace'; ctx.textBaseline = 'middle';
       segs.forEach(function(sg, i){
@@ -1542,8 +1616,13 @@
       drawOverlay();
     }
 
+    function regionsLocked(){
+      if (!state.regions) return false;
+      showAlert(els.alert, 'error', tr('Marker tools are off: this project has its own regions (accepted LEARN suggestions). Nothing was changed.'));
+      return true;
+    }
     function addMarkerAt(t){
-      if (!state.audioBuffer) return;
+      if (!state.audioBuffer || regionsLocked()) return;
       var d = state.audioBuffer.duration;
       if (t < MIN_GAP || t > d - MIN_GAP) return;
       // enforce min gap from existing markers
@@ -1563,6 +1642,7 @@
       layoutStage(); drawOverlay(); renderSamples();
     }
     function clearMarkers(){
+      if (regionsLocked()) return;
       state.markers = [];
       state.selected = 0;
       layoutStage(); drawOverlay(); renderSamples();
@@ -1623,6 +1703,7 @@
 
     /* ---- auto chop: transient detection ---- */
     function autoChopTransient(){
+      if (regionsLocked()) return;
       var buf = state.audioBuffer.getChannelData(0);
       var sr = state.audioBuffer.sampleRate;
       var frame = 1024, hop = 512;
@@ -1687,6 +1768,7 @@
       layoutStage(); drawOverlay(); renderSamples();
     }
     function autoChopEqual(){
+      if (regionsLocked()) return;
       var n = state.equalParts, d = state.audioBuffer.duration;
       state.markers = [];
       for (var i=1;i<n;i++){
@@ -1780,6 +1862,7 @@
       els.exportAllBtn.textContent = hasSel ? (tr('Export All') + ' (' + total + ')') : tr('Export All');
       els.exportHint.textContent = hasSel ? SPCore.sampleFileName(state.fileName, state.selected + 1) + '  ·  ' + SPCore.zipFileName(state.fileName) : '';
       if (els.alert.classList.contains('ok')) showAlert(els.alert, 'ok', '');   // a finished export message is stale once slices change
+      renderLearnPanel();
       updatePads();
       drawOverlay();
     }
@@ -2164,6 +2247,7 @@
       }, 20);
     }
     function makeBeatLoops(){
+      if (regionsLocked()) return;
       var gr = state.grid; if (!state.audioBuffer || !(gr.bpm > 0)) return;
       var L = gr.div * 60 / gr.bpm, d = state.audioBuffer.duration;
       var k0 = Math.ceil((MIN_GAP - gr.offset) / L), times = [];
@@ -2246,6 +2330,7 @@
       els.exportSelectedBtn.disabled = on || !segments().length;
       els.exportAllBtn.disabled = on || !segments().length;
       els.openLearnBtn.disabled = on || !segments().length;
+      els.saveProjectBtn.disabled = on || !isDirty();
     }
 
     els.exportSelectedBtn.addEventListener('click', function(){
@@ -2278,6 +2363,134 @@
       })['catch'](exportError).then(function(){ setExporting(false); });
     });
 
+
+    /* ---- an opened .spsystem project (from LEARN / macOS open) ---- */
+    function sig(){
+      return JSON.stringify([state.markers.map(function(m){ return Math.round(m.time * 1e6); }), state.regions ? state.regions.map(function(r){ return r.id; }) : null]);
+    }
+    function isDirty(){ return !!(state.project && (state.project.acceptedDirty || sig() !== state.project.baseSig)); }
+    function markSaved(rev){
+      if (!state.project) return;
+      if (rev != null) state.project.revision = rev;
+      state.project.baseSig = sig(); state.project.acceptedDirty = false; renderLearnPanel();
+    }
+    function regionsFromInfoChops(list){ return list.map(function(c){ return { id: c.id, start: c.start, end: c.end, name: c.name }; }); }
+    function applyProject(info){
+      state.project = { key: info.key, path: info.path, id: info.id, revision: info.revision, title: info.title, requirements: info.requirements, baseSig: null, acceptedDirty: false };
+      var t = info.tempo;
+      if (t && t.bpm > 0){
+        state.grid = { bpm: t.bpm, offset: typeof t.beatOffsetSeconds === 'number' ? t.beatOffsetSeconds : 0, div: state.grid.div, show: false, detected: true };
+        setBpm(t.bpm, true); state.grid.show = false; state.grid.detected = true;
+      }
+      if (info.chops.length && !info.chopsPartition){ state.regions = regionsFromInfoChops(info.chops); state.markers = []; }
+      else { state.regions = null; state.markers = info.markers.map(function(tm){ return { id: state.nextMarkerId++, time: tm }; }); }
+      state.suggestions = info.candidates.chops.map(function(c){ var o = Object.assign({}, c); o.loop = false; return o; })
+        .concat(info.candidates.loops.map(function(c){ var o = Object.assign({}, c); o.loop = true; return o; }));
+      state.selected = 0;
+      state.project.baseSig = sig();
+    }
+    function showSelectionAfterOpen(){ if (state.suggestions.length) renderLearnPanel(); }
+    function fmtRange(a, b){ return fmtTime(a) + '–' + fmtTime(b); }
+    function relinkWith(file){
+      var info = pendingRelink, want = info.source.sha256;
+      return file.arrayBuffer().then(function(buf){ return crypto.subtle.digest('SHA-256', buf); }).then(function(d){
+        var h = Array.prototype.map.call(new Uint8Array(d), function(x){ return ('0' + x.toString(16)).slice(-2); }).join('');
+        var n = want ? Math.min(h.length, want.length) : 0;
+        if (want && h.slice(0, n) !== want.slice(0, n)){
+          showAlert(els.loadAlert, 'error', tr('This is not the track the project was made from. Choose the original file to relink: {n}', { n: info.source.name || '' }));
+          return;
+        }
+        var keep = pendingRelink; pendingRelink = null; loadFile(file, { info: keep });
+      });
+    }
+    function openProject(res){
+      if (!res || !res.ok){
+        showAlert(els.loadAlert, 'error', tr('Could not open the project:') + ' ' + ((res && res.message) || tr('unknown error')));
+        return;
+      }
+      var info = res.info; stopAll();
+      if (res.sourceBytes){
+        var nm = info.source.name || 'track'; if (!/\.[A-Za-z0-9]+$/.test(nm)) nm += '.' + (res.sourceExt || 'wav');
+        loadFile(new File([res.sourceBytes], nm), { info: info });
+        return;
+      }
+      // no usable audio: keep the project, say why, and let the user relink by loading the original file
+      state.audioBuffer = null; els.workspace.hidden = true; els.drop.hidden = false; els.learnPanel.hidden = true;
+      var st = info.source.state;
+      if (st === 'none') showAlert(els.loadAlert, 'error', tr('This project has no source audio (it only contains samples).'));
+      else if (st === 'mismatch') { pendingRelink = info; showAlert(els.loadAlert, 'error', tr('The source file changed since the project was made. Load the original track to relink: {n}', { n: info.source.name || '' })); }
+      else if (st === 'error') showAlert(els.loadAlert, 'error', tr('Could not read the source audio:') + ' ' + (info.source.message || ''));
+      else { pendingRelink = info; showAlert(els.loadAlert, 'error', tr('Source audio not found ({p}). Load the original track to relink it: {n}', { p: info.source.path || tr('embedded file missing'), n: info.source.name || '' })); }
+    }
+    function renderLearnPanel(){
+      var p = state.project;
+      els.learnPanel.hidden = !p;
+      if (!p) return;
+      els.learnTitle.textContent = p.title || state.fileName;
+      var dirty = isDirty();
+      els.learnMeta.textContent = (p.revision != null ? tr('revision') + ' ' + p.revision + ' · ' : '') + (dirty ? tr('unsaved changes') : tr('saved'));
+      els.saveProjectBtn.disabled = !dirty || state.exporting;
+      els.learnSuggest.hidden = !state.suggestions.length;
+      els.learnSuggestList.textContent = '';
+      var n = 0;
+      state.suggestions.forEach(function(sg){
+        n++;
+        var li = document.createElement('li'), txt = document.createElement('span'), lbl = (sg.label || sg.kind || 'region');
+        txt.textContent = 'S' + n + ' · ' + lbl + ' · ' + fmtRange(sg.startSeconds, sg.endSeconds) + (sg.loop ? ' · ' + tr('loop') : '');
+        li.appendChild(txt);
+        var show = document.createElement('button'); show.type = 'button'; show.className = 'sp-btn sm'; show.textContent = tr('Show');
+        show.addEventListener('click', function(){
+          var len = Math.max(0.02, sg.endSeconds - sg.startSeconds), pad = len * 0.08;
+          setView(sg.startSeconds - pad, containerWidth() / (len + 2 * pad));
+        });
+        li.appendChild(show);
+        if (sg.accepted){ var done = document.createElement('span'); done.className = 'learn-done'; done.textContent = tr('Accepted'); li.appendChild(done); }
+        else { var acc = document.createElement('button'); acc.type = 'button'; acc.className = 'sp-btn sm solid'; acc.textContent = tr('Accept'); acc.addEventListener('click', function(){ acceptSuggestion(sg); }); li.appendChild(acc); }
+        els.learnSuggestList.appendChild(li);
+      });
+      var rq = p.requirements;
+      els.learnReq.hidden = !(rq && rq.needs && rq.needs.length);
+      els.learnReqList.textContent = '';
+      if (rq && rq.needs) rq.needs.forEach(function(nd){
+        var li = document.createElement('li'), a = document.createElement('span'), b = document.createElement('strong');
+        a.textContent = nd.type + (nd.note ? ' — ' + nd.note : ''); b.textContent = Math.min(nd.have, nd.count) + ' / ' + nd.count; if (nd.have >= nd.count) li.className = 'met';
+        li.appendChild(a); li.appendChild(b); els.learnReqList.appendChild(li);
+      });
+    }
+    function acceptSuggestion(sg){
+      var p = state.project; if (!p || !window.spBridge) return;
+      if (!state.regions && !sg.loop){
+        // markers must be exactly the saved ones: accepting switches the project to independent regions (kept as they are)
+        if (sig() !== p.baseSig && state.markers.length){ showAlert(els.alert, 'error', tr('Save the project first: accepting a suggestion switches it to its own regions.')); return; }
+      }
+      window.spBridge.acceptSuggestion(p.key, sg.id, sg.loop ? 'loop' : 'chop').then(function(res){
+        if (!res.ok){ showAlert(els.alert, 'error', tr('Could not accept:') + ' ' + (res.message || res.code)); return; }
+        var st = res.state;
+        state.suggestions = st.candidates.chops.map(function(c){ var o = Object.assign({}, c); o.loop = false; return o; })
+          .concat(st.candidates.loops.map(function(c){ var o = Object.assign({}, c); o.loop = true; return o; }));
+        p.requirements = st.requirements; p.acceptedDirty = true;
+        if (!sg.loop){
+          state.regions = regionsFromInfoChops(st.chops); state.markers = [];
+          state.selected = Math.max(0, state.regions.findIndex(function(r){ return r.id === res.chopId; }));
+          layoutStage(); drawOverlay(); renderSamples(); zoomToSelection();
+        } else { renderLearnPanel(); drawOverlay(); }
+        showAlert(els.alert, 'ok', tr('Suggestion accepted. Save the project to keep it.'));
+      });
+    }
+    els.saveProjectBtn.addEventListener('click', function(){
+      if (!state.project || state.exporting || !window.spBridge) return;
+      setExporting(true);
+      learnPayload().then(function(payload){
+        payload.unchanged = false;
+        showAlert(els.alert, 'busy', tr('Saving the project…'));
+        return window.spBridge.saveProject(payload);
+      }).then(function(res){
+        if (res.ok){ markSaved(res.revision); if (res.state) { state.project.requirements = res.state.requirements; } showAlert(els.alert, 'ok', tr('Project saved (revision {r}): {f}', { r: res.revision, f: res.file })); }
+        else learnMessage(res);
+      })['catch'](function(err){ showAlert(els.alert, 'error', tr('Could not save the project:') + ' ' + (err && err.message ? err.message : tr('unknown error'))); })
+        .then(function(){ setExporting(false); renderLearnPanel(); });
+    });
+
     /* ---- Open in LEARN: the current chops become a .spsystem project (see DROP_SPSYSTEM_HANDOFF.md) ---- */
     function learnPayload(){
       var d = state.audioBuffer.duration, segs = segments().filter(function(sg){ return sg.end - sg.start > 1e-6; }), ext = (/\.([A-Za-z0-9]+)$/.exec(state.fileName) || [0, 'wav'])[1].toLowerCase();
@@ -2293,12 +2506,16 @@
           return { sessionKey: state.sessionKey, fileName: state.fileName, mode: state.mode, duration: d, sampleRate: state.audioBuffer.sampleRate,
             channels: state.audioBuffer.numberOfChannels, markers: state.markers.map(function(m){ return { time: m.time }; }),
             grid: { bpm: state.grid.bpm, offset: state.grid.offset, div: state.grid.div, show: state.grid.show, detected: state.grid.detected },
-            sourceBytes: new Uint8Array(buf), sourceExt: ext, slices: slices, renderKey: '48k16', version: '1.1.0', now: Date.now() };
+            sourceBytes: new Uint8Array(buf), sourceExt: ext, slices: slices, renderKey: '48k16', version: '1.1.0', now: Date.now(),
+            regionsMode: !!state.regions, unchanged: !!(state.project && !isDirty()) };
         });
       });
     }
     function learnMessage(res){
-      if (res.ok) {
+      if (res.ok && state.project) markSaved(res.revision);
+      if (res.ok && res.saved === false) {
+        showAlert(els.alert, 'ok', tr('Sent to SP-404 LEARN without changes (revision {r}): {f}', { r: res.revision, f: res.file }));
+      } else if (res.ok) {
         if (res.launched === 'learn') showAlert(els.alert, 'ok', tr('Project saved (revision {r}) and sent to SP-404 LEARN: {f}', { r: res.revision, f: res.file }));
         else showAlert(els.alert, 'ok', tr('Project saved (revision {r}): {f}. SP-404 LEARN was not found — the file is shown in Finder.', { r: res.revision, f: res.file }));
       } else if (res.conflict) showAlert(els.alert, 'error', tr('The project file was changed by another app (LEARN). Nothing was overwritten. Open it in LEARN, or reload the track in DROP to start a new project file.'));
@@ -2340,8 +2557,13 @@
       if (state.audioBuffer) renderSamples(); else els.sub.textContent = tr('No track loaded');
     });
 
-    return { reset: reset, stopAll: stopAll, loadFile: loadFile };
+    return { reset: reset, stopAll: stopAll, loadFile: loadFile, openProject: openProject };
   })();
+  /* A project handed to DROP from outside (LEARN / macOS "open"): same path for cold and warm start. */
+  if (window.spBridge && window.spBridge.onProjectOpened) {
+    window.spBridge.onProjectOpened(function (res) { showScreen('chop'); Chop.openProject(res); });
+    window.spBridge.ready();
+  }
   /* =========================================================
      HOME — the drop area. Files dropped here wait (in memory only) until the user picks Chop / Loop or Convert.
      ========================================================= */
