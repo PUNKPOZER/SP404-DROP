@@ -118,7 +118,7 @@
         <h3>This session</h3>
         <ul id="homeRecentList"></ul>
       </div>
-      <div class="home-foot">Unofficial &middot; not affiliated with Roland &middot; MIT &middot; v1.1.0</div>
+      <div class="home-foot">Unofficial &middot; not affiliated with Roland &middot; MIT &middot; v1.2.0</div>
     </section>
 
     <!-- ============ CONVERT ============ -->
@@ -320,13 +320,13 @@
 
     <!-- ============ ABOUT ============ -->
     <section class="screen" id="screenAbout" aria-label="About">
-      <div class="screen-head"><h2>About</h2><span class="sub">SP404 DROP &middot; v1.1.0</span></div>
+      <div class="screen-head"><h2>About</h2><span class="sub">SP404 DROP &middot; v1.2.0</span></div>
       <div class="about">
         <svg class="mark" viewBox="0 0 947 1072" aria-hidden="true" focusable="false"><use href="#sp-brand"/></svg>
         <p>SP404 DROP is a fast sample-preparation utility for the Roland SP-404 family: convert audio to 16-bit / 48kHz WAV, chop it into slices or loops, export.</p>
         <p>Everything runs on this device. Nothing is uploaded and the app makes no network requests.</p>
         <dl>
-          <dt>Version</dt><dd>1.1.0</dd>
+          <dt>Version</dt><dd>1.2.0</dd>
           <dt>Licence</dt><dd>MIT</dd>
           <dt>Source</dt><dd><a href="https://github.com/PUNKPOZER/SP404-DROP" target="_blank" rel="noopener noreferrer">github.com/PUNKPOZER/SP404-DROP</a></dd>
           <dt>Design</dt><dd>SP SYSTEM</dd>
@@ -394,7 +394,7 @@
     "That would make over 500 loops — pick a longer loop length.": "Получилось бы больше 500 лупов — выбери длиннее.",
     "Convert": "Конвертер",
     "Chop / Loop": "Нарезка / Луп",
-    "Unofficial · not affiliated with Roland · MIT · v1.1.0": "Неофициально · не связано с Roland · MIT · v1.1.0",
+    "Unofficial · not affiliated with Roland · MIT · v1.2.0": "Неофициально · не связано с Roland · MIT · v1.2.0",
     "PCM WAV · 16-bit · 48kHz": "PCM WAV · 16 бит · 48 кГц",
     "Tracks": "Треки",
     "Good": "Ок",
@@ -548,7 +548,7 @@
     "SP SYSTEM / DROP": "SP SYSTEM / DROP",
     "SP404 DROP": "SP404 DROP",
     "SP404 DROP is a fast sample-preparation utility for the Roland SP-404 family: convert audio to 16-bit / 48kHz WAV, chop it into slices or loops, export.": "SP404 DROP — быстрая утилита подготовки сэмплов для семейства Roland SP-404: конвертация аудио в WAV 16 бит / 48 кГц, нарезка на слайсы и лупы, экспорт.",
-    "SP404 DROP · v1.1.0": "SP404 DROP · v1.1.0",
+    "SP404 DROP · v1.2.0": "SP404 DROP · v1.2.0",
     "Same as source": "Как в исходнике",
     "Sample preparation": "Подготовка сэмплов",
     "Sample rate": "Частота",
@@ -2506,7 +2506,7 @@
           return { sessionKey: state.sessionKey, fileName: state.fileName, mode: state.mode, duration: d, sampleRate: state.audioBuffer.sampleRate,
             channels: state.audioBuffer.numberOfChannels, markers: state.markers.map(function(m){ return { time: m.time }; }),
             grid: { bpm: state.grid.bpm, offset: state.grid.offset, div: state.grid.div, show: state.grid.show, detected: state.grid.detected },
-            sourceBytes: new Uint8Array(buf), sourceExt: ext, slices: slices, renderKey: '48k16', version: '1.1.0', now: Date.now(),
+            sourceBytes: new Uint8Array(buf), sourceExt: ext, slices: slices, renderKey: '48k16', version: '1.2.0', now: Date.now(),
             regionsMode: !!state.regions, unchanged: !!(state.project && !isDirty()) };
         });
       });

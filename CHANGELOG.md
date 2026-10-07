@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — SP SYSTEM redesign
+## 1.2.0 — SP SYSTEM redesign + LEARN integration (2026-10-07)
 
 - **Open in LEARN picks the right LEARN:** it inspects every installed copy (Spotlight by bundle id, /Applications, ~/Applications; `SP404DROP_LEARN_APP` overrides)
   and opens the project in the newest build that declares the `.spsystem` document type; an old LEARN that cannot load the file is never used (Finder fallback instead).
