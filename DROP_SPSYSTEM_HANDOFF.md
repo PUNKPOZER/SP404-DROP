@@ -1,7 +1,7 @@
 # DROP ↔ LEARN `.spsystem` — implementation handoff
 
 For the LEARN developer running the first real cross-app test. This is not a spec; the canonical spec is `sp-system-spec/`.
-DROP side: branch `feat/spsystem-interchange`. 
+DROP side: branch `feat/spsystem-interchange`. UI: the Chop / Loop screen has an "Open in LEARN" button (saves `~/Documents/SP404 DROP/Projects/<track>.spsystem`, then `open -a "SP-404 LEARN" <file>`; the library itself is unchanged).
 
 ## Spec identity
 - `SPEC_HASH`: `83f2954447d164842e9c0ade28253a0b9898997484b261a629de2275fe6d0225` (`sp-system-spec/SPEC_HASH`, source `sp404-learn @ a582be3`).
