@@ -8,7 +8,28 @@ function shared(name) { try { return require('../../web/' + name); } catch (e) {
 var Bridge = shared('sp-bridge.js'), FS = require('./spsystem-fs.js');
 
 var sessions = new Map();     /* sessionKey -> {project, file} */
-var LEARN_APPS = ['/Applications/SP-404 LEARN.app', path.join(os.homedir(), 'Applications', 'SP-404 LEARN.app')];
+var LEARN_BUNDLE_ID = 'app.sp404learn.desktop';
+
+/* Which SP-404 LEARN to open: only a build whose Info.plist declares the .spsystem document type can load the file, so
+   every copy is inspected (mdfind by bundle id, /Applications, ~/Applications; SP404DROP_LEARN_APP overrides) and the most
+   recently built one that can open it wins. Mirrors how LEARN picks a DROP. */
+function chooseLearn(copies) {
+  return copies.filter(function (c) { return c.opensSpsystem; }).sort(function (a, b) { return (b.modified - a.modified) || (a.path < b.path ? -1 : 1); }).map(function (c) { return c.path; })[0] || null;
+}
+function installedLearnCopies() {
+  var paths = [];
+  try { paths = cp.execFileSync('mdfind', ["kMDItemCFBundleIdentifier == '" + LEARN_BUNDLE_ID + "'"], { encoding: 'utf8' }).split('\n'); } catch (e) { /* no Spotlight */ }
+  paths.push('/Applications/SP-404 LEARN.app', path.join(os.homedir(), 'Applications', 'SP-404 LEARN.app'));
+  return Array.from(new Set(paths)).filter(function (p) { return /\.app$/.test(p) && fs.existsSync(p); }).map(function (p) {
+    var plist = path.join(p, 'Contents', 'Info.plist'), opens = false, modified = 0;
+    try { opens = /"spsystem"/i.test(cp.execFileSync('plutil', ['-extract', 'CFBundleDocumentTypes', 'json', '-o', '-', plist], { encoding: 'utf8' })); modified = fs.statSync(plist).mtimeMs; } catch (e) { /* unreadable */ }
+    return { path: p, opensSpsystem: opens, modified: modified };
+  });
+}
+function findLearn() {
+  var env = process.env.SP404DROP_LEARN_APP;
+  return env && env.trim() ? env.trim() : chooseLearn(installedLearnCopies());
+}
 
 function projectsDir() { return path.join(os.homedir(), 'Documents', 'SP404 DROP', 'Projects'); }
 function safeBase(name) {
@@ -22,8 +43,8 @@ function uniquePath(dir, base) {
 }
 function defaultLaunch(file) {
   return new Promise(function (resolve) {
-    var app = LEARN_APPS.filter(function (a) { return fs.existsSync(a); })[0];
-    var args = app ? ['-a', app, file] : ['-R', file];
+    var app = findLearn();
+    var args = app ? ['-a', app, file] : ['-R', file];               /* argument array: the path is never parsed by a shell */
     cp.execFile('open', args, function (err) { resolve({ launched: err ? 'none' : (app ? 'learn' : 'finder'), error: err ? err.message : null }); });
   });
 }
@@ -49,4 +70,4 @@ function run(payload, opts) {
   }).catch(function (e) { return { ok: false, code: e.code || 'E_IO', message: e.message }; });
 }
 
-module.exports = { run: run, projectsDir: projectsDir, sessions: sessions, safeBase: safeBase };
+module.exports = { chooseLearn: chooseLearn, findLearn: findLearn, run: run, projectsDir: projectsDir, sessions: sessions, safeBase: safeBase };

@@ -154,3 +154,9 @@ test('read-only requirements: DROP never offers a write path for learn/requireme
     assert.ok(['chops', 'samples', 'pads', 'loops'].every(function (n) { return !p.isReadOnly(n); }));
   });
 });
+
+test('Open in LEARN picks a LEARN build that can open .spsystem (newest), never an old one', function () {
+  assert.strictEqual(OIL.chooseLearn([{ path: '/Applications/Old.app', opensSpsystem: false, modified: 9 }]), null);
+  assert.strictEqual(OIL.chooseLearn([{ path: '/a/Old.app', opensSpsystem: false, modified: 9 }, { path: '/b/Dev.app', opensSpsystem: true, modified: 1 }, { path: '/c/New.app', opensSpsystem: true, modified: 5 }]), '/c/New.app');
+  assert.strictEqual(OIL.chooseLearn([]), null);
+});

@@ -2,6 +2,8 @@
 
 ## Unreleased — SP SYSTEM redesign
 
+- **Open in LEARN picks the right LEARN:** it inspects every installed copy (Spotlight by bundle id, /Applications, ~/Applications; `SP404DROP_LEARN_APP` overrides)
+  and opens the project in the newest build that declares the `.spsystem` document type; an old LEARN that cannot load the file is never used (Finder fallback instead).
 - **LEARN → DROP:** DROP opens `.spsystem` handed over by macOS / LEARN (`open -a "SP404 DROP" file.spsystem`; cold start and warm start,
   one `openExternalProject` pipeline, read-only open, nothing rewritten, not dirty). The source audio comes from the package (or the external
   file for lightweight projects, with a relink state if it is missing/changed). LEARN's chop/loop *suggestions* are drawn on the waveform
