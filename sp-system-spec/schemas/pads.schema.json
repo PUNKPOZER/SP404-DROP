@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sp-system/pads.schema.json",
+  "title": "Pad mapping (project/pads.json)",
+  "description": "Flat list of assignments; any number of banks; empty pads may be omitted or have sampleId null.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "assignments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "bank": {
+            "$ref": "common.schema.json#/$defs/bank"
+          },
+          "pad": {
+            "$ref": "common.schema.json#/$defs/pad"
+          },
+          "sampleId": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/stableId"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "bank",
+          "pad",
+          "sampleId"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "assignments"
+  ],
+  "additionalProperties": true
+}

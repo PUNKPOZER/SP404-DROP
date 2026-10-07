@@ -1,0 +1,1 @@
+Round-trip result: DROP chops/pads/samples + LEARN analysis/recipe/progress/requirements + an unknown DROP extension that must survive. Example only. Audio files (audio/source.wav, samples/*.wav) are intentionally omitted from this repository.

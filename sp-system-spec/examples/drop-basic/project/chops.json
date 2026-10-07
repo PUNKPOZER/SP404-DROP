@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "chops": [
+    {
+      "id": "chop-01",
+      "name": "Break 1",
+      "source": "audio/source.wav",
+      "startSeconds": 12.482,
+      "endSeconds": 13.741,
+      "type": "manual",
+      "confidence": null,
+      "createdBy": "sp404-drop"
+    },
+    {
+      "id": "chop-02",
+      "name": "Break 2",
+      "source": "audio/source.wav",
+      "startSeconds": 13.741,
+      "endSeconds": 14.2,
+      "type": "transient",
+      "confidence": null,
+      "createdBy": "sp404-drop"
+    },
+    {
+      "id": "chop-03",
+      "name": "Break 3",
+      "source": "audio/source.wav",
+      "startSeconds": 14.2,
+      "endSeconds": 14.9,
+      "type": "beat",
+      "confidence": null,
+      "createdBy": "sp404-drop"
+    },
+    {
+      "id": "chop-04",
+      "name": "Break 4",
+      "source": "audio/source.wav",
+      "startSeconds": 15.0,
+      "endSeconds": 15.6,
+      "type": "manual",
+      "confidence": null,
+      "createdBy": "sp404-drop"
+    }
+  ]
+}

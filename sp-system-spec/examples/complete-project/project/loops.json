@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "loops": [
+    {
+      "id": "loop-01",
+      "name": "Four bars",
+      "source": "audio/source.wav",
+      "startSeconds": 32.0,
+      "endSeconds": 38.857,
+      "bars": 4,
+      "bpm": 168.0,
+      "confidence": 0.91
+    }
+  ]
+}

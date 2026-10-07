@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sp-system/common.schema.json",
+  "title": "SP SYSTEM shared definitions",
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$",
+      "description": "Stable, human-readable id, unique within its collection. Never reused after deletion."
+    },
+    "seconds": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Time on the source timeline in seconds (not samples)."
+    },
+    "confidence": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Producer's own estimate; null = not estimated. Not comparable across producers."
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32,64}$",
+      "description": "Lower-case hex of SHA-256 of the file bytes. 32 hex chars (LEARN's cache key) is accepted; compare by the shorter prefix."
+    },
+    "isoTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "relPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(^|/)\\.\\.?(/|$))(?!.*\\\\)[^\\u0000-\\u001f]+$",
+      "description": "Path inside the package: forward slashes, no leading slash, no drive letter, no '.' or '..' segments, no backslashes, no control characters."
+    },
+    "bank": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]{1,4}$",
+      "description": "Bank label. SP-404MKII banks are letters; the schema does not hard-code the count."
+    },
+    "pad": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16,
+      "description": "1..16, physical order of the SP-404MKII pad grid: 1 = bottom-left, 16 = top-right (as in LEARN's pad layout)."
+    },
+    "sampleCategory": {
+      "enum": [
+        "drum",
+        "kick",
+        "snare",
+        "hat",
+        "perc",
+        "bass",
+        "vocal",
+        "melodic",
+        "texture",
+        "loop",
+        "unknown"
+      ]
+    },
+    "overridable": {
+      "type": "object",
+      "properties": {
+        "raw": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "userOverride": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "description": "Every inferred property: `raw` = what the engine said (never overwritten by a user); `userOverride` = what a person set. Readers use userOverride ?? raw."
+    },
+    "producer": {
+      "type": "object",
+      "properties": {
+        "app": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "app"
+      ],
+      "additionalProperties": true
+    }
+  }
+}

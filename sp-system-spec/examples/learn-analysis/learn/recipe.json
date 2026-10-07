@@ -1,0 +1,26 @@
+{
+  "recipeVersion": 1,
+  "kind": "track",
+  "title": "Build something like this",
+  "genre": "drum_and_bass",
+  "generatedFrom": {
+    "analysisVersion": 1
+  },
+  "steps": [
+    {
+      "id": "step-1",
+      "title": "Build the rhythm",
+      "why": "The track is a two-step breakbeat at about 172 BPM.",
+      "items": [
+        {
+          "type": "lesson",
+          "id": "dnb-02-drums"
+        },
+        {
+          "type": "exercise",
+          "id": "ex-drum-and-bass"
+        }
+      ]
+    }
+  ]
+}

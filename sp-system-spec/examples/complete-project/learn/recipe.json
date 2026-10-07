@@ -1,0 +1,28 @@
+{
+  "recipeVersion": 1,
+  "kind": "track",
+  "title": "Build something like this",
+  "genre": "drum_and_bass",
+  "generatedFrom": {
+    "analysisVersion": 1
+  },
+  "steps": [
+    {
+      "id": "step-1",
+      "title": "Build the rhythm",
+      "items": [
+        {
+          "type": "lesson",
+          "id": "dnb-02-drums"
+        }
+      ],
+      "pads": [
+        {
+          "bank": "A",
+          "pad": 5,
+          "sampleId": "sample-05"
+        }
+      ]
+    }
+  ]
+}
