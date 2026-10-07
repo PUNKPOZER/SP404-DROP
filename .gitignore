@@ -10,6 +10,10 @@ mac/app/icon.svg
 mac/app/sp-system.css
 mac/app/drop.css
 mac/app/sp-core.js
+mac/app/sp-schemas.js
+mac/app/sp-validate.js
+mac/app/sp-package.js
+mac/app/sp-project.js
 mac/app/assets/
 
 # generated icon renders (reproduce with: node scripts/make-icons.js)

@@ -19,8 +19,10 @@
    Any failure removes the temp file and leaves the original as it was. */
 'use strict';
 var fs = require('fs'), fsp = fs.promises, path = require('path'), os = require('os'), crypto = require('crypto');
-var SPPackage = require('../../web/sp-package.js');
-var SPProject = require('../../web/sp-project.js');
+/* In the repo the shared modules live in ../../web; mac/build.sh copies them next to this file for the packaged app. */
+function shared(name) { try { return require('./' + name); } catch (e) { if (e.code !== 'MODULE_NOT_FOUND') throw e; return require('../../web/' + name); } }
+var SPPackage = shared('sp-package.js');
+var SPProject = shared('sp-project.js');
 
 var LOCK_STALE_MS = 10 * 60 * 1000;
 

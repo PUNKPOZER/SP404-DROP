@@ -63,3 +63,27 @@ function dropProject(o) {
   });
 }
 module.exports = { wav: wav, rawZip: rawZip, json: json, manifest: manifest, minimalZip: minimalZip, openBytes: openBytes, codes: codes, dropProject: dropProject, P: P };
+
+/* A faithful stand-in for LEARN: it adds the files it owns, an unknown future file and an unknown manifest field,
+   bumps revision, and copies everything else through raw (as the spec requires of every SP SYSTEM app). */
+module.exports.simulateLearn = function (bytes, now) {
+  var learnFiles = {
+    'analysis/track.json': Buffer.from(JSON.stringify({ analysisVersion: 1, producedBy: { app: 'sp404-learn', version: '0.4.0' }, producedAt: '2026-10-07T09:20:00Z',
+      tempo: { raw: { bpm: 120, confidence: 0.7 } }, 'x-learn-private': { weights: [0.1, 0.2] },
+      chopCandidates: [{ id: 'cand-01', kind: 'drum-break', startSeconds: 0.2, endSeconds: 0.9, confidence: 0.7, state: 'suggested' }] }, null, 1)),
+    'learn/recipe.json': Buffer.from('{"recipeVersion":1,"kind":"track","steps":[{"id":"step-1","title":"Chop the break"}],"x-future-field":true}\n'),
+    'learn/progress.json': Buffer.from('{ "progressVersion": 1,   "lessonsDone": {"l1": 1760000000000} }'),
+    'learn/requirements.json': Buffer.from('{"requirementsVersion":1,"lesson":"l1","needs":[{"type":"drum-chop","count":3}]}'),
+    'x-future/notes.bin': Buffer.from([0, 1, 2, 3, 250, 251, 252, 253])
+  };
+  var add = {}; Object.keys(learnFiles).forEach(function (k) { add[k] = new Uint8Array(learnFiles[k]); });
+  return P.open(P.fromBytes(bytes)).then(function (r) {
+    var m = JSON.parse(JSON.stringify(r.manifest));
+    m.revision = (m.revision || 0) + 1; m.modifiedBy = 'sp404-learn'; m.modifiedByVersion = '0.4.0'; m.modifiedAt = now || '2026-10-07T09:30:00Z';
+    m['x-learn-note'] = { keep: 'me' };
+    m.modules = m.modules || {};
+    [['analysis', 'analysis/track.json'], ['recipe', 'learn/recipe.json'], ['progress', 'learn/progress.json'], ['requirements', 'learn/requirements.json']].forEach(function (x) { m.modules[x[0]] = { path: x[1], schemaVersion: 1, owner: 'sp404-learn' }; });
+    var sink = P.memorySink();
+    return P.assemble(r.package, { replace: { 'manifest.json': P.stringify(m) }, add: add }, sink, { now: now }).then(function () { return { bytes: sink.bytes(), learnFiles: learnFiles }; });
+  });
+};

@@ -9,6 +9,8 @@ ARCH="${1:-arm64}"
 [ -d node_modules ] || npm install
 # the web app is index.html + sp-system.css + drop.css + sp-core.js + assets/ — copy all of it next to main.js
 cp ../web/index.html ../web/sp-system.css ../web/drop.css ../web/sp-core.js ../web/icon.svg app/
+# .spsystem interchange modules (used by spsystem-fs.js; not wired to the UI yet)
+cp ../web/sp-schemas.js ../web/sp-validate.js ../web/sp-package.js ../web/sp-project.js app/
 rm -rf app/assets && cp -R ../web/assets app/assets
 ICON_ARGS=()
 if [ -f icon.icns ]; then ICON_ARGS=(--icon=icon.icns); fi

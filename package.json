@@ -5,7 +5,10 @@
   "description": "Dev-only manifest for tests and asset scripts. The app itself has no dependencies.",
   "license": "MIT",
   "scripts": {
-    "test": "node --test web/test/*.test.js",
-    "sync-assets": "node scripts/sync-assets.js"
+    "test": "node --test \"web/test/*.test.js\" \"web/test/spsystem/*.test.js\"",
+    "sync-assets": "node scripts/sync-assets.js",
+    "sync-spec": "node scripts/sync-spec.js",
+    "gen-schemas": "node scripts/gen-schemas.js",
+    "build-fixtures": "node scripts/build-fixtures.js"
   }
 }
