@@ -6,7 +6,7 @@ every item below is a proposal for a *future* revision, and each is rated by wha
 Severity: **BLOCKER** = Phase 1a cannot be built correctly without a schema change · **IMPORTANT** = works today only through a
 workaround/convention that other apps must also follow · **MINOR** = ambiguity or polish · **FUTURE** = needed by a later phase.
 
-**Result: 0 BLOCKERS.** 6 IMPORTANT, 11 MINOR, 7 FUTURE. Phase 1a is fully implemented with the workarounds listed.
+**Result: 0 BLOCKERS.** 7 IMPORTANT, 12 MINOR, 5 FUTURE (24 items: S1–S23 plus the new S24). Phase 1a is fully implemented with the workarounds listed.
 
 | # | Title | Severity | Schema |
 |---|---|---|---|

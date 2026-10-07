@@ -2,6 +2,11 @@
 
 ## Unreleased — SP SYSTEM redesign
 
+- **`.spsystem` interchange foundation (Phase 1a, no UI yet):** vendored canonical spec snapshot (`sp-system-spec/`, `SPEC_HASH`),
+  schema validator, hardened package reader/writer (path/symlink/executable/zip-bomb/size checks, raw copy-through of
+  LEARN-owned and unknown data), project model (stable ids, chops/samples/pads/loops serialisation, revision + conflict state),
+  atomic Node save adapter, round-trip fixtures. Findings for the spec owner: `SP_SYSTEM_SCHEMA_ISSUES.md`.
+
 - **App shell matched to the SP SYSTEM reference board:** dark top strip, ink sidebar (Drop / Convert / Chop-Loop, language, About) with a red active tab,
   heavy grotesk titles, a fixed *Output* panel with the red CONVERT button, tiles, and a real "This session" file list; About screen.
 - **New visual language (SP SYSTEM):** paper + ink with Signal Red / Electric Blue /
